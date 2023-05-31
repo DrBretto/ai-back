@@ -24,7 +24,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/data', dataRouter);
 app.use('/api/history', historyRouter);
 
-app.get('/', (req, res) => {
+app.get('/test', (req, res) => {
   res.send('Hello, world!!');
 });
 
