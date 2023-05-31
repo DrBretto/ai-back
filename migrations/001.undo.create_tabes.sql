@@ -1,2 +1,9 @@
-DROP TABLE IF EXISTS example;
-DROP TABLE IF EXISTS example2;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS floor_materials;
+DROP TABLE IF EXISTS ceiling_materials;
+DROP TABLE IF EXISTS wall_materials;
+DROP TABLE IF EXISTS other_materials;
+DROP TABLE IF EXISTS ceiling_products;
+DROP TABLE IF EXISTS baffle_units;
+DROP TABLE IF EXISTS wall_products;
+DROP TABLE IF EXISTS recommended_reverb_times;
