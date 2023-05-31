@@ -1,5 +1,5 @@
 /* eslint-disable strict */
-const app = require('./app');
+const app = require('../api');
 const { PORT, DATABASE_URL } = require('./config');
 const knex = require('knex');
 
