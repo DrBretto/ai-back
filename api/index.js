@@ -4,7 +4,7 @@ const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const helmet = require('helmet');
-const { NODE_ENV } = require('../src/config');
+const { NODE_ENV } = require('./config');
 const authRouter = require('../src/auth/auth-router');
 const usersRouter = require('../src/users/users-router');
 
