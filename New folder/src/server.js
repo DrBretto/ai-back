@@ -12,5 +12,5 @@ app.set('db', db);
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
-  console.log(`Server listening at (not) ${DATABASE_URL}:${PORT}`);
+  console.log(`Server listening at ${DATABASE_URL}:${PORT}`);
 });

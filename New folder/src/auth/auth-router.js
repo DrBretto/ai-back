@@ -30,10 +30,17 @@ authRouter.post('/login', jsonBodyParser, (req, res, next) => {
             error: 'Incorrect user_name or password',
           });
 
+        if (!dbUser.active) {
+          return res.status(400).json({
+            error: 'Account disabled',
+          });
+        }
+        const isadmin = dbUser.isadmin;
         const sub = dbUser.user_name;
         const payload = { user_id: dbUser.id };
         res.send({
           authToken: AuthService.createJwt(sub, payload),
+          isadmin: isadmin,
         });
       });
     })
