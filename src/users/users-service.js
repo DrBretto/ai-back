@@ -40,7 +40,7 @@ const UsersService = {
     return bcrypt.hash(password, 12);
   },
   serializeUser(user) {
-    console.log(user);
+    
     return {
       id: user.id,
       full_name: xss(user.full_name),
