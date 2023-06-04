@@ -4,7 +4,8 @@
 const bcrypt = require('bcryptjs');
 const xss = require('xss');
 
-const REGEX_UPPER_LOWER_NUMBER_SPECIAL = /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&])[\S]+/;
+const REGEX_UPPER_LOWER_NUMBER_SPECIAL =
+  /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&])[\S]+/;
 
 const UsersService = {
   hasUserWithUserName(db, user_name) {
@@ -39,6 +40,7 @@ const UsersService = {
     return bcrypt.hash(password, 12);
   },
   serializeUser(user) {
+    console.log(user);
     return {
       id: user.id,
       full_name: xss(user.full_name),
