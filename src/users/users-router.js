@@ -8,6 +8,7 @@ const jsonBodyParser = express.json();
 
 usersRouter.post('/', jsonBodyParser, (req, res, next) => {
   const { password, email } = req.body;
+  console.log(req.body);
 
   for (const field of ['email', 'password'])
     if (!req.body[field])
@@ -33,7 +34,6 @@ usersRouter.post('/', jsonBodyParser, (req, res, next) => {
 
         return UsersService.insertUser(req.app.get('db'), newUser).then(
           (user) => {
-            console.log(user);
             res
               .status(201)
               .location(path.posix.join(req.originalUrl, `/${user.id}`))
