@@ -6,19 +6,6 @@ const UsersService = require('./users-service');
 const usersRouter = express.Router();
 const jsonBodyParser = express.json();
 
-usersRouter.get('/testdb', (req, res) => {
-  try {
-    // Try to execute a simple SQL query
-    req.app.get('db').raw('SELECT 1');
-
-    // If the query succeeds, send a success message
-    res.send('Successfully connected to the database!');
-  } catch (err) {
-    // If the query fails, log the error and send an error message
-    console.error('Error testing database connection:', err);
-    res.status(500).send('Error testing database connection');
-  }
-});
 
 usersRouter.post('/', jsonBodyParser, (req, res, next) => {
   const { password, email } = req.body;

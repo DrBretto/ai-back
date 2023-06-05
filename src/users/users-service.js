@@ -7,10 +7,7 @@ const xss = require('xss');
 const UsersService = {
   hasUserWithUserName(db, email) {
     console.log('Checking if user exists'); // <-- Add logging
-    return db('users')
-      .where({ email })
-      .first()
-      .then((user) => !!user);
+    return false;
   },
 
   validatePassword(password) {
