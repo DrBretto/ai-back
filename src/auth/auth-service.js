@@ -4,18 +4,15 @@ const jwt = require('jsonwebtoken');
 const config = require('../config');
 
 const AuthService = {
-  getUserWithUserName(knex, email) {
-    console.log(
-      'lookig for user:',
-      knex('users')
-        .where({ email })
-        .first()
-        .then((user) => !!user)
-    );
+  getUserWithUserName(knex, user_name) {
     return knex('users')
-      .where({ email })
+      .where({ user_name })
       .first()
-      .then((user) => !!user);
+      .then((user) => !!user)
+      .catch((err) => {
+        console.error('Error occurred:', err);
+        throw err; // Re-throw the error so it can be handled later
+      });
   },
   comparePasswords(password, hash) {
     return bcrypt.compare(password, hash);
