@@ -8,6 +8,10 @@ const AuthService = {
     return knex('users')
       .where({ email }) // updated this line from user_name to email
       .first()
+      .then((user) => {
+        console.log(user); // Here log user object to verify that password field exists
+        return user;
+      })
       .then((user) => !!user)
       .catch((err) => {
         console.error('Error occurred:', err);
