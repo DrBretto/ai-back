@@ -9,6 +9,7 @@ const AuthService = {
     return db('users').where({ user_name }).first();
   },
   comparePasswords(password, hash) {
+    console.log('comparing passwords:', hash);
     return bcrypt.compare(password, hash);
   },
   createJwt(subject, payload) {
