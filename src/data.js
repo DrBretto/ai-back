@@ -1,9 +1,12 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable strict */
-require('dotenv').config();
+const config = require('../config');
+
 const knex = require('knex');
 
-const knexInstance = knex({
+const db = knex({
   client: 'pg',
-  connection: process.env.DATABASE_URL, 
+  connection: config.DATABASE_URL,
 });
+
+module.exports = db;
