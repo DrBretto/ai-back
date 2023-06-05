@@ -8,7 +8,6 @@ const jsonBodyParser = express.json();
 
 usersRouter.post('/', jsonBodyParser, (req, res, next) => {
   const { password, email } = req.body;
-  console.log(req.body);
 
   for (const field of ['email', 'password'])
     if (!req.body[field])
@@ -32,14 +31,17 @@ usersRouter.post('/', jsonBodyParser, (req, res, next) => {
           date_created: 'now()',
         };
 
-        return UsersService.insertUser(req.app.get('db'), newUser).then(
-          (user) => {
+        return UsersService.insertUser(req.app.get('db'), newUser)
+          .then((user) => {
             res
               .status(201)
               .location(path.posix.join(req.originalUrl, `/${user.id}`))
               .json(UsersService.serializeUser(user));
-          }
-        );
+          })
+          .catch((error) => {
+            console.error('Error inserting user:', error);
+            res.status(500).json({ error: 'Internal server error' });
+          });
       });
     })
     .catch(next);
