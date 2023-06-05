@@ -5,6 +5,13 @@ const config = require('../config');
 
 const AuthService = {
   getUserWithUserName(knex, user_name) {
+    console.log(
+      'lookig for user:',
+      knex('users')
+        .where({ user_name })
+        .first()
+        .then((user) => !!user)
+    );
     return knex('users')
       .where({ user_name })
       .first()

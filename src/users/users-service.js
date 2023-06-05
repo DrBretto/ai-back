@@ -5,13 +5,6 @@ const xss = require('xss');
 
 const UsersService = {
   hasUserWithUserName(db, email) {
-    console.log('Checking if user exists');
-    console.log(
-      db('users')
-        .where({ email })
-        .first()
-        .then((user) => !!user)
-    );
     return db('users')
       .where({ email })
       .first()
