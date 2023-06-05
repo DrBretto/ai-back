@@ -5,14 +5,13 @@ const config = require('../config');
 
 const AuthService = {
   getUserWithUserName(knex, email) {
-    console.log(email);
     return knex('users')
-      .where({ email })
+      .where({ email }) // updated this line from user_name to email
       .first()
       .then((user) => !!user)
       .catch((err) => {
         console.error('Error occurred:', err);
-        throw err; // Re-throw the error so it can be handled later
+        throw err;
       });
   },
   comparePasswords(password, hash) {
