@@ -5,7 +5,7 @@ const knex = require('knex');
 
 const db = knex({
   client: 'pg',
-  connection: DATABASE_URL, //'postgres://lamvinadmin@lambin-reverb-postgresql-db:LAMVINtech2022!@lambin-reverb-postgresql-db.postgres.database.azure.com:5432/reverb', ,
+  connection: DATABASE_URL,
 });
 
 app.set('db', db);
