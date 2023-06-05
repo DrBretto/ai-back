@@ -52,3 +52,5 @@ authRouter.post('/login', jsonBodyParser, async (req, res, next) => {
     next(err);
   }
 });
+
+module.exports = authRouter;
