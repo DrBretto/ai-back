@@ -18,7 +18,7 @@ authRouter.post('/login', jsonBodyParser, async (req, res, next) => {
   }
 
   try {
-    const dbUser = await AuthService.getUserWithUserName(
+    const dbUser = await AuthService.getUserWithEmail(
       req.app.get('db'),
       loginUser.email
     );
