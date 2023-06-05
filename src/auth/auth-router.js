@@ -30,6 +30,7 @@ authRouter.post('/login', jsonBodyParser, async (req, res, next) => {
       });
     }
 
+    console.log(loginUser.password, dbUser.password);
     const compareMatch = await AuthService.comparePasswords(
       loginUser.password,
       dbUser.password
