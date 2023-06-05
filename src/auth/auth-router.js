@@ -7,7 +7,7 @@ const jsonBodyParser = express.json();
 authRouter.post('/login', jsonBodyParser, (req, res, next) => {
   const { email, password } = req.body;
   const loginUser = { email, password };
-  console.log(loginUser);
+  console.log(req.body);
 
   for (const [key, value] of Object.entries(loginUser))
     if (value === null)
@@ -17,7 +17,6 @@ authRouter.post('/login', jsonBodyParser, (req, res, next) => {
 
   AuthService.getUserWithUserName(req.app.get('db'), loginUser.email)
     .then((dbUser) => {
-      console.log('Checking if user exists:', loginUser.email);
       if (!dbUser)
         return res.status(400).json({
           error: 'Incorrect email or password',
