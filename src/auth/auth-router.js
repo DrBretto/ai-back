@@ -4,20 +4,20 @@ const AuthService = require('./auth-service');
 const authRouter = express.Router();
 const jsonBodyParser = express.json();
 
-authRouter.post('/login', jsonBodyParser, async (req, res, next) => {
+authRouter.post('/login', jsonBodyParser, (req, res, next) => {
   const { email, password } = req.body;
   const loginUser = { email, password };
 
   console.log('Login endpoint hit with:', loginUser);
 
   for (const [key, value] of Object.entries(loginUser))
-    if (value == null)
+    if (value === null)
       return res.status(400).json({
         error: `Missing '${key}' in request body`,
       });
 
   try {
-    const dbUser = await AuthService.getUserWithUserName(
+    const dbUser = AuthService.getUserWithUserName(
       req.app.get('db'),
       loginUser.email
     );
@@ -29,7 +29,7 @@ authRouter.post('/login', jsonBodyParser, async (req, res, next) => {
         error: 'Incorrect email or password',
       });
 
-    const compareMatch = await AuthService.comparePasswords(
+    const compareMatch = AuthService.comparePasswords(
       loginUser.password,
       dbUser.password
     );
