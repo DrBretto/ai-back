@@ -4,16 +4,16 @@ const jwt = require('jsonwebtoken');
 const config = require('../config');
 
 const AuthService = {
-  getUserWithUserName(knex, user_name) {
+  getUserWithUserName(knex, email) {
     console.log(
       'lookig for user:',
       knex('users')
-        .where({ user_name })
+        .where({ email })
         .first()
         .then((user) => !!user)
     );
     return knex('users')
-      .where({ user_name })
+      .where({ email })
       .first()
       .then((user) => !!user);
   },
