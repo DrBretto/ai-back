@@ -6,6 +6,7 @@ const xss = require('xss');
 
 const UsersService = {
   hasUserWithUserName(db, email) {
+    console.log('Checking if user exists'); // <-- Add logging
     return db('users')
       .where({ email })
       .first()
@@ -32,10 +33,12 @@ const UsersService = {
   },
 
   hashPassword(password) {
+    console.log('Hashing password'); // <-- Add logging
     return bcrypt.hash(password, 12);
   },
 
   insertUser(db, newUser) {
+    console.log('Inserting user'); // <-- Add logging
     return db
       .insert(newUser)
       .into('users')
@@ -44,6 +47,7 @@ const UsersService = {
   },
 
   serializeUser(user) {
+    console.log(user);
     return {
       id: user.id,
       email: xss(user.email),
