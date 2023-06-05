@@ -22,18 +22,6 @@ app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/data', dataRouter);
 
-app.get('/testdb', async (req, res) => {
-  try {
-    const result = await db.raw(
-      'SELECT tablename FROM pg_tables WHERE schemaname = current_schema();'
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to connect to the database' });
-  }
-});
-
 app.get('/', (req, res) => {
   res.send('Hello, world!!');
 });
