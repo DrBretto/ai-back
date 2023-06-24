@@ -5,8 +5,8 @@ const authRouter = express.Router();
 const jsonBodyParser = express.json();
 
 authRouter.post('/login', jsonBodyParser, async (req, res, next) => {
-  const { email, password } = req.body;
-  const loginUser = { email, password };
+  const { username, password } = req.body;
+  const loginUser = { username, password };
 
   console.log('Login endpoint hit with:', loginUser);
 
@@ -18,15 +18,15 @@ authRouter.post('/login', jsonBodyParser, async (req, res, next) => {
   }
 
   try {
-    const dbUser = await AuthService.getUserWithEmail(
+    const dbUser = await AuthService.getUserWithUsername(
       req.app.get('db'),
-      loginUser.email
+      loginUser.username
     );
     console.log('User fetched from DB:', dbUser);
 
     if (!dbUser) {
       return res.status(400).json({
-        error: 'Incorrect email or password',
+        error: 'Incorrect username or password',
       });
     }
 
@@ -39,11 +39,11 @@ authRouter.post('/login', jsonBodyParser, async (req, res, next) => {
 
     if (!compareMatch) {
       return res.status(400).json({
-        error: 'Incorrect email or password',
+        error: 'Incorrect username or password',
       });
     }
 
-    const sub = dbUser.email;
+    const sub = dbUser.username;
     const payload = { user_id: dbUser.id };
     res.send({
       authToken: AuthService.createJwt(sub, payload),

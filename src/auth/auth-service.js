@@ -4,9 +4,9 @@ const jwt = require('jsonwebtoken');
 const config = require('../config');
 
 const AuthService = {
-  getUserWithEmail(knex, email) {
+  getUserWithUsername(knex, username) {
     return knex('users')
-      .where({ email }) // updated this line from user_name to email
+      .where({ username }) // updated this line from user_name to username
       .first()
       .then((user) => {
         console.log(user); // Here log user object to verify that password field exists
