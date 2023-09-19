@@ -5,3 +5,4 @@ VALUES
 
   (1, 'Demo', 'Demo', '$2a$12$nWn9FFfvnRYRPeV7nWej.uGITxh347TMwIicz0Y9CkOPvTexO.HM6',  '2020-09-04 19:02:53');
 
+INSERT INTO Stocks (symbol) VALUES ('JDST', 'NUGT');

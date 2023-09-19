@@ -17,5 +17,7 @@ CREATE TABLE StockHistory (
     history_id SERIAL PRIMARY KEY,
     stock_id INT REFERENCES Stocks(stock_id),
     date_time TIMESTAMPTZ NOT NULL,
-    closing_price DECIMAL(10, 2) NOT NULL
+    closing_price DECIMAL(10, 2) NOT NULL,
+    volume INT NOT NULL,
+    UNIQUE(stock_id, date_time)
 );
