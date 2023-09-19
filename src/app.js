@@ -22,7 +22,7 @@ app.use(cors());
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/data', dataRouter);
-app.use('/api/stocks/history', stocksRouter);
+app.use('/api/stocks', stocksRouter);
 
 app.get('/', (req, res) => {
   res.send('Hello, world!!');
