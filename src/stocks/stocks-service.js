@@ -19,7 +19,7 @@ const StocksService = {
       const closePrice = stockData['4. close'];
       const volume = stockData['5. volume'];
 
-      await db('StockHistory')
+      await db('stockhistory')
         .insert({
           stock_id: stockId,
           date_time: dateTime,
