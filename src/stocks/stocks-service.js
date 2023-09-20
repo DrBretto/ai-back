@@ -17,18 +17,23 @@ const StocksService = {
 
     for (const [dateTime, stockData] of Object.entries(timeSeries)) {
       const closePrice = stockData['4. close'];
+      const highPrice = stockData['2. high'];
+      const lowPrice = stockData['3. low'];
       const volume = stockData['5. volume'];
-
+    
       await db('stockhistory')
         .insert({
           stock_id: stockId,
           date_time: dateTime,
           closing_price: closePrice,
+          high_price: highPrice,  // New
+          low_price: lowPrice,    // New
           volume: volume,
         })
         .onConflict(['stock_id', 'date_time'])
         .ignore();
     }
+    
 
     return data;
   },
