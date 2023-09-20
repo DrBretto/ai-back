@@ -15,7 +15,6 @@ const StocksService = {
     const url = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=1min&adjusted=true&month=${month}&outputsize=full&apikey=B91GX8DBBAR32QM0`;
     const response = await fetch(url);
     const data = await response.json();
-    console.log('data:', data);
 
     const stockId = await this.getStockId(stockSymbol); // Implement this function
 
@@ -27,7 +26,7 @@ const StocksService = {
 
       // Insert into PostgreSQL
       await pool.query(
-        'INSERT INTO StockHistory (stock_id, date_time, closing_price, volume) VALUES ($1, $2, $3, $4) ON CONFLICT (stock_id, date_time) DO NOTHING',
+        'INSERT INTO stockhistory (stock_id, date_time, closing_price, volume) VALUES ($1, $2, $3, $4) ON CONFLICT (stock_id, date_time) DO NOTHING',
         [stockId, dateTime, closePrice, volume]
       );
     }
