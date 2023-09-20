@@ -1,9 +1,6 @@
 const fetch = require('node-fetch');
-const { Pool } = require('pg');
+const db = require('..data.js');
 
-const pool = new Pool({
-  // your db config here
-});
 
 const StocksService = {
   async getStockId(db, symbol) {
@@ -25,10 +22,13 @@ const StocksService = {
       const volume = stockData['5. volume'];
 
       // Insert into PostgreSQL
-      await pool.query(
-        'INSERT INTO stockhistory (stock_id, date_time, closing_price, volume) VALUES ($1, $2, $3, $4) ON CONFLICT (stock_id, date_time) DO NOTHING',
-        [stockId, dateTime, closePrice, volume]
-      );
+      await db('stockhistory').insert({
+        stock_id: stockId,
+        date_time: dateTime,
+        closing_price: closePrice,
+        volume: volume
+      }).onConflict(['stock_id', 'date_time']).ignore();
+      
     }
 
     return data;
