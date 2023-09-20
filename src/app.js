@@ -50,14 +50,20 @@ cron.schedule('*/5 * * * *', async () => {
   const formattedMonth = String(currentMonth).padStart(2, '0');
   console.log(`Fetching stock history for ${currentYear}-${formattedMonth}`);
 
-  await StocksService.fetchStockHistory(
-    'JDST',
-    `${currentYear}-${formattedMonth}`
-  );
-  await StocksService.fetchStockHistory(
-    'NUGT',
-    `${currentYear}-${formattedMonth}`
-  );
+  try {
+    await StocksService.fetchStockHistory(
+      'JDST',
+      `${currentYear}-${formattedMonth}`
+    );
+    await StocksService.fetchStockHistory(
+      'NUGT',
+      `${currentYear}-${formattedMonth}`
+    );
+  } catch (error) {
+    console.error('Error fetching stock history:', error);
+    return; // Exit the function early if an error occurs
+  }
+
   // Update month and year
   if (currentMonth === 1) {
     currentMonth = 12;
