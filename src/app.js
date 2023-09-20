@@ -46,13 +46,18 @@ const cron = require('node-cron');
 let currentMonth = new Date().getMonth() + 1; // JavaScript months are 0-11
 let currentYear = new Date().getFullYear();
 
-
 cron.schedule('*/5 * * * *', async () => {
-  console.log(`Fetching stock history for ${currentYear}-${currentMonth}`);
-  
-  await StocksService.fetchStockHistory('JDST', `${currentYear}-${currentMonth}`);
-  await StocksService.fetchStockHistory('NUGT', `${currentYear}-${currentMonth}`);
-  
+  const formattedMonth = String(currentMonth).padStart(2, '0');
+  console.log(`Fetching stock history for ${currentYear}-${formattedMonth}`);
+
+  await StocksService.fetchStockHistory(
+    'JDST',
+    `${currentYear}-${formattedMonth}`
+  );
+  await StocksService.fetchStockHistory(
+    'NUGT',
+    `${currentYear}-${formattedMonth}`
+  );
 
   // Update month and year
   if (currentMonth === 1) {
@@ -62,6 +67,5 @@ cron.schedule('*/5 * * * *', async () => {
     currentMonth -= 1;
   }
 });
-
 
 module.exports = app;
