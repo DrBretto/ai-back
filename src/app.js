@@ -46,23 +46,18 @@ const cron = require('node-cron');
 let currentMonth = new Date().getMonth() + 1; // JavaScript months are 0-11
 let currentYear = new Date().getFullYear();
 
+const fetch = require('node-fetch');
+
 cron.schedule('*/5 * * * *', async () => {
   const formattedMonth = String(currentMonth).padStart(2, '0');
   console.log(`Fetching stock history for ${currentYear}-${formattedMonth}`);
 
-  try {
-    await StocksService.fetchStockHistory(
-      'JDST',
-      `${currentYear}-${formattedMonth}`
-    );
-    await StocksService.fetchStockHistory(
-      'NUGT',
-      `${currentYear}-${formattedMonth}`
-    );
-  } catch (error) {
-    console.error('Error fetching stock history:', error);
-    return; // Exit the function early if an error occurs
-  }
+  await fetch(
+    `https://api-x0xg.onrender.com/api/stocks/history?stockSymbol=JDST&month=${currentYear}-${formattedMonth}`
+  );
+  await fetch(
+    `https://api-x0xg.onrender.com/api/stocks/history?stockSymbol=NUGT&month=${currentYear}-${formattedMonth}`
+  );
 
   // Update month and year
   if (currentMonth === 1) {
