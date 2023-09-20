@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 
 const StocksService = {
   async getStockId(db, symbol) {
-    const stock = await db('Stocks').where({ symbol }).first();
+    const stock = await db('stocks').where({ symbol }).first();
     return stock ? stock.stock_id : null;
   },
 
