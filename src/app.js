@@ -40,34 +40,34 @@ app.use(function errorHandler(error, req, res) {
   res.status(500).json(response);
 });
 
-const cron = require('node-cron');
+// const cron = require('node-cron');
 
-let currentMonth = new Date().getMonth() + 1; // JavaScript months are 0-11
-let currentYear = new Date().getFullYear();
+// let currentMonth = new Date().getMonth() + 1; // JavaScript months are 0-11
+// let currentYear = new Date().getFullYear();
 
-const fetch = require('node-fetch');
+// const fetch = require('node-fetch');
 
-cron.schedule('*/5 * * * *', async () => {
-  const formattedMonth = String(currentMonth).padStart(2, '0');
-  console.log(`Fetching stock history for ${currentYear}-${formattedMonth}`);
+// cron.schedule('*/5 * * * *', async () => {
+//   const formattedMonth = String(currentMonth).padStart(2, '0');
+//   console.log(`Fetching stock history for ${currentYear}-${formattedMonth}`);
 
-  await fetch(
-    `https://api-x0xg.onrender.com/api/stocks/history?stockSymbol=JDST&month=${currentYear}-${formattedMonth}`
-  );
-  await fetch(
-    `https://api-x0xg.onrender.com/api/stocks/history?stockSymbol=NUGT&month=${currentYear}-${formattedMonth}`
-  );
+//   await fetch(
+//     `https://api-x0xg.onrender.com/api/stocks/history?stockSymbol=JDST&month=${currentYear}-${formattedMonth}`
+//   );
+//   await fetch(
+//     `https://api-x0xg.onrender.com/api/stocks/history?stockSymbol=NUGT&month=${currentYear}-${formattedMonth}`
+//   );
 
-  // Update month and year
-  if (currentMonth === 1) {
-    currentMonth = 12;
-    currentYear -= 1;
-  } else {
-    currentMonth -= 1;
-  }
-  console.log(
-    `Updated to ${currentYear}-${String(currentMonth).padStart(2, '0')}`
-  );
-});
+//   // Update month and year
+//   if (currentMonth === 1) {
+//     currentMonth = 12;
+//     currentYear -= 1;
+//   } else {
+//     currentMonth -= 1;
+//   }
+//   console.log(
+//     `Updated to ${currentYear}-${String(currentMonth).padStart(2, '0')}`
+//   );
+// });
 
 module.exports = app;
