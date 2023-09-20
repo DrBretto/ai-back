@@ -33,7 +33,7 @@ const StocksService = {
         .onConflict(['stock_id', 'date_time'])
         .ignore();
     }
-    
+    // test
 
     return data;
   },
