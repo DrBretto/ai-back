@@ -43,34 +43,25 @@ app.use(function errorHandler(error, req, res) {
 
 const cron = require('node-cron');
 
-// Function to get the last 24 months
-const getLast24Months = () => {
-  const dates = [];
-  let currentDate = new Date();
-  
-  for (let i = 0; i < 24; i++) {
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-    
-    dates.push(`${year}-${month}`);
-    
-    currentDate.setMonth(currentDate.getMonth() - 1);
-  }
-  
-  return dates;
-};
+let currentMonth = new Date().getMonth() + 1; // JavaScript months are 0-11
+let currentYear = new Date().getFullYear();
 
-const months = getLast24Months();
 
 cron.schedule('*/5 * * * *', async () => {
-  for (const month of months) {
-    await StocksService.fetchStockHistory('JDST', month);
-    await StocksService.fetchStockHistory('NUGT', month);
+  console.log(`Fetching stock history for ${currentYear}-${currentMonth}`);
+  
+  await StocksService.fetchStockHistory('JDST', `${currentYear}-${currentMonth}`);
+  await StocksService.fetchStockHistory('NUGT', `${currentYear}-${currentMonth}`);
+  
+
+  // Update month and year
+  if (currentMonth === 1) {
+    currentMonth = 12;
+    currentYear -= 1;
+  } else {
+    currentMonth -= 1;
   }
 });
-
-
-
 
 
 module.exports = app;
