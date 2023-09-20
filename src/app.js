@@ -58,7 +58,6 @@ cron.schedule('*/5 * * * *', async () => {
     'NUGT',
     `${currentYear}-${formattedMonth}`
   );
-
   // Update month and year
   if (currentMonth === 1) {
     currentMonth = 12;
@@ -66,6 +65,9 @@ cron.schedule('*/5 * * * *', async () => {
   } else {
     currentMonth -= 1;
   }
+  console.log(
+    `Updated to ${currentYear}-${String(currentMonth).padStart(2, '0')}`
+  );
 });
 
 module.exports = app;
