@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const db = require('..data.js');
+const db = require('../data.js');
 
 
 const StocksService = {
