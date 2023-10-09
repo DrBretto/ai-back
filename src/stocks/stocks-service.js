@@ -10,11 +10,13 @@ const StocksService = {
     // Get the stock ID
     const stockId = await this.getStockId(db, stockSymbol); // Assuming getStockId is a method in the same service
 
-    console.log('Inside fetchStockHistory',  stockId);
+    console.log('Inside fetchStockHistory', stockId);
     // First, find the last date in the DB for this stock
     const lastDateInDBRow = await db('stockhistory')
       .where('stock_id', stockId)
       .max('date_time');
+
+    console.log('Inside fetchStockHistory', lastDateInDBRow);
 
     const lastDateInDB = new Date(lastDateInDBRow[0].max);
     const lastDayOfMonth = new Date(
