@@ -48,9 +48,12 @@ const StocksService = {
       url = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=1min&adjusted=true&month=${monthToFetch}&outputsize=full&apikey=B91GX8DBBAR32QM0`;
     }
 
+    console.log('About to fetch data from Alpha Vantage');
     const response = await fetch(url);
     const data = await response.json();
     const timeSeries = data['Time Series (1min)'];
+    console.log('Fetched data from Alpha Vantage');
+    console.log('Starting to process fetched data');
 
     // Loop through the time series and insert new data into the DB
     for (const [dateTime, stockData] of Object.entries(timeSeries)) {
@@ -87,40 +90,6 @@ const StocksService = {
     }
   },
 
-  ///////////////////////
-  // async fetchStockHistory(db, stockSymbol, month) {
-  //   const url = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=1min&adjusted=true&month=${month}&outputsize=full&apikey=B91GX8DBBAR32QM0`;
-  //   const response = await fetch(url);
-  //   const data = await response.json();
-
-  //   const stockId = await this.getStockId(db, stockSymbol);
-
-  //   const timeSeries = data['Time Series (1min)'];
-
-  //   for (const [dateTime, stockData] of Object.entries(timeSeries)) {
-  //     const closePrice = stockData['4. close'];
-  //     const highPrice = stockData['2. high'];
-  //     const lowPrice = stockData['3. low'];
-  //     const volume = stockData['5. volume'];
-
-  //     await db('stockhistory')
-  //       .insert({
-  //         stock_id: stockId,
-  //         date_time: dateTime,
-  //         closing_price: closePrice,
-  //         high_price: highPrice, // New
-  //         low_price: lowPrice, // New
-  //         volume: volume,
-  //       })
-  //       .onConflict(['stock_id', 'date_time'])
-  //       .ignore();
-  //   }
-  //   // test
-
-  //   return data;
-  // },
-
-  // In StocksService.js
   async fetchAndSaveStocks(db) {
     const stocks = ['JDST', 'NUGT'];
     for (const stock of stocks) {
