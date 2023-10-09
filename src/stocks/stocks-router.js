@@ -4,20 +4,22 @@ const StocksService = require('./stocks-service');
 const stocksRouter = express.Router();
 
 stocksRouter.get('/history', async (req, res, next) => {
-  console.log('stocksRouter.get hit with:', req.query);
-  const { stockSymbol, month } = req.query;
-  console.log('stockSymbol:', stockSymbol);
-  console.log('month:', month);
 
-  const db = req.app.get('db'); // <-- Add this line to get the db instance
+  console.log('Inside /history route', req.query, res);
+
+  
+  const { stockSymbol } = req.query;  // Get stockSymbol from query params
+  const db = req.app.get('db');
 
   try {
-    const data = await StocksService.fetchStockHistory(db, stockSymbol, month); // <-- Add db as the first argument
+    const data = await StocksService.fetchStockHistory(db, stockSymbol); // Pass stockSymbol to fetchStockHistory
     res.json(data);
   } catch (error) {
     next(error);
   }
 });
+
+
 
 stocksRouter.get('/refreshData', async (req, res, next) => {
   const db = req.app.get('db');

@@ -7,6 +7,7 @@ const StocksService = {
   },
 
   async fetchStockHistory(db, stockSymbol) {
+    console.log('Inside fetchStockHistory', db, stockSymbol);
     // First, find the last date in the DB for this stock
     const lastDateInDBRow = await db('stockhistory')
       .where('stock_id', stockSymbol)
