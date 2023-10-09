@@ -8,7 +8,7 @@ const { NODE_ENV } = require('./config');
 const authRouter = require('./auth/auth-router');
 const usersRouter = require('./users/users-router');
 const stocksRouter = require('./stocks/stocks-router');
-const StocksService = require('./path/to/StocksService');
+const StocksService = require('./stocks/stocks-service');
 const cron = require('node-cron');
 
 const dataRouter = require('./data/data-router.js');
