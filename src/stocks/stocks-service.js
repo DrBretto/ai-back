@@ -7,10 +7,13 @@ const StocksService = {
   },
 
   async fetchStockHistory(db, stockSymbol) {
-    console.log('Inside fetchStockHistory', db, stockSymbol);
+    // Get the stock ID
+    const stockId = await this.getStockId(db, stockSymbol); // Assuming getStockId is a method in the same service
+
+    console.log('Inside fetchStockHistory', db, stockId);
     // First, find the last date in the DB for this stock
     const lastDateInDBRow = await db('stockhistory')
-      .where('stock_id', stockSymbol)
+      .where('stock_id', stockId)
       .max('date_time');
 
     const lastDateInDB = new Date(lastDateInDBRow[0].max);
@@ -46,9 +49,6 @@ const StocksService = {
     const response = await fetch(url);
     const data = await response.json();
     const timeSeries = data['Time Series (1min)'];
-
-    // Get the stock ID
-    const stockId = await this.getStockId(db, stockSymbol); // Assuming getStockId is a method in the same service
 
     // Loop through the time series and insert new data into the DB
     for (const [dateTime, stockData] of Object.entries(timeSeries)) {
