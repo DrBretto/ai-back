@@ -69,6 +69,15 @@ const StocksService = {
         const lowPrice = stockData['3. low'];
         const volume = stockData['5. volume'];
 
+        console.log(
+          'Data to be inserted:',
+          stockId,
+          closePrice,
+          highPrice,
+          lowPrice,
+          volume
+        );
+
         await db('stockhistory').insert({
           stock_id: stockId,
           date_time: dateTime,
@@ -77,31 +86,24 @@ const StocksService = {
           low_price: lowPrice,
           volume: volume,
         });
-        console.log(
-          'Data inserted successfully',
-          stockId,
-          closePrice,
-          highPrice,
-          lowPrice,
-          volume
-        );
+       
       }
     }
   },
 
-  async fetchAndSaveStocks(db) {
-    const stocks = ['JDST', 'NUGT'];
-    for (const stock of stocks) {
-      const lastDataPoint = await db('stockhistory')
-        .where({ stock_id: stock })
-        .orderBy('date_time', 'desc')
-        .first();
-      const lastDateTime = lastDataPoint ? lastDataPoint.date_time : null;
+  // async fetchAndSaveStocks(db) {
+  //   const stocks = ['JDST', 'NUGT'];
+  //   for (const stock of stocks) {
+  //     const lastDataPoint = await db('stockhistory')
+  //       .where({ stock_id: stock })
+  //       .orderBy('date_time', 'desc')
+  //       .first();
+  //     const lastDateTime = lastDataPoint ? lastDataPoint.date_time : null;
 
-      // Fetch and save data for this stock
-      await this.fetchStockHistory(db, stock, lastDateTime);
-    }
-  },
+  //     // Fetch and save data for this stock
+  //     await this.fetchStockHistory(db, stock, lastDateTime);
+  //   }
+  // },
 };
 
 module.exports = StocksService;
