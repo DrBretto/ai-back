@@ -67,7 +67,7 @@ const StocksService = {
     // Filter the timeSeries object
     const filteredTimeSeries = Object.fromEntries(
       Object.entries(timeSeries).filter(
-        ([dateTime, _]) =>
+        ([dateTime, lastDateTimeComparable]) =>
           new Date(dateTime).toISOString() > lastDateTimeComparable
       )
     );
