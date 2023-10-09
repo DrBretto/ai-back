@@ -49,11 +49,13 @@ const StocksService = {
     }
 
     console.log('About to fetch data from Alpha Vantage');
+
     const response = await fetch(url);
     const data = await response.json();
     const timeSeries = data['Time Series (1min)'];
-    console.log('Fetched data from Alpha Vantage');
-    console.log('Starting to process fetched data');
+
+    console.log('Fetched data from Alpha Vantage', data);
+    console.log('Starting to process fetched data', timeSeries);
 
     // Loop through the time series and insert new data into the DB
     for (const [dateTime, stockData] of Object.entries(timeSeries)) {

@@ -5,7 +5,7 @@ const stocksRouter = express.Router();
 
 stocksRouter.get('/history', async (req, res, next) => {
 
-  console.log('Inside /history route', req.query);
+  console.log('Inside /history route', req.query, res);
 
   
   const { stockSymbol } = req.query;  // Get stockSymbol from query params
