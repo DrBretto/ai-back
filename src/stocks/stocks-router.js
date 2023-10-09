@@ -13,6 +13,7 @@ stocksRouter.get('/history', async (req, res, next) => {
 
   try {
     const data = await StocksService.fetchStockHistory(db, stockSymbol); // Pass stockSymbol to fetchStockHistory
+    console.log("res:", res)
     res.json(data);
   } catch (error) {
     next(error);

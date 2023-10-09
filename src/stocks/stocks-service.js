@@ -54,9 +54,6 @@ const StocksService = {
     const data = await response.json();
     const timeSeries = data['Time Series (1min)'];
 
-    console.log('Fetched data from Alpha Vantage', data);
-    console.log('Starting to process fetched data', timeSeries);
-
     // Loop through the time series and insert new data into the DB
     for (const [dateTime, stockData] of Object.entries(timeSeries)) {
       const existingRecord = await db('stockhistory')
