@@ -16,8 +16,6 @@ const StocksService = {
       .where('stock_id', stockId)
       .max('date_time');
 
-    console.log('Inside fetchStockHistory', lastDateInDBRow);
-
     const lastDateInDB = new Date(lastDateInDBRow[0].max);
     const lastDayOfMonth = new Date(
       lastDateInDB.getFullYear(),
@@ -28,6 +26,13 @@ const StocksService = {
 
     let url;
     let monthToFetch = lastDateInDB.getMonth() + 1; // JavaScript months are 0-11
+
+    console.log(
+      'Inside fetchStockHistory dates',
+      lastDateInDBRow,
+      lastDayOfMonth,
+      monthToFetch
+    );
 
     if (Date.now() - lastDateInDB <= 6000000) {
       // 100 minutes in milliseconds
@@ -56,8 +61,7 @@ const StocksService = {
 
     // Loop through the time series and insert new data into the DB
     for (const [dateTime, stockData] of Object.entries(timeSeries)) {
-
-      console.log('Inside fetchStockHistory', dateTime, stockData)
+      console.log('Inside for loop', dateTime, stockData);
 
       const existingRecord = await db('stockhistory')
         .where({
@@ -89,7 +93,6 @@ const StocksService = {
           low_price: lowPrice,
           volume: volume,
         });
-       
       }
     }
   },
