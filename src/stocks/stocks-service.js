@@ -75,6 +75,14 @@ const StocksService = {
           low_price: lowPrice,
           volume: volume,
         });
+        console.log(
+          'Data inserted successfully',
+          stockId,
+          closePrice,
+          highPrice,
+          lowPrice,
+          volume
+        );
       }
     }
   },
