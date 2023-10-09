@@ -59,10 +59,23 @@ const StocksService = {
     const data = await response.json();
     const timeSeries = data['Time Series (1min)'];
 
-    // Loop through the time series and insert new data into the DB
-    for (const [dateTime, stockData] of Object.entries(timeSeries)) {
-      console.log('Inside for loop', dateTime, stockData);
+    // Convert the lastDateInDBRow to a comparable format (if needed)
+    const lastDateTimeComparable = new Date(
+      lastDateInDBRow[0].max
+    ).toISOString();
 
+    // Filter the timeSeries object
+    const filteredTimeSeries = Object.fromEntries(
+      Object.entries(timeSeries).filter(
+        ([dateTime, _]) =>
+          new Date(dateTime).toISOString() > lastDateTimeComparable
+      )
+    );
+
+    console.log('lastDateTimeComparable: ', lastDateTimeComparable);
+
+    // Loop through the time series and insert new data into the DB
+    for (const [dateTime, stockData] of Object.entries(filteredTimeSeries)) {
       const existingRecord = await db('stockhistory')
         .where({
           stock_id: stockId,
