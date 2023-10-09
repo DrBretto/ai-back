@@ -56,6 +56,9 @@ const StocksService = {
 
     // Loop through the time series and insert new data into the DB
     for (const [dateTime, stockData] of Object.entries(timeSeries)) {
+
+      console.log('Inside fetchStockHistory', dateTime, stockData)
+
       const existingRecord = await db('stockhistory')
         .where({
           stock_id: stockId,
