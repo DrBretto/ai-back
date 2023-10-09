@@ -19,4 +19,14 @@ stocksRouter.get('/history', async (req, res, next) => {
   }
 });
 
+stocksRouter.get('/refreshData', async (req, res, next) => {
+  const db = req.app.get('db');
+  try {
+    await StocksService.fetchAndSaveStocks(db);
+    res.status(200).json({ message: 'Data refreshed successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = stocksRouter;
