@@ -8,19 +8,13 @@ const StocksService = {
 
   async fetchHistoricalData(db, stockSymbol, monthToFetch) {
     const stockId = await this.getStockId(db, stockSymbol);
-    //const lastDateInDBRow = await db('stockhistory').where('stock_id', stockId).max('date_time');
-    //const lastDateInDB = new Date(lastDateInDBRow[0].max);
-    //const monthToFetch = lastDateInDB.getMonth() + 1;
-
     const historicalUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=1min&adjusted=true&month=${monthToFetch}&outputsize=full&apikey=B91GX8DBBAR32QM0`;
-
     await this.fetchDataAndInsert(db, stockId, historicalUrl);
   },
 
   async fetchTodaysData(db, stockSymbol) {
     const stockId = await this.getStockId(db, stockSymbol);
     const todayUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=1min&adjusted=true&outputsize=full&apikey=B91GX8DBBAR32QM0`;
-
     await this.fetchDataAndInsert(db, stockId, todayUrl);
   },
 
@@ -28,6 +22,14 @@ const StocksService = {
     const response = await fetch(url);
     const data = await response.json();
     const timeSeries = data['Time Series (1min)'];
+
+    console.log("Fetching data for stockId:", stockId);
+    
+    const timeSeriesEntries = Object.entries(timeSeries);
+    if (timeSeriesEntries.length > 0) {
+      console.log("First entry:", timeSeriesEntries[0]);
+      console.log("Last entry:", timeSeriesEntries[timeSeriesEntries.length - 1]);
+    }
 
     for (const [dateTime, stockData] of Object.entries(timeSeries)) {
       const existingRecord = await db('stockhistory').where({ stock_id: stockId, date_time: dateTime }).first();
@@ -54,21 +56,3 @@ const StocksService = {
 };
 
 module.exports = StocksService;
-
-
-
-
-
-  // async fetchAndSaveStocks(db) {
-  //   const stocks = ['JDST', 'NUGT'];
-  //   for (const stock of stocks) {
-  //     const lastDataPoint = await db('stockhistory')
-  //       .where({ stock_id: stock })
-  //       .orderBy('date_time', 'desc')
-  //       .first();
-  //     const lastDateTime = lastDataPoint ? lastDataPoint.date_time : null;
-
-  //     // Fetch and save data for this stock
-  //     await this.fetchStockHistory(db, stock, lastDateTime);
-  //   }
-  // },
