@@ -48,8 +48,10 @@ let currentMonth = new Date().getMonth() + 1; // Months are 0-based in JS
 
 cron.schedule('*/5 * * * *', async () => {
   const db = app.get('db');
-  const monthToFetch = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
-
+  const monthToFetch = `${currentYear}-${currentMonth
+    .toString()
+    .padStart(2, '0')}`;
+  console.log('Fetching history: ', monthToFetch);
   await StocksService.fetchHistoricalData(db, 'JDST', monthToFetch);
   await StocksService.fetchHistoricalData(db, 'NUGT', monthToFetch);
 
@@ -64,6 +66,7 @@ cron.schedule('*/5 * * * *', async () => {
 
 cron.schedule('*/100 * * * *', async () => {
   const db = app.get('db');
+  console.log('Fetching recent data');
   await StocksService.fetchTodaysData(db, 'JDST');
   await StocksService.fetchTodaysData(db, 'NUGT');
 });
