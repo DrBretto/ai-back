@@ -23,16 +23,24 @@ const StocksService = {
     const data = await response.json();
     const timeSeries = data['Time Series (1min)'];
 
-    console.log("Fetching data for stockId:", stockId);
-    
+    console.log('Fetching data for stockId:', stockId);
+
     const timeSeriesEntries = Object.entries(timeSeries);
     if (timeSeriesEntries.length > 0) {
-      console.log("First entry:", timeSeriesEntries[0]);
-      console.log("Last entry:", timeSeriesEntries[timeSeriesEntries.length - 1]);
+      console.log('Recording ', timeSeriesEntries.length, ' entries');
+      console.log('First entry:', timeSeriesEntries[0]);
+      console.log(
+        'Last entry:',
+        timeSeriesEntries[timeSeriesEntries.length - 1]
+      );
+    } else {
+      console.log('No data to record');
     }
 
     for (const [dateTime, stockData] of Object.entries(timeSeries)) {
-      const existingRecord = await db('stockhistory').where({ stock_id: stockId, date_time: dateTime }).first();
+      const existingRecord = await db('stockhistory')
+        .where({ stock_id: stockId, date_time: dateTime })
+        .first();
 
       if (!existingRecord) {
         const closePrice = stockData['4. close'];
@@ -51,8 +59,6 @@ const StocksService = {
       }
     }
   },
-
-
 };
 
 module.exports = StocksService;

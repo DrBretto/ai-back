@@ -51,8 +51,9 @@ cron.schedule('*/5 * * * *', async () => {
   const monthToFetch = `${currentYear}-${currentMonth
     .toString()
     .padStart(2, '0')}`;
-  console.log('Fetching history: ', monthToFetch);
+  console.log('Fetching history: JDST', monthToFetch);
   await StocksService.fetchHistoricalData(db, 'JDST', monthToFetch);
+  console.log('Fetching history: NUGT', monthToFetch);
   await StocksService.fetchHistoricalData(db, 'NUGT', monthToFetch);
 
   // Decrement month and handle year rollover
@@ -66,8 +67,9 @@ cron.schedule('*/5 * * * *', async () => {
 
 cron.schedule('*/100 * * * *', async () => {
   const db = app.get('db');
-  console.log('Fetching recent data');
+  console.log('Fetching recent data: JDST');
   await StocksService.fetchTodaysData(db, 'JDST');
+  console.log('Fetching recent data: NUGT');
   await StocksService.fetchTodaysData(db, 'NUGT');
 });
 
