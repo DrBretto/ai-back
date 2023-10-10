@@ -43,8 +43,29 @@ app.use(function errorHandler(error, req, res) {
 });
 
 //Scheduler
-cron.schedule('50 11 * * *', async () => {
-  await StocksService.fetchAndSaveStocks(); // Assuming the DB instance is globally available in StocksService
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth() + 1; // Months are 0-based in JS
+
+cron.schedule('*/5 * * * *', async () => {
+  const db = app.get('db');
+  const monthToFetch = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
+
+  await StocksService.fetchHistoricalData(db, 'JDST', monthToFetch);
+  await StocksService.fetchHistoricalData(db, 'NUGT', monthToFetch);
+
+  // Decrement month and handle year rollover
+  if (currentMonth === 1) {
+    currentYear--;
+    currentMonth = 12;
+  } else {
+    currentMonth--;
+  }
+});
+
+cron.schedule('*/100 * * * *', async () => {
+  const db = app.get('db');
+  await StocksService.fetchTodaysData(db, 'JDST');
+  await StocksService.fetchTodaysData(db, 'NUGT');
 });
 
 module.exports = app;
