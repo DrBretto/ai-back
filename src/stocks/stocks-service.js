@@ -14,7 +14,7 @@ const StocksService = {
 
   async fetchTodaysData(db, stockSymbol) {
     const stockId = await this.getStockId(db, stockSymbol);
-    const todayUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=1min&adjusted=true&outputsize=full&apikey=B91GX8DBBAR32QM0`;
+    const todayUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=1min&&adjusted=true&outputsize=full&apikey=B91GX8DBBAR32QM0`;
     await this.fetchDataAndInsert(db, stockId, todayUrl);
   },
 
