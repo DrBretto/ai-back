@@ -1,4 +1,8 @@
 const fetch = require('node-fetch');
+require('dotenv').config();
+
+const finnhubApiKey = process.env.FINNHUB_API_KEY;
+const alphaVantageApiKey = process.env.ALPHA_VANTAGE_API_KEY;
 
 const StocksService = {
   async getStockId(db, symbol) {
@@ -8,13 +12,13 @@ const StocksService = {
 
   async fetchHistoricalData(db, stockSymbol, monthToFetch) {
     const stockId = await this.getStockId(db, stockSymbol);
-    const historicalUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=1min&adjusted=true&month=${monthToFetch}&outputsize=full&apikey=B91GX8DBBAR32QM0`;
+    const historicalUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=1min&adjusted=true&month=${monthToFetch}&outputsize=full&apikey=${alphaVantageApiKey}`;
     await this.fetchDataAndInsert(db, stockId, historicalUrl);
   },
 
   async fetchTodaysData(db, stockSymbol) {
     const stockId = await this.getStockId(db, stockSymbol);
-    const finnhubUrl = `https://finnhub.io/api/v1/quote?symbol=${stockSymbol}&token=ckja88pr01qq18o5nhb0ckja88pr01qq18o5nhbg`;
+    const finnhubUrl = `https://finnhub.io/api/v1/quote?symbol=${stockSymbol}&token=${finnhubApiKey}`;
     await this.fetchRealTimeDataAndInsert(db, stockId, finnhubUrl);
   },
 
@@ -24,31 +28,30 @@ const StocksService = {
 
     console.log('Fetching real-time data for stockId:', stockId);
 
-// Finnhub data keys: c = close, h = high, l = low, o = open, d = daily change, dp = daily percent change, pc = previous close, t = timestamp
-const {
-  c: closePrice,
-  h: highPrice,
-  l: lowPrice,
-  o: openPrice,
-  d: dailyChange,
-  dp: dailyPercentChange,
-  pc: previousClose,
-  t: timestamp
-} = data;
+    // Finnhub data keys: c = close, h = high, l = low, o = open, d = daily change, dp = daily percent change, pc = previous close, t = timestamp
+    const {
+      c: closePrice,
+      h: highPrice,
+      l: lowPrice,
+      o: openPrice,
+      d: dailyChange,
+      dp: dailyPercentChange,
+      pc: previousClose,
+    } = data;
 
     const now = new Date();
     const dateTime = `${now.getFullYear()}-${String(
       now.getMonth() + 1
     ).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(
       now.getHours()
-    ).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`
+    ).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
 
     console.log('inserting:', data, dateTime);
 
     try {
       await db('stockrealtime').insert({
         stock_id: stockId,
-        date_time: dateTime,  
+        date_time: dateTime,
         closing_price: closePrice,
         high_price: highPrice,
         low_price: lowPrice,

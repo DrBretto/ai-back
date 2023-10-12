@@ -42,10 +42,10 @@ app.use(function errorHandler(error, req, res) {
   res.status(500).json(response);
 });
 
-//Scheduler//////////////////////////////////////////////////////////////////
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth() + 1; // Months are 0-based in JS
 
+//Scheduler//////////////////////////////////////////////////////////////////
 cron.schedule('*/5 * * * *', async () => {
   const db = app.get('db');
   const monthToFetch = `${currentYear}-${currentMonth
@@ -66,7 +66,16 @@ cron.schedule('*/5 * * * *', async () => {
 });
 ////////////////////////////////////////////////////////////////////////////
 
-
+cron.schedule('0 0 * * *', async () => {
+  const db = app.get('db');
+  const monthToFetch = `${currentYear}-${currentMonth
+    .toString()
+    .padStart(2, '0')}`;
+  console.log('Fetching history: JDST', monthToFetch);
+  await StocksService.fetchHistoricalData(db, 'JDST', monthToFetch);
+  console.log('Fetching history: NUGT', monthToFetch);
+  await StocksService.fetchHistoricalData(db, 'NUGT', monthToFetch);
+});
 
 cron.schedule('*/1 * * * *', async () => {
   const db = app.get('db');
