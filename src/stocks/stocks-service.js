@@ -14,7 +14,7 @@ const StocksService = {
 
   async fetchTodaysData(db, stockSymbol) {
     const stockId = await this.getStockId(db, stockSymbol);
-    const finnhubUrl = `https://finnhub.io/api/v1/quote?symbol=${stockSymbol}&token=YOUR_API_KEY_HERE`;
+    const finnhubUrl = `https://finnhub.io/api/v1/quote?symbol=${stockSymbol}&token=ckja88pr01qq18o5nhb0ckja88pr01qq18o5nhbg`;
     await this.fetchRealTimeDataAndInsert(db, stockId, finnhubUrl);
   },
 
@@ -33,8 +33,13 @@ const StocksService = {
       v: volume,
     } = data;
 
-    // Generate a timestamp for the current time
-    const dateTime = new Date().toISOString();
+    const now = new Date();
+    const dateTime = `${now.getFullYear()}-${String(
+      now.getMonth() + 1
+    ).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(
+      now.getHours()
+    ).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
+
     console.log('inserting:', data, dateTime);
 
     // Just insert the new record
@@ -64,7 +69,6 @@ const StocksService = {
         'Last entry:',
         timeSeriesEntries[timeSeriesEntries.length - 1]
       );
-      console.log('dateTime:', timeSeriesEntries.dateTime);
     } else {
       console.log('No data to record');
     }
