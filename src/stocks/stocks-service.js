@@ -17,36 +17,36 @@ const StocksService = {
     const finnhubUrl = `https://finnhub.io/api/v1/quote?symbol=${stockSymbol}&token=YOUR_API_KEY_HERE`;
     await this.fetchRealTimeDataAndInsert(db, stockId, finnhubUrl);
   },
-  
+
   async fetchRealTimeDataAndInsert(db, stockId, url) {
     const response = await fetch(url);
     const data = await response.json();
-  
+
     console.log('Fetching real-time data for stockId:', stockId);
-  
+
     // Finnhub data keys: c = close, h = high, l = low, o = open, v = volume
-    const { c: closePrice, h: highPrice, l: lowPrice, o: openPrice, v: volume } = data;
-  
+    const {
+      c: closePrice,
+      h: highPrice,
+      l: lowPrice,
+      o: openPrice,
+      v: volume,
+    } = data;
+
     // Generate a timestamp for the current time
     const dateTime = new Date().toISOString();
-  
-    const existingRecord = await db('stockrealtime')
-      .where({ stock_id: stockId, date_time: dateTime })
-      .first();
-  
-    if (!existingRecord) {
-      await db('stockrealtime').insert({
-        stock_id: stockId,
-        date_time: dateTime,
-        closing_price: closePrice,
-        high_price: highPrice,
-        low_price: lowPrice,
-        volume: volume,
-        open_price: openPrice,
-      });
-    } else {
-      // Update the existing record if needed
-    }
+    console.log('inserting:', data, dateTime);
+
+    // Just insert the new record
+    await db('stockrealtime').insert({
+      stock_id: stockId,
+      date_time: dateTime,
+      closing_price: closePrice,
+      high_price: highPrice,
+      low_price: lowPrice,
+      volume: volume,
+      open_price: openPrice,
+    });
   },
 
   async fetchDataAndInsert(db, stockId, url) {
@@ -64,6 +64,7 @@ const StocksService = {
         'Last entry:',
         timeSeriesEntries[timeSeriesEntries.length - 1]
       );
+      console.log('dateTime:', timeSeriesEntries.dateTime);
     } else {
       console.log('No data to record');
     }
