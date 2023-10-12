@@ -37,10 +37,14 @@ const StocksService = {
       d: dailyChange,
       dp: dailyPercentChange,
       pc: previousClose,
-      t: timestamp,
     } = data;
 
-    const dateTime = new Date(timestamp * 1000).toISOString();
+    const now = new Date();
+    const dateTime = `${now.getFullYear()}-${String(
+      now.getMonth() + 1
+    ).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(
+      now.getHours()
+    ).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
 
     console.log('inserting:', stockId, data, dateTime);
 
