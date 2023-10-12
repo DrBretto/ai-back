@@ -43,32 +43,32 @@ app.use(function errorHandler(error, req, res) {
 });
 
 //Scheduler//////////////////////////////////////////////////////////////////
-// let currentYear = new Date().getFullYear();
-// let currentMonth = new Date().getMonth() + 1; // Months are 0-based in JS
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth() + 1; // Months are 0-based in JS
 
-// cron.schedule('*/5 * * * *', async () => {
-//   const db = app.get('db');
-//   const monthToFetch = `${currentYear}-${currentMonth
-//     .toString()
-//     .padStart(2, '0')}`;
-//   console.log('Fetching history: JDST', monthToFetch);
-//   await StocksService.fetchHistoricalData(db, 'JDST', monthToFetch);
-//   console.log('Fetching history: NUGT', monthToFetch);
-//   await StocksService.fetchHistoricalData(db, 'NUGT', monthToFetch);
+cron.schedule('*/5 * * * *', async () => {
+  const db = app.get('db');
+  const monthToFetch = `${currentYear}-${currentMonth
+    .toString()
+    .padStart(2, '0')}`;
+  console.log('Fetching history: JDST', monthToFetch);
+  await StocksService.fetchHistoricalData(db, 'JDST', monthToFetch);
+  console.log('Fetching history: NUGT', monthToFetch);
+  await StocksService.fetchHistoricalData(db, 'NUGT', monthToFetch);
 
-//   // Decrement month and handle year rollover
-//   if (currentMonth === 1) {
-//     currentYear--;
-//     currentMonth = 12;
-//   } else {
-//     currentMonth--;
-//   }
-// });
+  // Decrement month and handle year rollover
+  if (currentMonth === 1) {
+    currentYear--;
+    currentMonth = 12;
+  } else {
+    currentMonth--;
+  }
+});
 ////////////////////////////////////////////////////////////////////////////
 
 
 
-cron.schedule('*/15 * * * *', async () => {
+cron.schedule('*/1 * * * *', async () => {
   const db = app.get('db');
   console.log('Fetching recent data: JDST');
   await StocksService.fetchTodaysData(db, 'JDST');

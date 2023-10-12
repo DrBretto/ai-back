@@ -23,3 +23,14 @@ CREATE TABLE StockHistory (
     volume INT NOT NULL,
     UNIQUE(stock_id, date_time)
 );
+
+CREATE TABLE StockRealtime (
+    history_id SERIAL PRIMARY KEY,
+    stock_id INT REFERENCES Stocks(stock_id),
+    date_time TIMESTAMPTZ NOT NULL,
+    closing_price DECIMAL(10, 4) NOT NULL,
+    high_price DECIMAL(10, 4) NOT NULL,
+    low_price DECIMAL(10, 4) NOT NULL,
+    volume INT NOT NULL,
+    UNIQUE(stock_id, date_time)
+);
