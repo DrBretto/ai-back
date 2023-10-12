@@ -45,7 +45,7 @@ const StocksService = {
       now.getHours()
     ).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
 
-    console.log('inserting:', stockId, dateTime, data.closePrice);
+    console.log('inserting:', stockId, dateTime, data.c);
 
     try {
       await db('stockrealtime').insert({
@@ -103,7 +103,6 @@ const StocksService = {
             low_price: lowPrice,
             volume: volume,
           });
-          console.log('Successfully inserted into stockhistory');
         } catch (error) {
           console.error('DB Insert Error:', error);
         }
