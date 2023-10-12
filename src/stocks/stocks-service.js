@@ -42,16 +42,20 @@ const StocksService = {
 
     console.log('inserting:', data, dateTime);
 
-    // Just insert the new record
-    await db('stockrealtime').insert({
-      stock_id: stockId,
-      date_time: dateTime,
-      closing_price: closePrice,
-      high_price: highPrice,
-      low_price: lowPrice,
-      volume: volume,
-      open_price: openPrice,
-    });
+    try {
+      await db('stockrealtime').insert({
+        stock_id: stockId,
+        date_time: dateTime,
+        closing_price: closePrice,
+        high_price: highPrice,
+        low_price: lowPrice,
+        volume: volume,
+        open_price: openPrice,
+      });
+      console.log('Successfully inserted into DB');
+    } catch (error) {
+      console.error('DB Insert Error:', error);
+    }
   },
 
   async fetchDataAndInsert(db, stockId, url) {
