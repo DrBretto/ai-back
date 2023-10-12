@@ -4,14 +4,14 @@ const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const helmet = require('helmet');
+const cron = require('node-cron');
+
 const { NODE_ENV } = require('./config');
+
 const authRouter = require('./auth/auth-router');
 const usersRouter = require('./users/users-router');
 const stocksRouter = require('./stocks/stocks-router');
 const StocksService = require('./stocks/stocks-service');
-const cron = require('node-cron');
-
-const dataRouter = require('./data/data-router.js');
 
 const morganOption = NODE_ENV === 'production' ? 'tiny' : 'common';
 
@@ -23,7 +23,6 @@ app.use(cors());
 
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
-app.use('/api/data', dataRouter);
 app.use('/api/stocks', stocksRouter);
 
 app.get('/', (req, res) => {
