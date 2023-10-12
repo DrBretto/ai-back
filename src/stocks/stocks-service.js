@@ -105,16 +105,6 @@ const StocksService = {
             low_price: lowPrice,
             volume: volume,
           });
-          console.log(
-            'Successfullly Recorded',
-            timeSeriesEntries.length,
-            'historical entries for stockId:',
-            stockId,
-            'from',
-            firstEntryDate,
-            'to',
-            lastEntryDate
-          );
         } catch (error) {
           console.error('DB Insert Error:', error);
         }
