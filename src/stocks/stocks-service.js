@@ -26,8 +26,6 @@ const StocksService = {
     const response = await fetch(url);
     const data = await response.json();
 
-    console.log('Fetching real-time data for stockId:', stockId);
-
     const {
       c: closePrice,
       h: highPrice,
@@ -45,8 +43,6 @@ const StocksService = {
       now.getHours()
     ).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
 
-    console.log('inserting:', stockId, dateTime, data.c);
-
     try {
       await db('stockrealtime').insert({
         stock_id: stockId,
@@ -59,7 +55,12 @@ const StocksService = {
         daily_percent_change: dailyPercentChange,
         previous_close: previousClose,
       });
-      console.log('Successfully inserted into DB');
+      console.log(
+        'Successfully inserted realtime data:',
+        stockId,
+        dateTime,
+        data.c
+      );
     } catch (error) {
       console.error('DB Insert Error:', error);
     }
@@ -70,19 +71,20 @@ const StocksService = {
     const data = await response.json();
     const timeSeries = data['Time Series (1min)'];
 
-    console.log('Fetching data for stockId:', stockId);
-
     const timeSeriesEntries = Object.entries(timeSeries);
-    if (timeSeriesEntries.length > 0) {
-      console.log('Recording', timeSeriesEntries.length, 'entries');
-      console.log('First entry:', timeSeriesEntries[0]);
-      console.log(
-        'Last entry:',
-        timeSeriesEntries[timeSeriesEntries.length - 1]
-      );
-    } else {
-      console.log('No data to record');
-    }
+    const firstEntryDate = timeSeriesEntries[0][0].split(' ')[0];
+    const lastEntryDate =
+      timeSeriesEntries[timeSeriesEntries.length - 1][0].split(' ')[0];
+
+    console.log(
+      'recording data for',
+      stockId,
+      'from',
+      firstEntryDate,
+      'to',
+      lastEntryDate,
+      ':'
+    );
 
     for (const [dateTime, stockData] of Object.entries(timeSeries)) {
       const existingRecord = await db('stockhistory')
@@ -103,6 +105,16 @@ const StocksService = {
             low_price: lowPrice,
             volume: volume,
           });
+          console.log(
+            'Successfullly Recorded',
+            timeSeriesEntries.length,
+            'historical entries for stockId:',
+            stockId,
+            'from',
+            firstEntryDate,
+            'to',
+            lastEntryDate
+          );
         } catch (error) {
           console.error('DB Insert Error:', error);
         }
