@@ -44,7 +44,7 @@ app.use(function errorHandler(error, req, res) {
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth() + 1; // Months are 0-based in JS
 
-//Scheduler//////////////////////////////////////////////////////////////////
+//Backlog Scheduler//////////////////////////////////////////////////////////////////
 cron.schedule('*/5 * * * *', async () => {
   const db = app.get('db');
   const monthToFetch = `${currentYear}-${currentMonth
