@@ -96,18 +96,15 @@ const StocksService = {
         const highPrice = stockData['2. high'];
         const lowPrice = stockData['3. low'];
         const volume = stockData['5. volume'];
-        try {
-          await db('stockhistory').insert({
-            stock_id: stockId,
-            date_time: dateTime,
-            closing_price: closePrice,
-            high_price: highPrice,
-            low_price: lowPrice,
-            volume: volume,
-          });
-        } catch (error) {
-          console.error('DB Insert Error:', error);
-        }
+
+        await db('stockhistory').insert({
+          stock_id: stockId,
+          date_time: dateTime,
+          closing_price: closePrice,
+          high_price: highPrice,
+          low_price: lowPrice,
+          volume: volume,
+        });
       }
     }
     console.log(
