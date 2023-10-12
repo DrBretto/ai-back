@@ -24,33 +24,38 @@ const StocksService = {
 
     console.log('Fetching real-time data for stockId:', stockId);
 
-    // Finnhub data keys: c = close, h = high, l = low, o = open, v = volume
-    const {
-      c: closePrice,
-      h: highPrice,
-      l: lowPrice,
-      o: openPrice,
-      v: volume,
-    } = data;
+// Finnhub data keys: c = close, h = high, l = low, o = open, d = daily change, dp = daily percent change, pc = previous close, t = timestamp
+const {
+  c: closePrice,
+  h: highPrice,
+  l: lowPrice,
+  o: openPrice,
+  d: dailyChange,
+  dp: dailyPercentChange,
+  pc: previousClose,
+  t: timestamp
+} = data;
 
     const now = new Date();
     const dateTime = `${now.getFullYear()}-${String(
       now.getMonth() + 1
     ).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(
       now.getHours()
-    ).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
+    ).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`
 
     console.log('inserting:', data, dateTime);
 
     try {
       await db('stockrealtime').insert({
         stock_id: stockId,
-        date_time: dateTime,
+        date_time: dateTime,  
         closing_price: closePrice,
         high_price: highPrice,
         low_price: lowPrice,
-        volume: volume,
-        open_price: openPrice,
+        opening_price: openPrice,
+        daily_change: dailyChange,
+        daily_percent_change: dailyPercentChange,
+        previous_close: previousClose,
       });
       console.log('Successfully inserted into DB');
     } catch (error) {

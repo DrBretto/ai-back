@@ -25,12 +25,15 @@ CREATE TABLE StockHistory (
 );
 
 CREATE TABLE StockRealtime (
-    history_id SERIAL PRIMARY KEY,
-    stock_id INT REFERENCES Stocks(stock_id),
-    date_time TIMESTAMPTZ NOT NULL,
-    closing_price DECIMAL(10, 4) NOT NULL,
-    high_price DECIMAL(10, 4) NOT NULL,
-    low_price DECIMAL(10, 4) NOT NULL,
-    volume INT NOT NULL,
+    history_id            SERIAL PRIMARY KEY,
+    stock_id              INT REFERENCES Stocks(stock_id),
+    date_time             TIMESTAMPTZ NOT NULL,
+    closing_price         DECIMAL(10, 4) NOT NULL,
+    high_price            DECIMAL(10, 4) NOT NULL,
+    low_price             DECIMAL(10, 4) NOT NULL,
+    opening_price         DECIMAL(10, 4) NOT NULL,
+    daily_change          DECIMAL(10, 4),
+    daily_percent_change  DECIMAL(10, 4),
+    previous_close        DECIMAL(10, 4),
     UNIQUE(stock_id, date_time)
 );
