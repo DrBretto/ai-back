@@ -120,6 +120,16 @@ const StocksService = {
         }
       }
     }
+    console.log(
+      'Successfullly Recorded',
+      timeSeriesEntries.length,
+      'historical entries for stockId:',
+      stockId,
+      'from',
+      firstEntryDate,
+      'to',
+      lastEntryDate
+    );
   },
 };
 
