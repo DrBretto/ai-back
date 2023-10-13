@@ -11,6 +11,8 @@ const { NODE_ENV } = require('./config');
 const authRouter = require('./auth/auth-router');
 const usersRouter = require('./users/users-router');
 const stocksRouter = require('./stocks/stocks-router');
+const sentimentRouter = require('./sentiment/sentiment-router');
+
 const StocksService = require('./stocks/stocks-service');
 
 const morganOption = NODE_ENV === 'production' ? 'tiny' : 'common';
@@ -24,6 +26,7 @@ app.use(cors());
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/stocks', stocksRouter);
+app.use('/api/sentiment', sentimentRouter);
 
 app.get('/', (req, res) => {
   res.send('Hello, world!!');
