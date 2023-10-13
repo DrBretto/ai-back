@@ -87,19 +87,33 @@ const SentimentService = {
 
   async performSentimentAnalysis() {
     try {
+      console.log("Starting performSentimentAnalysis...");
       const articles = await this.scrapeTradingView();
+      console.log("Scraped articles:", articles);
+      
       const analyzedArticles = [];
   
       for (const article of articles) {
+        console.log(`Fetching content for article: ${article.url}`);
         const content = await this.fetchArticleContent(article.url);
+        console.log("Fetched content:", content);
+  
         if (content) {
+          console.log("Getting sentiment from GPT...");
           const gptSentiment = await this.getSentimentFromGPT(content.content);
-          const sentimentValue = this.convertSentimentToValue(gptSentiment); // Assuming you have a function to convert sentiment to value
-          analyzedArticles.push({
-            date: content.adjDate,
-            sentimentBlurb: gptSentiment,
-            sentimentValue,
-          });
+          console.log("Received GPT sentiment:", gptSentiment);
+  
+          if (gptSentiment) {
+            console.log("Converting sentiment to value...");
+            const sentimentValue = this.convertSentimentToValue(gptSentiment); // Assuming you have a function to convert sentiment to value
+            console.log("Converted sentiment value:", sentimentValue);
+  
+            analyzedArticles.push({
+              date: content.adjDate,
+              sentimentBlurb: gptSentiment,
+              sentimentValue,
+            });
+          }
         }
       }
   
@@ -114,6 +128,7 @@ const SentimentService = {
       return [];
     }
   },
+  
 };
 
 module.exports = SentimentService;
