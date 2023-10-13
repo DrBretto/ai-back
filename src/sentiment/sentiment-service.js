@@ -46,7 +46,13 @@ const SentimentService = {
       const articleContent = $('[class*="content"]').text().trim();
 
       console.log('Fetched article content:', articleContent);
-      console.log('Fetched date:', date);
+
+      const dateString =
+        'News Flow/TradingView/XAU/USD: Gold Pops 1.2% Out of the Gate…Oct 9, 202310:48 UTC';
+      const dateMatch = dateString.match(/(\w+ \d+, \d+ \d+:\d+ UTC)/);
+      const adjDate = dateMatch ? dateMatch[1] : null;
+
+      console.log('Fetched date:', adjDate);
       console.log('Fetched title:', title);
 
       return { date, title, content: articleContent };
