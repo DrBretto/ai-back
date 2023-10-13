@@ -2,8 +2,8 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 
 const OPENAI_API_URL =
-  'https://api.openai.com/v1/engines/davinci-codex/completions';
-const API_KEY = process.env.OPENAI_API_KEY;
+  'https://api.openai.com/v1/engines/davinci-codex-v4/completions';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 const SentimentService = {
   async scrapeTradingView() {
@@ -65,60 +65,56 @@ const SentimentService = {
     }
   },
 
-  async getSentimentFromGPT(articleContent) {
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${API_KEY}`,
+  async getSentimentFromGPT4(content) {
+    const apiKey = OPENAI_API_KEY;
+    const url = OPENAI_API_URL;
+
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
     };
 
-    const data = {
-      prompt: `Analyze the following article content for sentiment regarding the price of gold:\n\n${articleContent}`,
+    const body = {
+      prompt: `Analyze the following article content for sentiment:\n\n${content}`,
       max_tokens: 100,
     };
 
     try {
-      const response = await axios.post(OPENAI_API_URL, data, { headers });
+      console.log('Sending request to GPT-4 API...');
+      const response = await axios.post(url, body, config);
+      console.log('Received response from GPT-4:', response.data);
       return response.data.choices[0].text.trim();
     } catch (error) {
-      console.error('Error in getSentimentFromGPT:', error);
+      console.error('Error in getSentimentFromGPT4:', error);
       return null;
     }
   },
 
   async performSentimentAnalysis() {
     try {
-      console.log("Starting performSentimentAnalysis...");
+      console.log('Starting sentiment analysis...');
       const articles = await this.scrapeTradingView();
-      console.log("Scraped articles:", articles);
-      
       const analyzedArticles = [];
-  
+
       for (const article of articles) {
         console.log(`Fetching content for article: ${article.url}`);
         const content = await this.fetchArticleContent(article.url);
-        console.log("Fetched content:", content);
-  
         if (content) {
-          console.log("Getting sentiment from GPT...");
-          const gptSentiment = await this.getSentimentFromGPT(content.content);
-          console.log("Received GPT sentiment:", gptSentiment);
-  
-          if (gptSentiment) {
-            console.log("Converting sentiment to value...");
-            const sentimentValue = this.convertSentimentToValue(gptSentiment); // Assuming you have a function to convert sentiment to value
-            console.log("Converted sentiment value:", sentimentValue);
-  
-            analyzedArticles.push({
-              date: content.adjDate,
-              sentimentBlurb: gptSentiment,
-              sentimentValue,
-            });
-          }
+          console.log('Content fetched, analyzing sentiment...');
+          const gptSentiment = await this.getSentimentFromGPT4(content.content); // Note the change here to GPT4
+          const sentimentValue = this.convertSentimentToValue(gptSentiment);
+          analyzedArticles.push({
+            date: content.adjDate,
+            sentimentBlurb: gptSentiment,
+            sentimentValue,
+          });
         }
       }
-  
+
       console.log('Analyzed articles:', analyzedArticles);
-      return analyzedArticles.map(article => ({
+      return analyzedArticles.map((article) => ({
         date: article.date,
         sentimentBlurb: article.sentimentBlurb,
         sentimentValue: article.sentimentValue,
@@ -128,7 +124,6 @@ const SentimentService = {
       return [];
     }
   },
-  
 };
 
 module.exports = SentimentService;
