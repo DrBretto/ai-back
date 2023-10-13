@@ -89,12 +89,12 @@ const SentimentService = {
     try {
       const articles = await this.scrapeTradingView();
       const analyzedArticles = [];
-
+  
       for (const article of articles) {
         const content = await this.fetchArticleContent(article.url);
         if (content) {
           const gptSentiment = await this.getSentimentFromGPT(content.content);
-          const sentimentValue = this.convertSentimentToValue(gptSentiment);
+          const sentimentValue = this.convertSentimentToValue(gptSentiment); // Assuming you have a function to convert sentiment to value
           analyzedArticles.push({
             date: content.adjDate,
             sentimentBlurb: gptSentiment,
@@ -102,9 +102,13 @@ const SentimentService = {
           });
         }
       }
-
+  
       console.log('Analyzed articles:', analyzedArticles);
-      return analyzedArticles;
+      return analyzedArticles.map(article => ({
+        date: article.date,
+        sentimentBlurb: article.sentimentBlurb,
+        sentimentValue: article.sentimentValue,
+      }));
     } catch (error) {
       console.error('Error in performSentimentAnalysis:', error);
       return [];
