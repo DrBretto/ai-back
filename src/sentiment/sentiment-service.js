@@ -35,22 +35,27 @@ const SentimentService = {
     try {
       const { data } = await axios.get(url);
       const $ = cheerio.load(data);
-
+      
       // Get date from breadcrumbs
-      const date = $('[class*="breadcrumbs"]').text(); // Replace with actual partial class name
-
-      // Get entire article content
-      const articleContent = $('body').text(); // Replace with a more specific selector if available
-
+      const date = $('[class*="breadcrumbs"]').text().trim();
+      
+      // Get article title
+      const title = $('[class*="title"]').text().trim();
+      
+      // Get article content (replace with a more specific selector if available)
+      const articleContent = $('[class*="article"]').text().trim(); 
+      
       console.log('Fetched article content:', articleContent);
       console.log('Fetched date:', date);
-
-      return { date, content: articleContent };
+      console.log('Fetched title:', title);
+      
+      return { date, title, content: articleContent };
     } catch (error) {
       console.error('Error in fetchArticleContent:', error);
-      return '';
+      return null;
     }
   },
+  
 
   async performSentimentAnalysis() {
     try {
