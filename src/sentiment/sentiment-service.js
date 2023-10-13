@@ -1,7 +1,8 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
-const OPENAI_API_URL = 'https://api.openai.com/v1/engines/davinci-codex/completions';
+const OPENAI_API_URL =
+  'https://api.openai.com/v1/engines/davinci-codex/completions';
 const API_KEY = process.env.OPENAI_API_KEY;
 
 const SentimentService = {
@@ -67,12 +68,12 @@ const SentimentService = {
   async getSentimentFromGPT(articleContent) {
     const headers = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${API_KEY}`
+      'Authorization': `Bearer ${API_KEY}`,
     };
 
     const data = {
       prompt: `Analyze the following article content for sentiment regarding the price of gold:\n\n${articleContent}`,
-      max_tokens: 100
+      max_tokens: 100,
     };
 
     try {
@@ -87,25 +88,28 @@ const SentimentService = {
   async performSentimentAnalysis() {
     try {
       const articles = await this.scrapeTradingView();
-      const articleContents = [];
+      const analyzedArticles = [];
 
       for (const article of articles) {
         const content = await this.fetchArticleContent(article.url);
         if (content) {
           const gptSentiment = await this.getSentimentFromGPT(content.content);
-          articleContents.push({ title: article.title, content, gptSentiment });
+          const sentimentValue = this.convertSentimentToValue(gptSentiment);
+          analyzedArticles.push({
+            date: content.adjDate,
+            sentimentBlurb: gptSentiment,
+            sentimentValue,
+          });
         }
       }
 
-      console.log('Article contents with GPT sentiment:', articleContents);
-      return articleContents;
+      console.log('Analyzed articles:', analyzedArticles);
+      return analyzedArticles;
     } catch (error) {
       console.error('Error in performSentimentAnalysis:', error);
       return [];
     }
   },
-
-  
 };
 
 module.exports = SentimentService;
