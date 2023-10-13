@@ -115,7 +115,7 @@ const StocksService = {
       'from',
       firstEntryDate,
       'to',
-      lastEntryDate
+      lastEntryDate, "-----------------------"
     );
   },
 };
