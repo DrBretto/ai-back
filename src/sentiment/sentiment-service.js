@@ -118,7 +118,7 @@ const SentimentService = {
       let combinedContent = '';
       const sentimentSubject = subject === 'dollar' ? 'US Dollar' : subject;
       const sentimentScores = []; // Store sentiment scores for averaging
-  
+
       for (const article of articles) {
         console.log(`Fetching content for article: ${article.url}`);
         const content = await this.fetchArticleContent(article.url);
@@ -126,9 +126,9 @@ const SentimentService = {
           combinedContent += ' ' + content.content;
         }
       }
-  
+
       console.log('Combined content fetched, analyzing sentiment...');
-  
+
       // Run the sentiment score call 10 times and save the results
       for (let i = 0; i < 10; i++) {
         const sentimentScoreString = await this.getSentimentFromGPT(
@@ -140,14 +140,19 @@ const SentimentService = {
         const sentimentScore = sentimentScoreMatch
           ? parseFloat(sentimentScoreMatch[0])
           : NaN;
-  
+
         sentimentScores.push(sentimentScore);
       }
-  
+
       // Calculate the average sentiment score
       const averageSentimentScore =
-        sentimentScores.reduce((sum, score) => sum + score, 0) / sentimentScores.length;
-  
+        sentimentScores.reduce((sum, score) => sum + score, 0) /
+        sentimentScores.length;
+
+      // Calculate the low and high sentiment scores
+      const lowSentimentScore = Math.min(...sentimentScores);
+      const highSentimentScore = Math.max(...sentimentScores);
+
       const summary = await this.getSentimentFromGPT(
         combinedContent,
         'summarize',
@@ -158,14 +163,18 @@ const SentimentService = {
         'sentimentWords',
         sentimentSubject
       );
-  
+
       const analyzedArticle = {
         date: 'Date not found', // Since it's a combination of articles
         summary: summary,
         sentimentWords: sentimentWords,
-        sentimentScore: averageSentimentScore.toFixed(4), // Round to 4 decimal places
+        sentimentBlurb: {
+          low: lowSentimentScore.toFixed(4), // Round to 4 decimal places
+          high: highSentimentScore.toFixed(4), // Round to 4 decimal places
+          average: averageSentimentScore.toFixed(4), // Round to 4 decimal places
+        },
       };
-  
+
       console.log('Analyzed article:', analyzedArticle);
       return analyzedArticle;
     } catch (error) {
@@ -173,7 +182,6 @@ const SentimentService = {
       return null;
     }
   },
-  
 };
 
 module.exports = SentimentService;
