@@ -66,11 +66,11 @@ const SentimentService = {
         userPrompt = `Summarize the following news article in one sentence:\n\n${content}`;
         break;
       case 'sentimentWords':
-        userPrompt = `Provide a short sentiment analysis in words for the following news article:\n\n${content}`;
+        userPrompt = `Provide a short sentiment analysis on the strength of ${subject} in words for the following news article:\n\n${content}`;
         break;
       case 'sentimentScore':
-        userPrompt = `Provide a sentiment score for the following news article as a float between -1 and 1, rounded to 4 decimal places:\n\n${content}`;
-         break;
+        userPrompt = `Provide a sentiment score for the immediate future of ${subject} the following news article as a float between -1 and 1, rounded to 4 decimal places:\n\n${content}`;
+        break;
       default:
         console.error('Invalid analysis type');
         return null;
@@ -111,9 +111,9 @@ const SentimentService = {
     }
   },
 
-  async performSentimentAnalysis(subject = 'the news article') {
+  async performSentimentAnalysis(subject) {
     try {
-      console.log('Starting sentiment analysis...');
+      console.log(`Starting sentiment analysis for ${subject}...`);
       const articles = await this.scrapeTradingView(subject);
       const analyzedArticles = [];
 
@@ -125,25 +125,28 @@ const SentimentService = {
 
           const summary = await this.getSentimentFromGPT(
             content.content,
-            'summarize',
-            subject
+            'summarize'
           );
           const sentimentWords = await this.getSentimentFromGPT(
             content.content,
-            'sentimentWords',
-            subject
+            'sentimentWords'
           );
-          const sentimentScore = await this.getSentimentFromGPT(
+
+          // Get sentiment score and extract the numerical value
+          const sentimentScoreString = await this.getSentimentFromGPT(
             content.content,
-            'sentimentScore',
-            subject
+            'sentimentScore'
           );
+          const sentimentScoreMatch = sentimentScoreString.match(/-?\d+\.\d+/);
+          const sentimentScore = sentimentScoreMatch
+            ? parseFloat(sentimentScoreMatch[0]).toFixed(4)
+            : 'NaN';
 
           analyzedArticles.push({
             date: content.adjDate,
             summary: summary,
             sentimentWords: sentimentWords,
-            sentimentScore: parseFloat(sentimentScore).toFixed(4), // Convert to float and keep 4 decimal places
+            sentimentScore: sentimentScore,
           });
         }
       }
