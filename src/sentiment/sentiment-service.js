@@ -4,6 +4,31 @@ const cheerio = require('cheerio');
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
+// Function to validate and parse sentiment scores
+const validateSentimentScore = (sentimentScoreString) => {
+  const sentimentScoreMatch = sentimentScoreString.match(/-?\d+\.\d+/);
+  return sentimentScoreMatch ? parseFloat(sentimentScoreMatch[0]) : NaN;
+};
+
+// Function to calculate average, low, and high scores
+const calculateScores = (sentimentScores) => {
+  const average =
+    sentimentScores.reduce((sum, score) => sum + score, 0) /
+    sentimentScores.length;
+  const low = Math.min(...sentimentScores);
+  const high = Math.max(...sentimentScores);
+  return {
+    average: average.toFixed(4),
+    low: low.toFixed(4),
+    high: high.toFixed(4),
+  };
+};
+
+// Function to handle error logging
+const logError = (error, message) => {
+  console.error(`${message}:`, error);
+};
+
 const SentimentService = {
   async scrapeTradingView(subject) {
     try {
@@ -111,8 +136,6 @@ const SentimentService = {
     }
   },
 
-  // ... (other parts of the code remain unchanged)
-
   async performSentimentAnalysis(subject) {
     try {
       console.log(`Starting sentiment analysis for ${subject}...`);
@@ -121,6 +144,7 @@ const SentimentService = {
       const sentimentSubject = subject === 'dollar' ? 'US Dollar' : subject;
       const sentimentScores = [];
 
+      // Combine the content of all fetched articles
       for (const article of articles) {
         console.log(`Fetching content for article: ${article.url}`);
         const content = await this.fetchArticleContent(article.url);
@@ -143,24 +167,15 @@ const SentimentService = {
           'sentimentScore',
           sentimentSubject
         );
-        const sentimentScoreMatch = sentimentScoreString.match(/-?\d+\.\d+/);
-        const sentimentScore = sentimentScoreMatch
-          ? parseFloat(sentimentScoreMatch[0])
-          : NaN;
+        const sentimentScore = validateSentimentScore(sentimentScoreString);
 
         if (!isNaN(sentimentScore)) {
           sentimentScores.push(sentimentScore);
         }
       }
 
-      // Calculate the average sentiment score
-      const averageSentimentScore =
-        sentimentScores.reduce((sum, score) => sum + score, 0) /
-        sentimentScores.length;
-
-      // Calculate the low and high sentiment scores
-      const lowSentimentScore = Math.min(...sentimentScores);
-      const highSentimentScore = Math.max(...sentimentScores);
+      // Calculate the average, low, and high sentiment scores
+      const scores = calculateScores(sentimentScores);
 
       const sentimentWords = await this.getSentimentFromGPT(
         summary,
@@ -171,17 +186,13 @@ const SentimentService = {
       const analyzedArticle = {
         summary: summary,
         sentimentWords: sentimentWords,
-        sentimentScores: {
-          low: lowSentimentScore.toFixed(4),
-          high: highSentimentScore.toFixed(4),
-          average: averageSentimentScore.toFixed(4),
-        },
+        sentimentScores: scores,
       };
 
       console.log('Analyzed article:', analyzedArticle);
       return analyzedArticle;
     } catch (error) {
-      console.error('Error in performSentimentAnalysis:', error);
+      logError(error, 'Error in performSentimentAnalysis');
       return null;
     }
   },
