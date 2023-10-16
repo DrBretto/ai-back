@@ -5,7 +5,7 @@ const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 const SentimentService = {
-  async scrapeTradingView() {
+  async scrapeTradingView(subject) {
     try {
       const url = 'https://www.tradingview.com/news/';
       const response = await axios.get(url);
@@ -15,10 +15,7 @@ const SentimentService = {
       $('a[href^="/news/"]').each((index, element) => {
         const articleUrl = $(element).attr('href');
         const articleTitle = $(element).text();
-        if (
-          articleTitle.toLowerCase().includes('gold') ||
-          articleTitle.toLowerCase().includes('us dollar')
-        ) {
+        if (articleTitle.toLowerCase().includes(subject)) {
           articles.push({
             url: `https://www.tradingview.com${articleUrl}`,
             title: articleTitle,
@@ -117,7 +114,7 @@ const SentimentService = {
   async performSentimentAnalysis(subject = 'the news article') {
     try {
       console.log('Starting sentiment analysis...');
-      const articles = await this.scrapeTradingView();
+      const articles = await this.scrapeTradingView(subject);
       const analyzedArticles = [];
 
       for (const article of articles) {
