@@ -117,7 +117,8 @@ const SentimentService = {
       const articles = await this.scrapeTradingView(subject);
       let combinedContent = '';
       const sentimentSubject = subject === 'dollar' ? 'US Dollar' : subject;
-
+      const sentimentScores = []; // Store sentiment scores for averaging
+  
       for (const article of articles) {
         console.log(`Fetching content for article: ${article.url}`);
         const content = await this.fetchArticleContent(article.url);
@@ -125,9 +126,28 @@ const SentimentService = {
           combinedContent += ' ' + content.content;
         }
       }
-
+  
       console.log('Combined content fetched, analyzing sentiment...');
-
+  
+      // Run the sentiment score call 10 times and save the results
+      for (let i = 0; i < 10; i++) {
+        const sentimentScoreString = await this.getSentimentFromGPT(
+          combinedContent,
+          'sentimentScore',
+          sentimentSubject
+        );
+        const sentimentScoreMatch = sentimentScoreString.match(/-?\d+\.\d+/);
+        const sentimentScore = sentimentScoreMatch
+          ? parseFloat(sentimentScoreMatch[0])
+          : NaN;
+  
+        sentimentScores.push(sentimentScore);
+      }
+  
+      // Calculate the average sentiment score
+      const averageSentimentScore =
+        sentimentScores.reduce((sum, score) => sum + score, 0) / sentimentScores.length;
+  
       const summary = await this.getSentimentFromGPT(
         combinedContent,
         'summarize',
@@ -138,25 +158,14 @@ const SentimentService = {
         'sentimentWords',
         sentimentSubject
       );
-
-      // Get sentiment score and extract the numerical value
-      const sentimentScoreString = await this.getSentimentFromGPT(
-        combinedContent,
-        'sentimentScore',
-        sentimentSubject
-      );
-      const sentimentScoreMatch = sentimentScoreString.match(/-?\d+\.\d+/);
-      const sentimentScore = sentimentScoreMatch
-        ? parseFloat(sentimentScoreMatch[0]).toFixed(4)
-        : 'NaN';
-
+  
       const analyzedArticle = {
         date: 'Date not found', // Since it's a combination of articles
         summary: summary,
         sentimentWords: sentimentWords,
-        sentimentScore: sentimentScore,
+        sentimentScore: averageSentimentScore.toFixed(4), // Round to 4 decimal places
       };
-
+  
       console.log('Analyzed article:', analyzedArticle);
       return analyzedArticle;
     } catch (error) {
@@ -164,6 +173,7 @@ const SentimentService = {
       return null;
     }
   },
+  
 };
 
 module.exports = SentimentService;
