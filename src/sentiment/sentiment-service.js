@@ -116,7 +116,6 @@ const SentimentService = {
       console.log(`Starting sentiment analysis for ${subject}...`);
       const articles = await this.scrapeTradingView(subject);
       let combinedContent = '';
-
       const sentimentSubject = subject === 'dollar' ? 'US Dollar' : subject;
 
       for (const article of articles) {
@@ -127,7 +126,7 @@ const SentimentService = {
         }
       }
 
-      console.log('All content fetched, analyzing sentiment...');
+      console.log('Combined content fetched, analyzing sentiment...');
 
       const summary = await this.getSentimentFromGPT(
         combinedContent,
@@ -152,7 +151,7 @@ const SentimentService = {
         : 'NaN';
 
       const analyzedArticle = {
-        date: 'Date not found', // You can adjust this later
+        date: 'Date not found', // Since it's a combination of articles
         summary: summary,
         sentimentWords: sentimentWords,
         sentimentScore: sentimentScore,
@@ -162,7 +161,7 @@ const SentimentService = {
       return analyzedArticle;
     } catch (error) {
       console.error('Error in performSentimentAnalysis:', error);
-      return [];
+      return null;
     }
   },
 };
