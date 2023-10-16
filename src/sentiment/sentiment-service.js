@@ -96,7 +96,7 @@ const SentimentService = {
         userPrompt = `Give a brief one to three sentence sentiment analysis, describing the strength of ${subject}, based on the following news articles:\n\n${content}`;
         break;
       case 'sentimentScore':
-        userPrompt = `Please calculate and provide a sentiment score, representing the strength of ${subject}, for the following news article. The score should be a float between -1 and 1, rounded to 4 decimal places. A score of -1 represents extremely negative sentiment towards ${subject}, a score of 1 represents extremely positive sentiment towards ${subject}, and a score of 0 represents neutral sentiment towards ${subject}:\n\n${content}`;
+        userPrompt = `Please quantize this sentiment analysis. The score should be a float between -1 and 1 where 1 is extremely positive and -1 is extremly negative and 0 is neutral:\n\n${content}`;
         break;
       default:
         console.error('Invalid analysis type');
@@ -162,10 +162,16 @@ const SentimentService = {
         sentimentSubject
       );
 
+      const sentimentWords = await this.getSentimentFromGPT(
+        summary,
+        'sentimentWords',
+        sentimentSubject
+      );
+
       // Use the summary for sentiment analysis
       for (let i = 0; i < 10; i++) {
         const sentimentScoreString = await this.getSentimentFromGPT(
-          summary,
+          sentimentWords,
           'sentimentScore',
           sentimentSubject
         );
@@ -178,12 +184,6 @@ const SentimentService = {
 
       // Calculate the average, low, and high sentiment scores
       const scores = calculateScores(sentimentScores);
-
-      const sentimentWords = await this.getSentimentFromGPT(
-        summary,
-        'sentimentWords',
-        sentimentSubject
-      );
 
       const analyzedArticle = {
         summary: summary,
