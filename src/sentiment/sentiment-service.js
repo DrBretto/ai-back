@@ -12,6 +12,8 @@ const validateSentimentScore = (sentimentScoreString) => {
 
 // Function to calculate average, low, and high scores
 const calculateScores = (sentimentScores) => {
+  console.log(`Fetched sentiment score: ${sentimentScores}`);
+  
   const average =
     sentimentScores.reduce((sum, score) => sum + score, 0) /
     sentimentScores.length;
