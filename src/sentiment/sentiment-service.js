@@ -39,13 +39,8 @@ const SentimentService = {
       const { data } = await axios.get(url);
       const $ = cheerio.load(data);
 
-      // Get date from breadcrumbs
       const date = $('[class*="breadcrumbs"]').text().trim();
-
-      // Get article title
       const title = $('[class*="title"]').text().trim();
-
-      // Get article content (replace with a more specific selector if available)
       const articleContent = $('div[class*="body-"]').text().trim();
 
       console.log('Fetched article content:', articleContent);
@@ -142,7 +137,6 @@ const SentimentService = {
             content.content,
             'sentimentScore'
           );
-
           analyzedArticles.push({
             date: content.adjDate,
             summary: summary,
@@ -155,8 +149,8 @@ const SentimentService = {
       console.log('Analyzed articles:', analyzedArticles);
       return analyzedArticles.map((article) => ({
         date: article.date,
-        sentimentBlurb: article.sentimentBlurb,
-        sentimentValue: article.sentimentValue,
+        sentimentBlurb: article.sentimentWords,
+        sentimentValue: article.sentimentScore,
       }));
     } catch (error) {
       console.error('Error in performSentimentAnalysis:', error);
