@@ -115,7 +115,7 @@ const SentimentService = {
     try {
       console.log(`Starting sentiment analysis for ${subject}...`);
       const articles = await this.scrapeTradingView(subject);
-      const analyzedArticles = [];
+      let combinedContent = '';
 
       const sentimentSubject = subject === 'dollar' ? 'US Dollar' : subject;
 
@@ -123,41 +123,43 @@ const SentimentService = {
         console.log(`Fetching content for article: ${article.url}`);
         const content = await this.fetchArticleContent(article.url);
         if (content) {
-          console.log('Content fetched, analyzing sentiment...');
-
-          const summary = await this.getSentimentFromGPT(
-            content.content,
-            'summarize',
-            sentimentSubject
-          );
-          const sentimentWords = await this.getSentimentFromGPT(
-            content.content,
-            'sentimentWords',
-            sentimentSubject
-          );
-
-          // Get sentiment score and extract the numerical value
-          const sentimentScoreString = await this.getSentimentFromGPT(
-            content.content,
-            'sentimentScore',
-            sentimentSubject
-          );
-          const sentimentScoreMatch = sentimentScoreString.match(/-?\d+\.\d+/);
-          const sentimentScore = sentimentScoreMatch
-            ? parseFloat(sentimentScoreMatch[0]).toFixed(4)
-            : 'NaN';
-
-          analyzedArticles.push({
-            date: content.adjDate,
-            summary: summary,
-            sentimentWords: sentimentWords,
-            sentimentScore: sentimentScore,
-          });
+          combinedContent += ' ' + content.content;
         }
       }
 
-      console.log('Analyzed articles:', analyzedArticles);
-      return analyzedArticles;
+      console.log('All content fetched, analyzing sentiment...');
+
+      const summary = await this.getSentimentFromGPT(
+        combinedContent,
+        'summarize',
+        sentimentSubject
+      );
+      const sentimentWords = await this.getSentimentFromGPT(
+        combinedContent,
+        'sentimentWords',
+        sentimentSubject
+      );
+
+      // Get sentiment score and extract the numerical value
+      const sentimentScoreString = await this.getSentimentFromGPT(
+        combinedContent,
+        'sentimentScore',
+        sentimentSubject
+      );
+      const sentimentScoreMatch = sentimentScoreString.match(/-?\d+\.\d+/);
+      const sentimentScore = sentimentScoreMatch
+        ? parseFloat(sentimentScoreMatch[0]).toFixed(4)
+        : 'NaN';
+
+      const analyzedArticle = {
+        date: 'Date not found', // You can adjust this later
+        summary: summary,
+        sentimentWords: sentimentWords,
+        sentimentScore: sentimentScore,
+      };
+
+      console.log('Analyzed article:', analyzedArticle);
+      return analyzedArticle;
     } catch (error) {
       console.error('Error in performSentimentAnalysis:', error);
       return [];
