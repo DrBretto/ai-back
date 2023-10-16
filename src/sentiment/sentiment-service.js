@@ -93,7 +93,7 @@ const SentimentService = {
         userPrompt = `Please provide a concise one-paragraph summary of the following news articles:\n\n${content}`;
         break;
       case 'sentimentWords':
-        userPrompt = `Give a brief one to three sentence sentiment analysis, describing the strength of ${subject}, based on the following news articles:\n\n${content}`;
+        userPrompt = `Give a detailed sentiment analysis, describing the strength of ${subject}, based on the following news articles:\n\n${content}`;
         break;
       case 'sentimentScore':
         userPrompt = `Please quantize this sentiment analysis. The score should be a float between -1 and 1 where 1 is extremely positive and -1 is extremly negative and 0 is neutral:\n\n${content}`;
