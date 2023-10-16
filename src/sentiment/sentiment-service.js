@@ -130,7 +130,7 @@ const SentimentService = {
       console.log('Combined content fetched, analyzing sentiment...');
 
       // Run the sentiment score call 10 times and save the results
-      for (let i = 0; i < 25; i++) {
+      for (let i = 0; i < 10; i++) {
         const sentimentScoreString = await this.getSentimentFromGPT(
           combinedContent,
           'sentimentScore',
@@ -165,13 +165,13 @@ const SentimentService = {
       );
 
       const analyzedArticle = {
-        date: 'Date not found', // Since it's a combination of articles
+        date: 'Date not found',
         summary: summary,
         sentimentWords: sentimentWords,
         sentimentScores: {
-          low: lowSentimentScore.toFixed(4), // Round to 4 decimal places
-          high: highSentimentScore.toFixed(4), // Round to 4 decimal places
-          average: averageSentimentScore.toFixed(4), // Round to 4 decimal places
+          low: lowSentimentScore.toFixed(4),
+          high: highSentimentScore.toFixed(4),
+          average: averageSentimentScore.toFixed(4),
         },
       };
 
