@@ -63,13 +63,13 @@ const SentimentService = {
 
     switch (analysisType) {
       case 'summarize':
-        userPrompt = `Summarize the following news article in one sentence:\n\n${content}`;
+        userPrompt = `Please provide a concise one-sentence summary of the following news article:\n\n${content}`;
         break;
       case 'sentimentWords':
-        userPrompt = `Provide a short sentiment analysis from the perspective of the strength of ${subject} in words for the following news article:\n\n${content}`;
+        userPrompt = `Give a brief sentiment analysis, describing the strength of ${subject}, based on the following news articles:\n\n${content}`;
         break;
       case 'sentimentScore':
-        userPrompt = `Provide a sentiment score from the perspective of the strength of ${subject} the following news article as a float between -1 and 1, rounded to 4 decimal places:\n\n${content}`;
+        userPrompt = `Please calculate and provide a sentiment score, representing the strength of ${subject}, for the following news article. The score should be a float between -1 and 1, rounded to 4 decimal places:\n\n${content}`;
         break;
       default:
         console.error('Invalid analysis type');
