@@ -64,9 +64,25 @@ const SentimentService = {
     }
   },
 
-  async getSentimentFromGPT4(content) {
+  async getSentimentFromGPT(content, analysisType) {
     const apiKey = OPENAI_API_KEY;
     const url = OPENAI_API_URL;
+    let userPrompt = '';
+
+    switch (analysisType) {
+      case 'summarize':
+        userPrompt = `Summarize the following news article in one sentence:\n\n${content}`;
+        break;
+      case 'sentimentWords':
+        userPrompt = `Provide a short sentiment analysis in words for the following news article:\n\n${content}`;
+        break;
+      case 'sentimentScore':
+        userPrompt = `Provide a sentiment score ranging from -1 to 1 for the following news article:\n\n${content}`;
+        break;
+      default:
+        console.error('Invalid analysis type');
+        return null;
+    }
 
     const config = {
       headers: {
@@ -76,16 +92,15 @@ const SentimentService = {
     };
 
     const body = {
-      model: 'gpt-3.5-turbo', // specify the model name
+      model: 'gpt-3.5-turbo',
       messages: [
         {
           role: 'system',
-          content:
-            'You are a financial analyst specialized in commodities, with a focus on predicting gold prices.',
+          content: 'You are a financial analyst specialized in commodities.',
         },
         {
           role: 'user',
-          content: `Analyze the following news article and provide a market outlook for gold. Also, provide a sentiment score ranging from -1 to 1. A score of -1 indicates a bearish outlook with a significant expected decline in gold prices, a score of 1 indicates a bullish outlook with a significant expected increase, and a score of 0 indicates a neutral outlook with no significant change expected:\n\n${content}`,
+          content: userPrompt,
         },
       ],
     };
@@ -94,16 +109,12 @@ const SentimentService = {
       console.log('Sending request to GPT-3.5 Turbo API...');
       const response = await axios.post(url, body, config);
       console.log('Received response from GPT-3.5 Turbo:', response.data);
-
-      const responseText = response.data.choices[0].message.content.trim();
-      // Extract the sentiment score from the response text
-      const sentimentScore = parseFloat(
-        responseText.match(/Sentiment Score: ([-+]?[0-9]*\.?[0-9]+)/)[1]
-      );
-
-      return { responseText, sentimentScore }; // Return both the text and the score
+      return response.data.choices[0].message.content.trim();
     } catch (error) {
-      console.error('Error in getSentimentFromGPT4:', error);
+      console.error(
+        `Error in getSentimentFromGPT4 for ${analysisType}:`,
+        error
+      );
       return null;
     }
   },
@@ -119,12 +130,24 @@ const SentimentService = {
         const content = await this.fetchArticleContent(article.url);
         if (content) {
           console.log('Content fetched, analyzing sentiment...');
-          const gptSentiment = await this.getSentimentFromGPT4(content.content); // Note the change here to GPT4
-          const sentimentValue = this.convertSentimentToValue(gptSentiment);
+          const summary = await this.getSentimentFromGPT(
+            content.content,
+            'summarize'
+          );
+          const sentimentWords = await this.getSentimentFromGPT(
+            content.content,
+            'sentimentWords'
+          );
+          const sentimentScore = await this.getSentimentFromGPT(
+            content.content,
+            'sentimentScore'
+          );
+
           analyzedArticles.push({
             date: content.adjDate,
-            sentimentBlurb: gptSentiment,
-            sentimentValue,
+            summary: summary,
+            sentimentWords: sentimentWords,
+            sentimentScore: sentimentScore,
           });
         }
       }
