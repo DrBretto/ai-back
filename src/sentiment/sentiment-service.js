@@ -59,7 +59,7 @@ const SentimentService = {
     }
   },
 
-  async getSentimentFromGPT(content, analysisType) {
+  async getSentimentFromGPT(content, analysisType, subject) {
     const apiKey = OPENAI_API_KEY;
     const url = OPENAI_API_URL;
     let userPrompt = '';
@@ -72,7 +72,7 @@ const SentimentService = {
         userPrompt = `Provide a short sentiment analysis in words for the following news article:\n\n${content}`;
         break;
       case 'sentimentScore':
-        userPrompt = `Provide a sentiment score ranging from -1 to 1 for the following news article:\n\n${content}`;
+        userPrompt = `Provide a sentiment score as a float ranging from -1 to 1 with 4 decimal places for the following ${subject}:\n\n${content}`;
         break;
       default:
         console.error('Invalid analysis type');
@@ -114,7 +114,7 @@ const SentimentService = {
     }
   },
 
-  async performSentimentAnalysis() {
+  async performSentimentAnalysis(subject = 'the news article') {
     try {
       console.log('Starting sentiment analysis...');
       const articles = await this.scrapeTradingView();
@@ -125,33 +125,34 @@ const SentimentService = {
         const content = await this.fetchArticleContent(article.url);
         if (content) {
           console.log('Content fetched, analyzing sentiment...');
+
           const summary = await this.getSentimentFromGPT(
             content.content,
-            'summarize'
+            'summarize',
+            subject
           );
           const sentimentWords = await this.getSentimentFromGPT(
             content.content,
-            'sentimentWords'
+            'sentimentWords',
+            subject
           );
           const sentimentScore = await this.getSentimentFromGPT(
             content.content,
-            'sentimentScore'
+            'sentimentScore',
+            subject
           );
+
           analyzedArticles.push({
             date: content.adjDate,
             summary: summary,
             sentimentWords: sentimentWords,
-            sentimentScore: sentimentScore,
+            sentimentScore: parseFloat(sentimentScore).toFixed(4), // Convert to float and keep 4 decimal places
           });
         }
       }
 
       console.log('Analyzed articles:', analyzedArticles);
-      return analyzedArticles.map((article) => ({
-        date: article.date,
-        sentimentBlurb: article.sentimentWords,
-        sentimentValue: article.sentimentScore,
-      }));
+      return analyzedArticles;
     } catch (error) {
       console.error('Error in performSentimentAnalysis:', error);
       return [];
