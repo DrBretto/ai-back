@@ -1,8 +1,7 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
-const OPENAI_API_URL =
-  'https://api.openai.com/v1/engines/davinci-codex-v4/completions';
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 const SentimentService = {
@@ -77,15 +76,25 @@ const SentimentService = {
     };
 
     const body = {
-      prompt: `Analyze the following article content for sentiment:\n\n${content}`,
-      max_tokens: 100,
+      model: 'gpt-3.5-turbo', // specify the model name
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You are a financial analyst specialized in predicting gold prices based on news articles.',
+        },
+        {
+          role: 'user',
+          content: `Based on the following news article, provide a paragraph summarizing whether you think the price of Gold is likely to go up or down, and how confident you are in this prediction:\n\n${content}`,
+        },
+      ],
     };
 
     try {
-      console.log('Sending request to GPT-4 API...');
+      console.log('Sending request to GPT-3.5 Turbo API...');
       const response = await axios.post(url, body, config);
-      console.log('Received response from GPT-4:', response.data);
-      return response.data.choices[0].text.trim();
+      console.log('Received response from GPT-3.5 Turbo:', response.data);
+      return response.data.choices[0].message.content.trim(); // Note the change here
     } catch (error) {
       console.error('Error in getSentimentFromGPT4:', error);
       return null;
