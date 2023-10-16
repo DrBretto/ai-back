@@ -63,7 +63,7 @@ const SentimentService = {
 
     switch (analysisType) {
       case 'summarize':
-        userPrompt = `Please provide a concise one-sentence summary of the following news article:\n\n${content}`;
+        userPrompt = `Please provide a concise one-paragraph summary of the following news articles:\n\n${content}`;
         break;
       case 'sentimentWords':
         userPrompt = `Give a brief one to three sentence sentiment analysis, describing the strength of ${subject}, based on the following news articles:\n\n${content}`;
@@ -111,13 +111,15 @@ const SentimentService = {
     }
   },
 
+  // ... (other parts of the code remain unchanged)
+
   async performSentimentAnalysis(subject) {
     try {
       console.log(`Starting sentiment analysis for ${subject}...`);
       const articles = await this.scrapeTradingView(subject);
       let combinedContent = '';
       const sentimentSubject = subject === 'dollar' ? 'US Dollar' : subject;
-      const sentimentScores = []; // Store sentiment scores for averaging
+      const sentimentScores = [];
 
       for (const article of articles) {
         console.log(`Fetching content for article: ${article.url}`);
@@ -127,12 +129,17 @@ const SentimentService = {
         }
       }
 
-      console.log('Combined content fetched, analyzing sentiment...');
+      // Get the summary first
+      const summary = await this.getSentimentFromGPT(
+        combinedContent,
+        'summarize',
+        sentimentSubject
+      );
 
-      // Run the sentiment score call 10 times and save the results
+      // Use the summary for sentiment analysis
       for (let i = 0; i < 10; i++) {
         const sentimentScoreString = await this.getSentimentFromGPT(
-          combinedContent,
+          summary,
           'sentimentScore',
           sentimentSubject
         );
@@ -141,7 +148,9 @@ const SentimentService = {
           ? parseFloat(sentimentScoreMatch[0])
           : NaN;
 
-        sentimentScores.push(sentimentScore);
+        if (!isNaN(sentimentScore)) {
+          sentimentScores.push(sentimentScore);
+        }
       }
 
       // Calculate the average sentiment score
@@ -153,19 +162,13 @@ const SentimentService = {
       const lowSentimentScore = Math.min(...sentimentScores);
       const highSentimentScore = Math.max(...sentimentScores);
 
-      const summary = await this.getSentimentFromGPT(
-        combinedContent,
-        'summarize',
-        sentimentSubject
-      );
       const sentimentWords = await this.getSentimentFromGPT(
-        combinedContent,
+        summary,
         'sentimentWords',
         sentimentSubject
       );
 
       const analyzedArticle = {
-        date: 'Date not found',
         summary: summary,
         sentimentWords: sentimentWords,
         sentimentScores: {
