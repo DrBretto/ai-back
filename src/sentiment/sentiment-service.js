@@ -66,10 +66,10 @@ const SentimentService = {
         userPrompt = `Summarize the following news article in one sentence:\n\n${content}`;
         break;
       case 'sentimentWords':
-        userPrompt = `Provide a short sentiment analysis on the strength of ${subject} in words for the following news article:\n\n${content}`;
+        userPrompt = `Provide a short sentiment analysis from the perspective of the strength of ${subject} in words for the following news article:\n\n${content}`;
         break;
       case 'sentimentScore':
-        userPrompt = `Provide a sentiment score for the immediate future of ${subject} the following news article as a float between -1 and 1, rounded to 4 decimal places:\n\n${content}`;
+        userPrompt = `Provide a sentiment score from the perspective of the strength of ${subject} the following news article as a float between -1 and 1, rounded to 4 decimal places:\n\n${content}`;
         break;
       default:
         console.error('Invalid analysis type');
@@ -117,6 +117,8 @@ const SentimentService = {
       const articles = await this.scrapeTradingView(subject);
       const analyzedArticles = [];
 
+      const sentimentSubject = subject === 'dollar' ? 'US Dollar' : subject;
+
       for (const article of articles) {
         console.log(`Fetching content for article: ${article.url}`);
         const content = await this.fetchArticleContent(article.url);
@@ -125,17 +127,20 @@ const SentimentService = {
 
           const summary = await this.getSentimentFromGPT(
             content.content,
-            'summarize'
+            'summarize',
+            sentimentSubject
           );
           const sentimentWords = await this.getSentimentFromGPT(
             content.content,
-            'sentimentWords'
+            'sentimentWords',
+            sentimentSubject
           );
 
           // Get sentiment score and extract the numerical value
           const sentimentScoreString = await this.getSentimentFromGPT(
             content.content,
-            'sentimentScore'
+            'sentimentScore',
+            sentimentSubject
           );
           const sentimentScoreMatch = sentimentScoreString.match(/-?\d+\.\d+/);
           const sentimentScore = sentimentScoreMatch
