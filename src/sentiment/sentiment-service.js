@@ -13,7 +13,7 @@ const validateSentimentScore = (sentimentScoreString) => {
 // Function to calculate average, low, and high scores
 const calculateScores = (sentimentScores) => {
   console.log(`Fetched sentiment score: ${sentimentScores}`);
-  
+
   const average =
     sentimentScores.reduce((sum, score) => sum + score, 0) /
     sentimentScores.length;
@@ -96,7 +96,7 @@ const SentimentService = {
         userPrompt = `Give a brief one to three sentence sentiment analysis, describing the strength of ${subject}, based on the following news articles:\n\n${content}`;
         break;
       case 'sentimentScore':
-        userPrompt = `Please calculate and provide a sentiment score, representing the strength of ${subject}, for the following news article. The score should be a float between -1 and 1, rounded to 4 decimal places:\n\n${content}`;
+        userPrompt = `Please calculate and provide a sentiment score, representing the strength of ${subject}, for the following news article. The score should be a float between -1 and 1, rounded to 4 decimal places. A score of -1 represents extremely negative sentiment towards ${subject}, a score of 1 represents extremely positive sentiment towards ${subject}, and a score of 0 represents neutral sentiment towards ${subject}:\n\n${content}`;
         break;
       default:
         console.error('Invalid analysis type');
