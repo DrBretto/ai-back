@@ -69,8 +69,8 @@ const SentimentService = {
         userPrompt = `Provide a short sentiment analysis in words for the following news article:\n\n${content}`;
         break;
       case 'sentimentScore':
-        userPrompt = `Provide a sentiment score as a float ranging from -1 to 1 with 4 decimal places for the following ${subject}:\n\n${content}`;
-        break;
+        userPrompt = `Provide a sentiment score for the following news article as a float between -1 and 1, rounded to 4 decimal places:\n\n${content}`;
+         break;
       default:
         console.error('Invalid analysis type');
         return null;
