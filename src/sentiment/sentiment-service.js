@@ -90,7 +90,7 @@ const SentimentService = {
 
     switch (analysisType) {
       case 'summarize':
-        userPrompt = `Please provide a concise one-paragraph summary of the following news articles:\n\n${content}`;
+        userPrompt = `Please provide a concise summary of anything related to ${subject} in the following block of news articles:\n\n${content}`;
         break;
       case 'sentimentWords':
         userPrompt = `Give a detailed sentiment analysis, describing the strength of ${subject}, based on the following news articles:\n\n${content}`;
