@@ -81,11 +81,11 @@ const SentimentService = {
         {
           role: 'system',
           content:
-            'You are a financial analyst specialized in predicting gold prices based on news articles.',
+            'You are a financial analyst specialized in commodities, with a focus on predicting gold prices.',
         },
         {
           role: 'user',
-          content: `Based on the following news article, provide a paragraph summarizing whether you think the price of Gold is likely to go up or down, and how confident you are in this prediction:\n\n${content}`,
+          content: `Analyze the following news article and provide a market outlook for gold. Also, provide a sentiment score ranging from -1 to 1. A score of -1 indicates a bearish outlook with a significant expected decline in gold prices, a score of 1 indicates a bullish outlook with a significant expected increase, and a score of 0 indicates a neutral outlook with no significant change expected:\n\n${content}`,
         },
       ],
     };
@@ -94,7 +94,14 @@ const SentimentService = {
       console.log('Sending request to GPT-3.5 Turbo API...');
       const response = await axios.post(url, body, config);
       console.log('Received response from GPT-3.5 Turbo:', response.data);
-      return response.data.choices[0].message.content.trim(); // Note the change here
+
+      const responseText = response.data.choices[0].message.content.trim();
+      // Extract the sentiment score from the response text
+      const sentimentScore = parseFloat(
+        responseText.match(/Sentiment Score: ([-+]?[0-9]*\.?[0-9]+)/)[1]
+      );
+
+      return { responseText, sentimentScore }; // Return both the text and the score
     } catch (error) {
       console.error('Error in getSentimentFromGPT4:', error);
       return null;
