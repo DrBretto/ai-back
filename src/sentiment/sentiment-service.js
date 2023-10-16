@@ -66,7 +66,7 @@ const SentimentService = {
         userPrompt = `Please provide a concise one-sentence summary of the following news article:\n\n${content}`;
         break;
       case 'sentimentWords':
-        userPrompt = `Give a brief sentiment analysis, describing the strength of ${subject}, based on the following news articles:\n\n${content}`;
+        userPrompt = `Give a brief one to three sentence sentiment analysis, describing the strength of ${subject}, based on the following news articles:\n\n${content}`;
         break;
       case 'sentimentScore':
         userPrompt = `Please calculate and provide a sentiment score, representing the strength of ${subject}, for the following news article. The score should be a float between -1 and 1, rounded to 4 decimal places:\n\n${content}`;
@@ -130,7 +130,7 @@ const SentimentService = {
       console.log('Combined content fetched, analyzing sentiment...');
 
       // Run the sentiment score call 10 times and save the results
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 25; i++) {
         const sentimentScoreString = await this.getSentimentFromGPT(
           combinedContent,
           'sentimentScore',
@@ -168,7 +168,7 @@ const SentimentService = {
         date: 'Date not found', // Since it's a combination of articles
         summary: summary,
         sentimentWords: sentimentWords,
-        sentimentBlurb: {
+        sentimentScores: {
           low: lowSentimentScore.toFixed(4), // Round to 4 decimal places
           high: highSentimentScore.toFixed(4), // Round to 4 decimal places
           average: averageSentimentScore.toFixed(4), // Round to 4 decimal places
