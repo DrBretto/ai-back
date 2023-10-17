@@ -62,8 +62,6 @@ CREATE TABLE sentiment_analysis (
   pull_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   subject_id INTEGER REFERENCES subjects(id),
   source_id INTEGER REFERENCES sources(id),
-  summary TEXT,
-  sentiment_blurb TEXT,
   tokenized_sentiment TEXT,
   average_score NUMERIC(6, 4),
   low_score NUMERIC(6, 4),

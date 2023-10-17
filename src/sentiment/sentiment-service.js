@@ -10,8 +10,6 @@ const validateSentimentScore = (sentimentScoreString) => {
 };
 
 const calculateScores = (sentimentScores) => {
-  console.log(`Fetched sentiment score: ${sentimentScores}`);
-
   const average =
     sentimentScores.reduce((sum, score) => sum + score, 0) /
     sentimentScores.length;
@@ -26,7 +24,7 @@ const calculateScores = (sentimentScores) => {
 
 // Function to handle error logging
 const logError = (error, message) => {
-  console.error(`${message}:`, error);
+  console.error(`${message}:`, error.code);
 };
 
 const SentimentService = {
@@ -51,7 +49,7 @@ const SentimentService = {
       console.log('Scraped articles:', articles);
       return articles;
     } catch (error) {
-      console.error('Error in scrapeTradingView:', error);
+      console.error('Error in scrapeTradingView:', error.code);
       return [];
     }
   },
@@ -65,7 +63,7 @@ const SentimentService = {
       const title = $('[class*="title"]').text().trim();
       const articleContent = $('div[class*="body-"]').text().trim();
 
-      console.log('Fetched article content:', articleContent);
+      console.log('Fetched article content');
 
       const dateRegex = /(\w+ \d+, \d+ \d+:\d+ UTC)/;
       const match = date.match(dateRegex);
@@ -76,7 +74,7 @@ const SentimentService = {
 
       return { adjDate, title, content: articleContent };
     } catch (error) {
-      console.error('Error in fetchArticleContent:', error);
+      console.error('Error in fetchArticleContent:', error.code);
       return null;
     }
   },
@@ -125,7 +123,7 @@ const SentimentService = {
     try {
       console.log('Sending request to GPT-3.5 Turbo API...');
       const response = await axios.post(url, body, config);
-      console.log('Received response from GPT-3.5 Turbo:', response.data);
+      console.log('Received response from GPT-3.5 Turbo:');
       return response.data.choices[0].message.content.trim();
     } catch (error) {
       console.error(
@@ -167,13 +165,10 @@ const SentimentService = {
         'Sending request for tokenized sentiment to GPT-3.5 Turbo API...'
       );
       const response = await axios.post(url, body, config);
-      console.log(
-        'Received tokenized sentiment from GPT-3.5 Turbo:',
-        response.data
-      );
+      console.log('Received tokenized sentiment from GPT-3.5 Turbo:');
       return response.data.choices[0].message.content.trim();
     } catch (error) {
-      console.error(`Error in getTokenizedSentimentFromGPT:`, error);
+      console.error(`Error in getTokenizedSentimentFromGPT:`, error.code);
       return null;
     }
   },
@@ -197,7 +192,7 @@ const SentimentService = {
 
       return newID;
     } catch (err) {
-      console.error('Error in getOrCreateSubjectID:', err);
+      console.error('Error in getOrCreateSubjectID:', err.code);
       return null;
     }
   },
@@ -213,12 +208,14 @@ const SentimentService = {
         return subjectRow.id;
       }
     } catch (err) {
-      console.error('Error in getSourceID:', err);
+      console.error('Error in getSourceID:', err.code);
       return null;
     }
   },
 
   async performSentimentAnalysis(db, subject, source) {
+    let totalTokensUsed = 0;
+
     try {
       const subjectID = await this.getOrCreateSubjectID(db, subject);
       const sourceID = await this.getSourceID(db, source);
@@ -250,12 +247,14 @@ const SentimentService = {
         'summarize',
         sentimentSubject
       );
+      totalTokensUsed += summary.data.usage.total_tokens;
 
       const sentimentWords = await this.getSentimentFromGPT(
         summary,
         'sentimentWords',
         sentimentSubject
       );
+      totalTokensUsed += summary.data.usage.total_tokens;
 
       const tokenizedSentiment = await this.getTokenizedSentimentFromGPT(
         sentimentWords,
@@ -269,6 +268,7 @@ const SentimentService = {
           'sentimentScore',
           sentimentSubject
         );
+        totalTokensUsed += sentimentScoreString.data.usage.total_tokens;
         const sentimentScore = validateSentimentScore(sentimentScoreString);
         console.log(`Sentiment score ${i}: ${sentimentScore}`);
         if (
@@ -285,6 +285,10 @@ const SentimentService = {
       // Calculate the average, low, and high sentiment scores
       const scores = calculateScores(sentimentScores);
 
+      console.log(
+        `Successfully analyzed ${subject} from ${source} using ${totalTokensUsed} tokens`
+      );
+
       const analyzedArticle = {
         summary: summary,
         sentimentWords: sentimentWords,
@@ -298,15 +302,12 @@ const SentimentService = {
         db,
         sourceID,
         subjectID,
-        summary,
-        sentimentWords,
         tokenizedSentiment,
         average,
         low,
         high
       );
 
-      console.log('Analyzed article:', analyzedArticle);
       return analyzedArticle;
     } catch (error) {
       logError(error, 'Error in performSentimentAnalysis');
@@ -318,27 +319,23 @@ const SentimentService = {
     db,
     sourceId,
     subjectId,
-    summary,
-    sentimentBlurb,
     tokenizedSentiment,
-    averageScore,
-    lowScore,
-    highScore
+    average,
+    low,
+    high
   ) {
     try {
       await db('sentiment_analysis').insert({
         subject_id: subjectId,
         source_id: sourceId,
-        summary: summary,
-        sentiment_blurb: sentimentBlurb,
         tokenized_sentiment: tokenizedSentiment,
-        average_score: averageScore,
-        low_score: lowScore,
-        high_score: highScore,
+        average_score: average,
+        low_score: low,
+        high_score: high,
       });
       console.log('Data inserted successfully.');
     } catch (err) {
-      console.error('Error inserting data:', err);
+      console.error('Error inserting data:', err.code);
     }
   },
 };
