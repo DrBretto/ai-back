@@ -218,8 +218,8 @@ const SentimentService = {
 
   async insertData(
     db,
-    source,
-    subject,
+    source_id,
+    subject_id,
     summary,
     sentimentBlurb,
     averageScore,
@@ -228,9 +228,9 @@ const SentimentService = {
   ) {
     try {
       await db('sentiment_analysis').insert({
-        subject,
-        source,
-        summary,
+        subject_id: subject_id,
+        source_id: source_id,
+        summary: summary,
         sentiment_blurb: sentimentBlurb,
         average_score: averageScore,
         low_score: lowScore,
