@@ -209,7 +209,7 @@ const SentimentService = {
       );
 
       const tokenizedSentiment = await this.getTokenizedSentimentFromGPT(
-        analyzedArticle.sentimentWords,
+        sentimentWords,
         subject
       );
 
