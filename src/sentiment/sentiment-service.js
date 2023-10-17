@@ -136,6 +136,48 @@ const SentimentService = {
     }
   },
 
+  async getTokenizedSentimentFromGPT(content, subject) {
+    const apiKey = OPENAI_API_KEY;
+    const url = OPENAI_API_URL;
+    const userPrompt = `Identify key phrases or entities in the following sentiment analysis that are indicative of the strength of ${subject}:\n\n${content}`;
+
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+    };
+
+    const body = {
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a financial analyst specialized in commodities.',
+        },
+        {
+          role: 'user',
+          content: userPrompt,
+        },
+      ],
+    };
+
+    try {
+      console.log(
+        'Sending request for tokenized sentiment to GPT-3.5 Turbo API...'
+      );
+      const response = await axios.post(url, body, config);
+      console.log(
+        'Received tokenized sentiment from GPT-3.5 Turbo:',
+        response.data
+      );
+      return response.data.choices[0].message.content.trim();
+    } catch (error) {
+      console.error(`Error in getTokenizedSentimentFromGPT:`, error);
+      return null;
+    }
+  },
+
   async performSentimentAnalysis(db, subject) {
     try {
       console.log(`Starting sentiment analysis for ${subject}...`);
@@ -166,6 +208,11 @@ const SentimentService = {
         sentimentSubject
       );
 
+      const tokenizedSentiment = await this.getTokenizedSentimentFromGPT(
+        analyzedArticle.sentimentWords,
+        subject
+      );
+
       // Use the summary for sentiment analysis
       for (let i = 0; i < 10; i++) {
         const sentimentScoreString = await this.getSentimentFromGPT(
@@ -192,6 +239,7 @@ const SentimentService = {
       const analyzedArticle = {
         summary: summary,
         sentimentWords: sentimentWords,
+        tokenizedSentiment: tokenizedSentiment,
         sentimentScores: scores,
       };
 
@@ -203,6 +251,7 @@ const SentimentService = {
         subject,
         summary,
         sentimentWords,
+        tokenizedSentiment,
         average,
         low,
         high
@@ -222,6 +271,7 @@ const SentimentService = {
     subject_id,
     summary,
     sentimentBlurb,
+    tokenizedSentiment,
     averageScore,
     lowScore,
     highScore
@@ -232,6 +282,7 @@ const SentimentService = {
         source_id: source_id,
         summary: summary,
         sentiment_blurb: sentimentBlurb,
+        tokenizedSentiment: tokenizedSentiment,
         average_score: averageScore,
         low_score: lowScore,
         high_score: highScore,

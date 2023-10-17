@@ -64,6 +64,7 @@ CREATE TABLE sentiment_analysis (
   source_id INTEGER REFERENCES sources(id),
   summary TEXT,
   sentiment_blurb TEXT,
+  tokenized_sentiment TEXT,
   average_score NUMERIC(6, 4),
   low_score NUMERIC(6, 4),
   high_score NUMERIC(6, 4)
