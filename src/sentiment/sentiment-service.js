@@ -3,6 +3,7 @@ const cheerio = require('cheerio');
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+let totalTokensUsed = 0;
 
 const validateSentimentScore = (sentimentScoreString) => {
   const sentimentScoreMatch = sentimentScoreString.match(/-?\d+\.\d+/);
@@ -94,6 +95,9 @@ const SentimentService = {
       case 'sentimentScore':
         userPrompt = `Please quantize this sentiment analysis. The score should be a float between -1 and 1 where 1 is extremely positive and -1 is extremly negative and 0 is neutral:\n\n${content}`;
         break;
+      case 'tokenizeSentiment':
+        userPrompt = `Identify key phrases or entities in the following sentiment analysis that are indicative of the strength of ${subject}:\n\n${content}`;
+        break;
       default:
         console.error('Invalid analysis type');
         return null;
@@ -124,6 +128,8 @@ const SentimentService = {
       console.log('Sending request to GPT-3.5 Turbo API...');
       const response = await axios.post(url, body, config);
       console.log('Received response from GPT-3.5 Turbo:');
+      totalTokensUsed += response.data.usage.total_tokens;
+
       return response.data.choices[0].message.content.trim();
     } catch (error) {
       console.error(
@@ -134,44 +140,45 @@ const SentimentService = {
     }
   },
 
-  async getTokenizedSentimentFromGPT(content, subject) {
-    const apiKey = OPENAI_API_KEY;
-    const url = OPENAI_API_URL;
-    const userPrompt = `Identify key phrases or entities in the following sentiment analysis that are indicative of the strength of ${subject}:\n\n${content}`;
+  // async getTokenizedSentimentFromGPT(content, subject) {
+  //   const apiKey = OPENAI_API_KEY;
+  //   const url = OPENAI_API_URL;
+  //   const userPrompt = `Identify key phrases or entities in the following sentiment analysis that are indicative of the strength of ${subject}:\n\n${content}`;
 
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-    };
+  //   const config = {
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       'Authorization': `Bearer ${apiKey}`,
+  //     },
+  //   };
 
-    const body = {
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a financial analyst specialized in commodities.',
-        },
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ],
-    };
+  //   const body = {
+  //     model: 'gpt-3.5-turbo',
+  //     messages: [
+  //       {
+  //         role: 'system',
+  //         content: 'You are a financial analyst specialized in commodities.',
+  //       },
+  //       {
+  //         role: 'user',
+  //         content: userPrompt,
+  //       },
+  //     ],
+  //   };
 
-    try {
-      console.log(
-        'Sending request for tokenized sentiment to GPT-3.5 Turbo API...'
-      );
-      const response = await axios.post(url, body, config);
-      console.log('Received tokenized sentiment from GPT-3.5 Turbo:');
-      return response.data.choices[0].message.content.trim();
-    } catch (error) {
-      console.error(`Error in getTokenizedSentimentFromGPT:`, error.code);
-      return null;
-    }
-  },
+  //   try {
+  //     console.log(
+  //       'Sending request for tokenized sentiment to GPT-3.5 Turbo API...'
+  //     );
+  //     const response = await axios.post(url, body, config);
+  //     console.log('Received tokenized sentiment from GPT-3.5 Turbo:');
+  //     totalTokensUsed += response.data.usage.total_tokens;
+  //     return response.data.choices[0].message.content.trim();
+  //   } catch (error) {
+  //     console.error(`Error in getTokenizedSentimentFromGPT:`, error.code);
+  //     return null;
+  //   }
+  // },
 
   async getOrCreateSubjectID(db, subject) {
     try {
@@ -238,7 +245,7 @@ const SentimentService = {
   },
 
   async performSentimentAnalysis(db, subject, source) {
-    let totalTokensUsed = 0;
+    totalTokensUsed = 0;
 
     try {
       const subjectID = await this.getOrCreateSubjectID(db, subject);
@@ -273,7 +280,6 @@ const SentimentService = {
         'summarize',
         sentimentSubject
       );
-      totalTokensUsed += summary.data.usage.total_tokens;
 
       //get comprehendive sentiment analysis
       const sentimentWords = await this.getSentimentFromGPT(
@@ -281,12 +287,12 @@ const SentimentService = {
         'sentimentWords',
         sentimentSubject
       );
-      totalTokensUsed += summary.data.usage.total_tokens;
 
       //strip noise form sentiment analysis
-      const tokenizedSentiment = await this.getTokenizedSentimentFromGPT(
+      const tokenizedSentiment = await this.getSentimentFromGPT(
         sentimentWords,
-        subject
+        'tokenizedSentiment',
+        sentimentWords
       );
 
       //Quantize sentiment analysis
@@ -296,7 +302,6 @@ const SentimentService = {
           'sentimentScore',
           sentimentSubject
         );
-        totalTokensUsed += sentimentScoreString.data.usage.total_tokens;
         const sentimentScore = validateSentimentScore(sentimentScoreString);
         console.log(`Sentiment score ${i}: ${sentimentScore}`);
         if (
