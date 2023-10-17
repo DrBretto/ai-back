@@ -230,6 +230,8 @@ const SentimentService = {
         case 'tradingview':
           articles = await this.scrapeTradingView(subject);
           break;
+        default:
+          return null;
       }
 
       let combinedContent = '';
