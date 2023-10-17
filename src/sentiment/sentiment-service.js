@@ -221,7 +221,7 @@ const SentimentService = {
   async performSentimentAnalysis(db, subject, source) {
     try {
       const subjectID = await this.getOrCreateSubjectID(db, subject);
-      const sourceID = await this.getSubjectID(db, source);
+      const sourceID = await this.getSourceID(db, source);
 
       if (!subjectID) {
         console.error('Failed to get or create subject ID');

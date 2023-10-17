@@ -62,7 +62,7 @@ const StocksService = {
         data.c
       );
     } catch (error) {
-      console.error('DB Insert Error:', error);
+      console.error('DB Insert Error:', error.code);
     }
   },
 
@@ -115,7 +115,8 @@ const StocksService = {
       'from',
       firstEntryDate,
       'to',
-      lastEntryDate, "-----------------------"
+      lastEntryDate,
+      '-----------------------'
     );
   },
 };
