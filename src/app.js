@@ -81,9 +81,7 @@ cron.schedule('0 0 * * *', async () => {
 
 cron.schedule('*/1 * * * *', async () => {
   const db = app.get('db');
-  console.log('Fetching recent data: JDST');
   await StocksService.fetchTodaysData(db, 'JDST');
-  console.log('Fetching recent data: NUGT');
   await StocksService.fetchTodaysData(db, 'NUGT');
 });
 

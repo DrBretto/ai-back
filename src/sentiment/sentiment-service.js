@@ -23,7 +23,6 @@ const calculateScores = (sentimentScores) => {
   };
 };
 
-// Function to handle error logging
 const logError = (error, message) => {
   console.error(`${message}:`, error);
 };
@@ -47,7 +46,7 @@ const SentimentService = {
         }
       });
 
-      console.log('Scraped articles:', articles);
+      console.log('Scraped articles from tradingview relating to ', subject);
       return articles;
     } catch (error) {
       console.error('Error in scrapeTradingView:', error.code);
@@ -59,21 +58,10 @@ const SentimentService = {
     try {
       const { data } = await axios.get(url);
       const $ = cheerio.load(data);
-
-      const date = $('[class*="breadcrumbs"]').text().trim();
       const title = $('[class*="title"]').text().trim();
       const articleContent = $('div[class*="body-"]').text().trim();
-
       console.log('Fetched article content');
-
-      const dateRegex = /(\w+ \d+, \d+ \d+:\d+ UTC)/;
-      const match = date.match(dateRegex);
-      const adjDate = match ? match[1] : 'Date not found';
-
-      console.log('Fetched date:', adjDate);
-      console.log('Fetched title:', title);
-
-      return { adjDate, title, content: articleContent };
+      return { title, content: articleContent };
     } catch (error) {
       console.error('Error in fetchArticleContent:', error.code);
       return null;
@@ -96,7 +84,7 @@ const SentimentService = {
         userPrompt = `Please quantize this sentiment analysis. The score should be a float between -1 and 1 where 1 is extremely positive and -1 is extremly negative and 0 is neutral:\n\n${content}`;
         break;
       case 'tokenizeSentiment':
-        userPrompt = `Identify key phrases or entities in the following sentiment analysis that are indicative of the strength of ${subject}:\n\n${content}`;
+        userPrompt = `Identify key terms or phrases from the following sentiment analysis that are indicative of market sentiment towards ${subject}. These terms will be tokenized for use in a neural network model to predict market behavior:\n\n${content}`;
         break;
       default:
         console.error('Invalid analysis type');
@@ -125,17 +113,13 @@ const SentimentService = {
     };
 
     try {
-      console.log('Sending request to GPT-3.5 Turbo API...');
       const response = await axios.post(url, body, config);
       console.log('Received response from GPT-3.5 Turbo:');
       totalTokensUsed += response.data.usage.total_tokens;
 
       return response.data.choices[0].message.content.trim();
     } catch (error) {
-      console.error(
-        `Error in getSentimentFromGPT4 for ${analysisType}:`,
-        error
-      );
+      console.error(`Error in getSentimentFromGPT for ${analysisType}:`, error);
       return null;
     }
   },
@@ -240,7 +224,7 @@ const SentimentService = {
 
       // Combine the content of all fetched articles
       for (const article of articles) {
-        console.log(`Fetching content for article: ${article.url}`);
+        console.log(`Fetching content for article: ${article.title}`);
         const content = await this.fetchArticleContent(article.url);
         if (content) {
           combinedContent += ' ' + content.content;
@@ -276,7 +260,6 @@ const SentimentService = {
           sentimentSubject
         );
         const sentimentScore = validateSentimentScore(sentimentScoreString);
-        console.log(`Sentiment score ${i}: ${sentimentScore}`);
         if (
           !isNaN(sentimentScore) &&
           sentimentScore >= -1 &&
