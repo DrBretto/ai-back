@@ -264,7 +264,7 @@ const SentimentService = {
       //strip noise form sentiment analysis
       const tokenizedSentiment = await this.getSentimentFromGPT(
         sentimentWords,
-        'tokenizedSentiment',
+        'tokenizeSentiment',
         sentimentSubject
       );
 
