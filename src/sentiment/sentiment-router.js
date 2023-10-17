@@ -4,12 +4,14 @@ const SentimentService = require('./sentiment-service');
 const sentimentRouter = express.Router();
 
 sentimentRouter.get('/', async (req, res, next) => {
-  const subject = req.query.subject || ' gold ';
+  const subject = req.query.subject || 'gold';
+  const source = req.query.subject || 'tradingview';
   const db = req.app.get('db'); // Default to 'gold' if no subject is provided
   try {
     const articleContents = await SentimentService.performSentimentAnalysis(
       db,
-      subject
+      subject,
+      source
     );
     res.json(articleContents);
   } catch (error) {

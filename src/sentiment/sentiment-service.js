@@ -178,9 +178,58 @@ const SentimentService = {
     }
   },
 
-  async performSentimentAnalysis(db, subject) {
+  async getOrCreateSubjectID(db, subject) {
     try {
-      console.log(`Starting sentiment analysis for ${subject}...`);
+      // Try to find the subject ID in the database
+      const subjectRow = await db('subjects_table')
+        .select('id')
+        .where('subject_name', subject)
+        .first();
+
+      if (subjectRow) {
+        return subjectRow.id;
+      }
+
+      // If subject not found, insert it
+      const [newID] = await db('subjects_table')
+        .insert({ subject_name: subject })
+        .returning('id');
+
+      return newID;
+    } catch (err) {
+      console.error('Error in getOrCreateSubjectID:', err);
+      return null;
+    }
+  },
+
+  async getSourceID(db, source) {
+    try {
+      const subjectRow = await db('sources_table')
+        .select('id')
+        .where('source_name', source)
+        .first();
+
+      if (subjectRow) {
+        return subjectRow.id;
+      }
+    } catch (err) {
+      console.error('Error in getSourceID:', err);
+      return null;
+    }
+  },
+
+  async performSentimentAnalysis(db, subject, source) {
+    try {
+      const subjectID = await this.getOrCreateSubjectID(db, subject);
+      const sourceID = await this.getSubjectID(db, source);
+
+      if (!subjectID) {
+        console.error('Failed to get or create subject ID');
+        return null;
+      }
+      console.log(
+        `Starting sentiment analysis for ${subject}...(subjectID: ${subjectID})`
+      );
       const articles = await this.scrapeTradingView(subject);
       let combinedContent = '';
       const sentimentSubject = subject === 'dollar' ? 'US Dollar' : subject;
@@ -247,8 +296,8 @@ const SentimentService = {
 
       this.insertData(
         db,
-        1,
-        subject,
+        sourceID,
+        subjectID,
         summary,
         sentimentWords,
         tokenizedSentiment,
