@@ -14,6 +14,7 @@ const stocksRouter = require('./stocks/stocks-router');
 const sentimentRouter = require('./sentiment/sentiment-router');
 
 const StocksService = require('./stocks/stocks-service');
+const SentimentService = require('./sentiment/sentiment-service');
 
 const morganOption = NODE_ENV === 'production' ? 'tiny' : 'common';
 
@@ -47,7 +48,7 @@ app.use(function errorHandler(error, req, res) {
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth() + 1; // Months are 0-based in JS
 
-//Backlog Scheduler//////////////////////////////////////////////////////////////////
+//Backlog Historical Price Scheduler////////////////////////////////////////
 // cron.schedule('*/10 * * * *', async () => {
 //   const db = app.get('db');
 //   const monthToFetch = `${currentYear}-${currentMonth
@@ -83,6 +84,27 @@ cron.schedule('*/1 * * * *', async () => {
   const db = app.get('db');
   await StocksService.fetchTodaysData(db, 'JDST');
   await StocksService.fetchTodaysData(db, 'NUGT');
+});
+
+cron.schedule('0 6,18 * * *', () => {
+  const db = app.get('db');
+  console.log('Running sentiment analysis for gold and dollar at:', new Date());
+
+  SentimentService.performSentimentAnalysis(db, 'gold', 'tradingview')
+    .then((result) => {
+      console.log('Successfully analyzed sentiment for gold:', result);
+    })
+    .catch((err) => {
+      console.error('Error analyzing sentiment for gold:', err);
+    });
+
+  SentimentService.performSentimentAnalysis(db, 'dollar', 'tradingview')
+    .then((result) => {
+      console.log('Successfully analyzed sentiment for dollar:', result);
+    })
+    .catch((err) => {
+      console.error('Error analyzing sentiment for dollar:', err);
+    });
 });
 
 module.exports = app;
