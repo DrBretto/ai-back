@@ -140,46 +140,6 @@ const SentimentService = {
     }
   },
 
-  // async getTokenizedSentimentFromGPT(content, subject) {
-  //   const apiKey = OPENAI_API_KEY;
-  //   const url = OPENAI_API_URL;
-  //   const userPrompt = `Identify key phrases or entities in the following sentiment analysis that are indicative of the strength of ${subject}:\n\n${content}`;
-
-  //   const config = {
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       'Authorization': `Bearer ${apiKey}`,
-  //     },
-  //   };
-
-  //   const body = {
-  //     model: 'gpt-3.5-turbo',
-  //     messages: [
-  //       {
-  //         role: 'system',
-  //         content: 'You are a financial analyst specialized in commodities.',
-  //       },
-  //       {
-  //         role: 'user',
-  //         content: userPrompt,
-  //       },
-  //     ],
-  //   };
-
-  //   try {
-  //     console.log(
-  //       'Sending request for tokenized sentiment to GPT-3.5 Turbo API...'
-  //     );
-  //     const response = await axios.post(url, body, config);
-  //     console.log('Received tokenized sentiment from GPT-3.5 Turbo:');
-  //     totalTokensUsed += response.data.usage.total_tokens;
-  //     return response.data.choices[0].message.content.trim();
-  //   } catch (error) {
-  //     console.error(`Error in getTokenizedSentimentFromGPT:`, error.code);
-  //     return null;
-  //   }
-  // },
-
   async getOrCreateSubjectID(db, subject) {
     try {
       // Try to find the subject ID in the database
@@ -206,19 +166,21 @@ const SentimentService = {
 
   async getSourceID(db, source) {
     try {
-      const subjectRow = await db('sources')
+      const sourceRow = await db('sources')
         .select('id')
         .where('name', source)
         .first();
-
-      if (subjectRow) {
-        return subjectRow.id;
+  
+      if (sourceRow) {
+        return sourceRow.id;
       }
+      return null;  // Explicitly return null if source is not found
     } catch (err) {
       console.error('Error in getSourceID:', err.code);
       return null;
     }
   },
+  
 
   async insertData(
     db,
@@ -259,7 +221,13 @@ const SentimentService = {
         `Starting sentiment analysis for ${subject}...(subjectID: ${subjectID})`
       );
 
-      const articles = await this.scrapeTradingView(subject);
+      let articles;
+
+      switch (source) {
+        case 'tradingview':
+          articles = await this.scrapeTradingView(subject);
+          break;
+      }
 
       let combinedContent = '';
       const sentimentSubject = subject === 'dollar' ? 'US Dollar' : subject; //GPT only disambiguation
@@ -292,7 +260,7 @@ const SentimentService = {
       const tokenizedSentiment = await this.getSentimentFromGPT(
         sentimentWords,
         'tokenizedSentiment',
-        sentimentWords
+        sentimentSubject
       );
 
       //Quantize sentiment analysis
@@ -329,7 +297,7 @@ const SentimentService = {
         sentimentScores: scores,
       };
 
-      const { average, low, high } = sentimentScores;
+      const { average, low, high } = scores;
 
       this.insertData(
         db,
