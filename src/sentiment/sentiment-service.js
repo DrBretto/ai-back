@@ -24,7 +24,7 @@ const calculateScores = (sentimentScores) => {
 
 // Function to handle error logging
 const logError = (error, message) => {
-  console.error(`${message}:`, error.code);
+  console.error(`${message}:`, error);
 };
 
 const SentimentService = {
