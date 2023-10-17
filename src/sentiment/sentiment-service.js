@@ -4,13 +4,11 @@ const cheerio = require('cheerio');
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-// Function to validate and parse sentiment scores
 const validateSentimentScore = (sentimentScoreString) => {
   const sentimentScoreMatch = sentimentScoreString.match(/-?\d+\.\d+/);
   return sentimentScoreMatch ? parseFloat(sentimentScoreMatch[0]) : NaN;
 };
 
-// Function to calculate average, low, and high scores
 const calculateScores = (sentimentScores) => {
   console.log(`Fetched sentiment score: ${sentimentScores}`);
 
@@ -138,7 +136,7 @@ const SentimentService = {
     }
   },
 
-  async performSentimentAnalysis(subject) {
+  async performSentimentAnalysis(db, subject) {
     try {
       console.log(`Starting sentiment analysis for ${subject}...`);
       const articles = await this.scrapeTradingView(subject);
@@ -197,11 +195,39 @@ const SentimentService = {
         sentimentScores: scores,
       };
 
+      const { average, low, high } = sentimentScores;
+
+      this.insertData(db, subject, summary, sentimentWords, average, low, high);
+
       console.log('Analyzed article:', analyzedArticle);
       return analyzedArticle;
     } catch (error) {
       logError(error, 'Error in performSentimentAnalysis');
       return null;
+    }
+  },
+
+  async insertData(
+    db,
+    subject,
+    summary,
+    sentimentBlurb,
+    averageScore,
+    lowScore,
+    highScore
+  ) {
+    try {
+      await db('sentiment_analysis').insert({
+        subject,
+        summary,
+        sentiment_blurb: sentimentBlurb,
+        average_score: averageScore,
+        low_score: lowScore,
+        high_score: highScore,
+      });
+      console.log('Data inserted successfully.');
+    } catch (err) {
+      console.error('Error inserting data:', err);
     }
   },
 };

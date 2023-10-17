@@ -13,6 +13,8 @@ CREATE TABLE Stocks (
     symbol VARCHAR(10) UNIQUE NOT NULL
 );
 
+INSERT INTO Stocks (symbol) VALUES ('JDST'), ('NUGT');
+
 CREATE TABLE StockHistory (
     history_id SERIAL PRIMARY KEY,
     stock_id INT REFERENCES Stocks(stock_id),
@@ -39,3 +41,31 @@ CREATE TABLE StockRealtime (
 );
 
 INSERT INTO Stocks (symbol) VALUES ('JDST'), ('NUGT');
+
+
+CREATE TABLE subjects (
+  id SERIAL PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL
+);
+
+INSERT INTO subjects (name) VALUES ('gold'), ('dollar');
+
+CREATE TABLE sources (
+  id SERIAL PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL
+);
+
+INSERT INTO sources (name) VALUES ('tradingview');
+
+CREATE TABLE sentiment_analysis (
+  id SERIAL PRIMARY KEY,
+  pull_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  subject_id INTEGER REFERENCES subjects(id),
+  source_id INTEGER REFERENCES sources(id),
+  summary TEXT,
+  sentiment_blurb TEXT,
+  average_score NUMERIC(6, 4),
+  low_score NUMERIC(6, 4),
+  high_score NUMERIC(6, 4)
+);
+
