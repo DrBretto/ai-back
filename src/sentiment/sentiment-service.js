@@ -176,7 +176,7 @@ const SentimentService = {
           sentimentSubject
         );
         const sentimentScore = validateSentimentScore(sentimentScoreString);
-
+        console.log(`Sentiment score ${i}: ${sentimentScore}`);
         if (!isNaN(sentimentScore)) {
           sentimentScores.push(sentimentScore);
         }
