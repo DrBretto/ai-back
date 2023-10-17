@@ -183,7 +183,7 @@ const SentimentService = {
       // Try to find the subject ID in the database
       const subjectRow = await db('subjects')
         .select('id')
-        .where('subject_name', subject)
+        .where('name', subject)
         .first();
 
       if (subjectRow) {
@@ -192,7 +192,7 @@ const SentimentService = {
 
       // If subject not found, insert it
       const [newID] = await db('subjects')
-        .insert({ subject_name: subject })
+        .insert({ name: subject })
         .returning('id');
 
       return newID;
@@ -206,7 +206,7 @@ const SentimentService = {
     try {
       const subjectRow = await db('sources')
         .select('id')
-        .where('source_name', source)
+        .where('name', source)
         .first();
 
       if (subjectRow) {
