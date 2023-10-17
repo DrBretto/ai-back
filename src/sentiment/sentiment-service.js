@@ -84,7 +84,7 @@ const SentimentService = {
         userPrompt = `Please quantize this sentiment analysis. The score should be a float between -1 and 1 where 1 is extremely positive and -1 is extremly negative and 0 is neutral:\n\n${content}`;
         break;
       case 'tokenizeSentiment':
-        userPrompt = `Identify key terms or phrases from the following sentiment analysis that are indicative of market sentiment towards ${subject}. These terms will be tokenized for use in a neural network model to predict market behavior:\n\n${content}`;
+        userPrompt = `Please list individual key phrases or entities from the following sentiment analysis that are indicative of the strength of ${subject}. Each term should be isolated for easy tokenization:\n\n${content}`;
         break;
       default:
         console.error('Invalid analysis type');
