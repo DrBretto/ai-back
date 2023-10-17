@@ -170,17 +170,16 @@ const SentimentService = {
         .select('id')
         .where('name', source)
         .first();
-  
+
       if (sourceRow) {
         return sourceRow.id;
       }
-      return null;  // Explicitly return null if source is not found
+      return null; // Explicitly return null if source is not found
     } catch (err) {
       console.error('Error in getSourceID:', err.code);
       return null;
     }
   },
-  
 
   async insertData(
     db,
@@ -211,14 +210,18 @@ const SentimentService = {
 
     try {
       const subjectID = await this.getOrCreateSubjectID(db, subject);
-      const sourceID = await this.getSourceID(db, source);
-
       if (!subjectID) {
         console.error('Failed to get or create subject ID');
         return null;
       }
+      const sourceID = await this.getSourceID(db, source);
+      if (!sourceID) {
+        console.error('Failed to get source ID');
+        return null;
+      }
+
       console.log(
-        `Starting sentiment analysis for ${subject}...(subjectID: ${subjectID})`
+        `Starting sentiment analysis for ${subject}...(subjectID: ${subjectID}) from ${source}...(sourceID: ${sourceID})`
       );
 
       let articles;

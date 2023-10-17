@@ -59,9 +59,9 @@ INSERT INTO sources (name) VALUES ('tradingview');
 
 CREATE TABLE sentiment_analysis (
   id SERIAL PRIMARY KEY,
-  pull_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  subject_id INTEGER REFERENCES subjects(id),
-  source_id INTEGER REFERENCES sources(id),
+  pull_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  subject_id INTEGER REFERENCES subjects(id) NOT NULL,
+  source_id INTEGER REFERENCES sources(id) NOT NULL,
   tokenized_sentiment TEXT,
   average_score NUMERIC(6, 4),
   low_score NUMERIC(6, 4),
