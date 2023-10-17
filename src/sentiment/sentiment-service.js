@@ -181,7 +181,7 @@ const SentimentService = {
   async getOrCreateSubjectID(db, subject) {
     try {
       // Try to find the subject ID in the database
-      const subjectRow = await db('subjects_table')
+      const subjectRow = await db('subjects')
         .select('id')
         .where('subject_name', subject)
         .first();
@@ -191,7 +191,7 @@ const SentimentService = {
       }
 
       // If subject not found, insert it
-      const [newID] = await db('subjects_table')
+      const [newID] = await db('subjects')
         .insert({ subject_name: subject })
         .returning('id');
 
@@ -204,7 +204,7 @@ const SentimentService = {
 
   async getSourceID(db, source) {
     try {
-      const subjectRow = await db('sources_table')
+      const subjectRow = await db('sources')
         .select('id')
         .where('source_name', source)
         .first();
