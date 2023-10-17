@@ -177,8 +177,14 @@ const SentimentService = {
         );
         const sentimentScore = validateSentimentScore(sentimentScoreString);
         console.log(`Sentiment score ${i}: ${sentimentScore}`);
-        if (!isNaN(sentimentScore)) {
+        if (
+          !isNaN(sentimentScore) &&
+          sentimentScore >= -1 &&
+          sentimentScore <= 1
+        ) {
           sentimentScores.push(sentimentScore);
+        } else {
+          console.warn(`Skipping invalid sentiment score: ${sentimentScore}`);
         }
       }
 
