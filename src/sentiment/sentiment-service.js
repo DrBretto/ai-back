@@ -213,6 +213,30 @@ const SentimentService = {
     }
   },
 
+  async insertData(
+    db,
+    sourceId,
+    subjectId,
+    tokenizedSentiment,
+    average,
+    low,
+    high
+  ) {
+    try {
+      await db('sentiment_analysis').insert({
+        subject_id: subjectId,
+        source_id: sourceId,
+        tokenized_sentiment: tokenizedSentiment,
+        average_score: average,
+        low_score: low,
+        high_score: high,
+      });
+      console.log('Data inserted successfully.');
+    } catch (err) {
+      console.error('Error inserting data:', err.code);
+    }
+  },
+
   async performSentimentAnalysis(db, subject, source) {
     let totalTokensUsed = 0;
 
@@ -227,9 +251,11 @@ const SentimentService = {
       console.log(
         `Starting sentiment analysis for ${subject}...(subjectID: ${subjectID})`
       );
+
       const articles = await this.scrapeTradingView(subject);
+
       let combinedContent = '';
-      const sentimentSubject = subject === 'dollar' ? 'US Dollar' : subject;
+      const sentimentSubject = subject === 'dollar' ? 'US Dollar' : subject; //GPT only disambiguation
       const sentimentScores = [];
 
       // Combine the content of all fetched articles
@@ -249,6 +275,7 @@ const SentimentService = {
       );
       totalTokensUsed += summary.data.usage.total_tokens;
 
+      //get comprehendive sentiment analysis
       const sentimentWords = await this.getSentimentFromGPT(
         summary,
         'sentimentWords',
@@ -256,12 +283,13 @@ const SentimentService = {
       );
       totalTokensUsed += summary.data.usage.total_tokens;
 
+      //strip noise form sentiment analysis
       const tokenizedSentiment = await this.getTokenizedSentimentFromGPT(
         sentimentWords,
         subject
       );
 
-      // Use the summary for sentiment analysis
+      //Quantize sentiment analysis
       for (let i = 0; i < 10; i++) {
         const sentimentScoreString = await this.getSentimentFromGPT(
           sentimentWords,
@@ -312,30 +340,6 @@ const SentimentService = {
     } catch (error) {
       logError(error, 'Error in performSentimentAnalysis');
       return null;
-    }
-  },
-
-  async insertData(
-    db,
-    sourceId,
-    subjectId,
-    tokenizedSentiment,
-    average,
-    low,
-    high
-  ) {
-    try {
-      await db('sentiment_analysis').insert({
-        subject_id: subjectId,
-        source_id: sourceId,
-        tokenized_sentiment: tokenizedSentiment,
-        average_score: average,
-        low_score: low,
-        high_score: high,
-      });
-      console.log('Data inserted successfully.');
-    } catch (err) {
-      console.error('Error inserting data:', err.code);
     }
   },
 };
