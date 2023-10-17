@@ -197,7 +197,16 @@ const SentimentService = {
 
       const { average, low, high } = sentimentScores;
 
-      this.insertData(db, subject, summary, sentimentWords, average, low, high);
+      this.insertData(
+        db,
+        1,
+        subject,
+        summary,
+        sentimentWords,
+        average,
+        low,
+        high
+      );
 
       console.log('Analyzed article:', analyzedArticle);
       return analyzedArticle;
@@ -209,6 +218,7 @@ const SentimentService = {
 
   async insertData(
     db,
+    source,
     subject,
     summary,
     sentimentBlurb,
@@ -219,6 +229,7 @@ const SentimentService = {
     try {
       await db('sentiment_analysis').insert({
         subject,
+        source,
         summary,
         sentiment_blurb: sentimentBlurb,
         average_score: averageScore,
