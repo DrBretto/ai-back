@@ -58,7 +58,8 @@ const SentimentService = {
 
   async fetchHistoricalNews(subject, startDate, endDate) {
     try {
-      const url = `https://newsdata.io/api/1/archive?apikey=${NEWSDATA_API_KEY}&q=${subject}&from_date=${startDate}&to_date=${endDate}`;
+      //const url = `https://newsdata.io/api/1/archive?apikey=${NEWSDATA_API_KEY}&q=${subject}&from_date=${startDate}&to_date=${endDate}`;
+      const url = `https://newsdata.io/api/1/archive?apikey=pub_314202479f0ec998e8dd2180e5532a93aff4c&q=example&language=en&from_date=2023-01-19&to_date=2023-01-25`;
 
       const response = await axios.get(url);
 
