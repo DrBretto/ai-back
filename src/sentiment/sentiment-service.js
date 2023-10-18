@@ -1,10 +1,7 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
-const ALPACA_API_URL = 'https://data.alpaca.markets/v1'; // The base URL for the Alpaca API (assuming it follows this pattern)
-const ALPACA_API_KEY = process.env.ALPACA_API_KEY; // Assuming you have the Alpaca API key stored in an environment variable
-const ALPACA_API_SECRET = process.env.ALPACA_API_SECRET; // Assuming you have the Alpaca API secret stored in an environment variable
-
+const NEWSDATA_API_KEY = process.env.NEWSDATA_API_KEY;
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
@@ -61,15 +58,9 @@ const SentimentService = {
 
   async fetchHistoricalNews(subject, startDate, endDate) {
     try {
-      // Assuming the endpoint for fetching news data follows this pattern
-      const url = `${ALPACA_API_URL}/news/${subject}?start=${startDate}&end=${endDate}`;
+      const url = `https://newsdata.io/api/1/archive?apikey=${NEWSDATA_API_KEY}&q=${subject}&from_date=${startDate}&to_date=${endDate}`;
 
-      const response = await axios.get(url, {
-        headers: {
-          'APCA-API-KEY-ID': ALPACA_API_KEY,
-          'APCA-API-SECRET-KEY': ALPACA_API_SECRET,
-        },
-      });
+      const response = await axios.get(url);
 
       const newsData = response.data;
 

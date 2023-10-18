@@ -21,7 +21,6 @@ sentimentRouter.get('/', async (req, res, next) => {
 });
 
 sentimentRouter.get('/historical-news', async (req, res, next) => {
-  // added next here
   const { subject, startDate, endDate } = req.query;
   if (!subject || !startDate || !endDate) {
     return res
@@ -39,11 +38,11 @@ sentimentRouter.get('/historical-news', async (req, res, next) => {
       console.error('No news data retrieved from fetchHistoricalNews.');
       return res.status(500).send('Failed to fetch historical news data');
     }
-    console.log('newsData:', newsData); // Log the newsData for troubleshooting
+    console.log('newsData:', newsData);
     res.json(newsData);
   } catch (error) {
     console.error('Error in /historical-news endpoint:', error);
-    next(error); // pass the error to the error handler
+    next(error);
   }
 });
 
