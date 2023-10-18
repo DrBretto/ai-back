@@ -1,8 +1,13 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
+const ALPACA_API_URL = 'https://data.alpaca.markets/v1'; // The base URL for the Alpaca API (assuming it follows this pattern)
+const ALPACA_API_KEY = process.env.ALPACA_API_KEY; // Assuming you have the Alpaca API key stored in an environment variable
+const ALPACA_API_SECRET = process.env.ALPACA_API_SECRET; // Assuming you have the Alpaca API secret stored in an environment variable
+
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
 let totalTokensUsed = 0;
 
 const validateSentimentScore = (sentimentScoreString) => {
@@ -51,6 +56,33 @@ const SentimentService = {
     } catch (error) {
       console.error('Error in scrapeTradingView:', error.code);
       return [];
+    }
+  },
+
+  async fetchHistoricalNews(subject, startDate, endDate) {
+    try {
+      // Assuming the endpoint for fetching news data follows this pattern
+      const url = `${ALPACA_API_URL}/news/${subject}?start=${startDate}&end=${endDate}`;
+
+      const response = await axios.get(url, {
+        headers: {
+          'APCA-API-KEY-ID': ALPACA_API_KEY,
+          'APCA-API-SECRET-KEY': ALPACA_API_SECRET,
+        },
+      });
+
+      const newsData = response.data;
+
+      if (!newsData || newsData.length === 0) {
+        console.error('No news data retrieved.');
+        return null;
+      }
+
+      console.log('Fetched historical news data:', newsData);
+      return newsData;
+    } catch (error) {
+      console.error('Error in fetchHistoricalNews:', error);
+      return null;
     }
   },
 
@@ -210,7 +242,7 @@ const SentimentService = {
       const sourceID = await this.getSourceID(db, source);
       if (!sourceID) {
         console.error('Failed to get source ID');
-        return null;
+        return 'Invalid source ID';
       }
 
       console.log(
@@ -219,10 +251,14 @@ const SentimentService = {
 
       let articles;
 
-      switch (source) {
-        case 'tradingview':
+      switch (sourceID) {
+        case 1:
           articles = await this.scrapeTradingView(subject);
           break;
+        case 2:
+          articles = await this.scrapeForbes(subject);
+          break;
+
         default:
           return null;
       }
