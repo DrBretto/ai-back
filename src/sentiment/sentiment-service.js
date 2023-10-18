@@ -174,6 +174,15 @@ const SentimentService = {
     low,
     high
   ) {
+    console.log(
+      'Inserting data into sentiment_analysis table',
+      subjectId,
+      sourceId,
+      tokenizedSentiment,
+      average,
+      low,
+      high
+    );
     try {
       await db('sentiment_analysis').insert({
         subject_id: subjectId,
