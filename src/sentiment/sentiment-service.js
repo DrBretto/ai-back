@@ -58,6 +58,22 @@ const SentimentService = {
     }
   },
 
+  async filterFinancialArticles(articles) {
+    try {
+      const financialArticles = [];
+      for (const article of articles) {
+        const isFinancial = await this.checkFinancialTopic(article.content);
+        if (isFinancial) {
+          financialArticles.push(article);
+        }
+      }
+      return financialArticles;
+    } catch (error) {
+      console.error('Error in filterFinancialArticles:', error);
+      return null;
+    }
+  },
+
   async fetchHistoricalNews(subject, startDate, endDate) {
     try {
       const url = AYLIEN_API_URL;
@@ -85,11 +101,53 @@ const SentimentService = {
         content: story.body,
       }));
 
-      console.log('Fetched historical news data:', newsData);
-      return articleBodies;
+      const financialArticles = await this.filterFinancialArticles(
+        articleBodies
+      );
+
+      console.log('Filtered financial articles:', financialArticles);
+      return financialArticles;
     } catch (error) {
       console.error('Error in fetchHistoricalNews:', error);
       return null;
+    }
+  },
+
+  async isFinancialContent(content) {
+    const apiKey = OPENAI_API_KEY;
+    const url = OPENAI_API_URL;
+
+    const userPrompt = `Determine if the following content is related to financial topics. Respond with "yes" if it is, and "no" if it isn't: \n\n${content}`;
+
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+    };
+
+    const body = {
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a financial analyst.',
+        },
+        {
+          role: 'user',
+          content: userPrompt,
+        },
+      ],
+    };
+
+    try {
+      const response = await axios.post(url, body, config);
+      return (
+        response.data.choices[0].message.content.trim().toLowerCase() === 'yes'
+      );
+    } catch (error) {
+      console.error(`Error in isFinancialContent:`, error);
+      return false;
     }
   },
 
