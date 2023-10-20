@@ -113,9 +113,12 @@ const SentimentService = {
         subject
       );
 
-      const sentimentScore = validateSentimentScore(
-        this.getSentimentFromGPT(sentimentWords, 'sentimentScore', subject)
+      const sentimentScoreString = await this.getSentimentFromGPT(
+        sentimentWords,
+        'sentimentScore',
+        subject
       );
+      const sentimentScore = this.validateSentimentScore(sentimentScoreString);
 
       processedData.tokenizedSentiment += tokenizedArticle;
       if (!isNaN(sentimentScore)) {
