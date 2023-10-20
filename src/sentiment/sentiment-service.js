@@ -62,7 +62,7 @@ const SentimentService = {
     try {
       const financialArticles = [];
       for (const article of articles) {
-        const isFinancial = await this.checkFinancialTopic(article.content);
+        const isFinancial = await this.isFinancialContent(article.content);
         if (isFinancial) {
           financialArticles.push(article);
         }
