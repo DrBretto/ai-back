@@ -77,14 +77,62 @@ const SentimentService = {
         },
       });
 
+
       const articleBodies = response.data.stories.map((story) => story.body);
-      return articleBodies;
+      const date = response.data.stories[0].published_at;
+      const processedData = await this.processAllArticles(articleBodies, date, subject);
+
+      
+      return processedData;
 
       // ... rest of your code
     } catch (error) {
       console.error('Error in fetchHistoricalNews:', error);
       return null;
     }
+  },
+
+  async processAllArticles(articleBodies, date, subject) {
+    const processedData = {
+      date: date,
+      tokenizedSentiment: '',
+      scores: [],
+    };
+
+    for (const article of articleBodies) {
+      const sentimentWords = await this.getSentimentFromGPT(
+        article,
+        'sentimentWords',
+        subject
+      );
+      const tokenizedArticle = await this.getSentimentFromGPT(
+        sentimentWords,
+        'tokenizeSentiment',
+        subject
+      );
+
+      const sentimentScore = this.validateSentimentScore(
+        this.getSentimentFromGPT(sentimentWords, 'sentimentScore', subject)
+      );
+
+      processedData.tokenizedSentiment += tokenizedArticle;
+      if (!isNaN(sentimentScore)) {
+        processedData.scores.push(sentimentScore);
+      }
+    }
+    // Calculating high, low and average scores
+    const { scores } = processedData;
+    const high = Math.max(...scores);
+    const low = Math.min(...scores);
+    const average =
+      scores.reduce((sum, score) => sum + score, 0) / scores.length;
+
+    // Adding high, low and average scores to the processedData object
+    processedData.high = high.toFixed(4);
+    processedData.low = low.toFixed(4);
+    processedData.average = average.toFixed(4);
+
+    return processedData; // Returning the processed data object
   },
 
   async fetchArticleContent(url) {
