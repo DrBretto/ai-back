@@ -9,6 +9,27 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 let totalTokensUsed = 0;
 
+const createBatches = (articleBodies, maxBatchSize) => {
+  let batches = [];
+  let currentBatch = '';
+  for (const article of articleBodies) {
+    // If adding the next article would exceed the maximum batch size,
+    // start a new batch
+    if (currentBatch.length + article.length > maxBatchSize) {
+      batches.push(currentBatch);
+      currentBatch = article;
+    } else {
+      // Otherwise, add the article to the current batch
+      currentBatch += '\n\n' + article;
+    }
+  }
+  // Add the last batch if it's non-empty
+  if (currentBatch) {
+    batches.push(currentBatch);
+  }
+  return batches;
+};
+
 const validateSentimentScore = (sentimentScoreString) => {
   const sentimentScoreMatch = sentimentScoreString.match(/-?\d+\.\d+/);
   return sentimentScoreMatch ? parseFloat(sentimentScoreMatch[0]) : NaN;
@@ -78,9 +99,10 @@ const SentimentService = {
       });
 
       const articleBodies = response.data.stories.map((story) => story.body);
+      const articleBatches = createBatches(articleBodies, 12048);
       const date = response.data.stories[0].published_at;
       const processedData = await this.processAllArticles(
-        articleBodies,
+        articleBatches,
         date,
         subject
       );
