@@ -77,7 +77,7 @@ const SentimentService = {
         },
       });
 
-      return response.data.stories;
+      return response.data.stories.body;
 
       // ... rest of your code
     } catch (error) {
