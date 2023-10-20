@@ -81,8 +81,9 @@ const SentimentService = {
         return null;
       }
 
-      const articleBodies = newsData.stories.map(story => story.body);
-
+      const articleBodies = newsData.stories.map((story) => ({
+        content: story.body,
+      }));
 
       console.log('Fetched historical news data:', newsData);
       return articleBodies;
