@@ -124,8 +124,13 @@ const SentimentService = {
     };
 
     for (const article of articleBodies) {
-      const sentimentWords = await this.getSentimentFromGPT(
+      const summary = await this.getSentimentFromGPT(
         article,
+        'summarize',
+        subject
+      );
+      const sentimentWords = await this.getSentimentFromGPT(
+        summary,
         'sentimentWords',
         subject
       );
