@@ -118,7 +118,7 @@ const SentimentService = {
         'sentimentScore',
         subject
       );
-      const sentimentScore = this.validateSentimentScore(sentimentScoreString);
+      const sentimentScore = validateSentimentScore(sentimentScoreString);
 
       processedData.tokenizedSentiment += tokenizedArticle;
       if (!isNaN(sentimentScore)) {
