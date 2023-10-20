@@ -1,7 +1,9 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
-const NEWSDATA_API_KEY = process.env.NEWSDATA_API_KEY;
+const AYLIEN_API_URL = 'https://api.aylien.com/news/stories';
+const AYLIEN_APP_ID = process.env.AYLIEN_APP_ID;
+const AYLIEN_API_KEY = process.env.AYLIEN_API_KEY;
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
@@ -58,20 +60,29 @@ const SentimentService = {
 
   async fetchHistoricalNews(subject, startDate, endDate) {
     try {
-      //const url = `https://newsdata.io/api/1/archive?apikey=${NEWSDATA_API_KEY}&q=${subject}&from_date=${startDate}&to_date=${endDate}`;
-      const url = `https://newsdata.io/api/1/archive?apikey=pub_314202479f0ec998e8dd2180e5532a93aff4c&q=example&language=en&from_date=2023-01-19&to_date=2023-01-25`;
-
-      const response = await axios.get(url);
+      const url = AYLIEN_API_URL;
+      const response = await axios.get(url, {
+        headers: {
+          'X-AYLIEN-NewsAPI-Application-ID': AYLIEN_APP_ID,
+          'X-AYLIEN-NewsAPI-Application-Key': AYLIEN_API_KEY,
+        },
+        params: {
+          'title': subject,
+          'published_at_start': startDate,
+          'published_at_end': endDate,
+          'per_page': 100, // Adjust as needed
+        },
+      });
 
       const newsData = response.data;
 
-      if (!newsData || newsData.length === 0) {
+      if (!newsData || newsData.stories.length === 0) {
         console.error('No news data retrieved.');
         return null;
       }
 
       console.log('Fetched historical news data:', newsData);
-      return newsData;
+      return newsData.stories;
     } catch (error) {
       console.error('Error in fetchHistoricalNews:', error);
       return null;
