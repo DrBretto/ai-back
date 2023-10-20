@@ -58,22 +58,6 @@ const SentimentService = {
     }
   },
 
-  async filterFinancialArticles(articles) {
-    try {
-      const financialArticles = [];
-      for (const article of articles) {
-        const isFinancial = await this.isFinancialContent(article.content);
-        if (isFinancial) {
-          financialArticles.push(article);
-        }
-      }
-      return financialArticles;
-    } catch (error) {
-      console.error('Error in filterFinancialArticles:', error);
-      return null;
-    }
-  },
-
   async fetchHistoricalNews(subject, startDate, endDate) {
     try {
       const url = AYLIEN_API_URL;
@@ -86,68 +70,19 @@ const SentimentService = {
           'title': subject,
           'published_at_start': startDate,
           'published_at_end': endDate,
-          'per_page': 100, // Adjust as needed
+          'per_page': 100,
+          'categories.taxonomy': 'iab-qag',
+          'categories.id[]': 'IAB22', // This is the category ID for Finance
+          'language[]': 'en',
         },
       });
 
-      const newsData = response.data;
+      return response.data.stories;
 
-      if (!newsData || newsData.stories.length === 0) {
-        console.error('No news data retrieved.');
-        return null;
-      }
-
-      const articleBodies = newsData.stories.map((story) => ({
-        content: story.body,
-      }));
-
-      const financialArticles = await this.filterFinancialArticles(
-        articleBodies
-      );
-
-      console.log('Filtered financial articles:', financialArticles);
-      return financialArticles;
+      // ... rest of your code
     } catch (error) {
       console.error('Error in fetchHistoricalNews:', error);
       return null;
-    }
-  },
-
-  async isFinancialContent(content) {
-    const apiKey = OPENAI_API_KEY;
-    const url = OPENAI_API_URL;
-
-    const userPrompt = `Determine if the following content is related to financial topics. Respond with "yes" if it is, and "no" if it isn't: \n\n${content}`;
-
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-    };
-
-    const body = {
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a financial analyst.',
-        },
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ],
-    };
-
-    try {
-      const response = await axios.post(url, body, config);
-      return (
-        response.data.choices[0].message.content.trim().toLowerCase() === 'yes'
-      );
-    } catch (error) {
-      console.error(`Error in isFinancialContent:`, error);
-      return false;
     }
   },
 
