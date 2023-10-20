@@ -77,12 +77,14 @@ const SentimentService = {
         },
       });
 
-
       const articleBodies = response.data.stories.map((story) => story.body);
       const date = response.data.stories[0].published_at;
-      const processedData = await this.processAllArticles(articleBodies, date, subject);
+      const processedData = await this.processAllArticles(
+        articleBodies,
+        date,
+        subject
+      );
 
-      
       return processedData;
 
       // ... rest of your code
@@ -111,7 +113,7 @@ const SentimentService = {
         subject
       );
 
-      const sentimentScore = this.validateSentimentScore(
+      const sentimentScore = validateSentimentScore(
         this.getSentimentFromGPT(sentimentWords, 'sentimentScore', subject)
       );
 
