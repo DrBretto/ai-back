@@ -81,8 +81,11 @@ const SentimentService = {
         return null;
       }
 
+      const articleBodies = newsData.stories.map(story => story.body);
+
+
       console.log('Fetched historical news data:', newsData);
-      return newsData.stories;
+      return articleBodies;
     } catch (error) {
       console.error('Error in fetchHistoricalNews:', error);
       return null;
