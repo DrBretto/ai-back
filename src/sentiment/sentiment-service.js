@@ -77,7 +77,8 @@ const SentimentService = {
         },
       });
 
-      return response.data.stories.body;
+      const articleBodies = response.data.stories.map((story) => story.body);
+      return articleBodies;
 
       // ... rest of your code
     } catch (error) {
