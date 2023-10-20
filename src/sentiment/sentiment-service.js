@@ -72,7 +72,7 @@ const SentimentService = {
           'published_at_end': endDate,
           'per_page': 100,
           'categories.taxonomy': 'iab-qag',
-          'categories.id[]': 'IAB22',
+          'categories.id[]': 'IAB13',
           'language[]': 'en',
         },
       });
