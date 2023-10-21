@@ -152,6 +152,8 @@ const SentimentService = {
         processedData.scores.push(sentimentScore);
       }
     }
+
+    processedData.tokenizedSentiment = await this.getSentimentFromGPT(processedData.tokenizedSentiment, 'reduceSentiment', subject);
     // Calculating high, low and average scores
     const { scores } = processedData;
     const high = Math.max(...scores);
@@ -199,6 +201,9 @@ const SentimentService = {
       case 'tokenizeSentiment':
         userPrompt = `Please list individual key phrases or entities from the following sentiment analysis that are indicative of the strength of ${subject}. Each term should be isolated for easy tokenization and be as concise as possible.\n\n${content}`;
         break;
+        case 'reduceSentiment':
+          userPrompt = `Please reduce this list of key phrases or entities from the following sentiment analysis that are indicative of the strength of ${subject}. remove repeated sentiments and Each term should be isolated for easy tokenization and be as concise as possible.\n\n${content}`;
+          break;
       default:
         console.error('Invalid analysis type');
         return null;
