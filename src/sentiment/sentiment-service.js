@@ -91,7 +91,7 @@ const SentimentService = {
           'title': subject,
           'published_at_start': startDate,
           'published_at_end': endDate,
-          'per_page': 100,
+          'per_page': 10,
           'categories.taxonomy': 'iab-qag',
           'categories.id[]': 'IAB13',
           'language[]': 'en',
