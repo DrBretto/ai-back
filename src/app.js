@@ -109,7 +109,7 @@ cron.schedule('0 6,18 * * *', () => {
 });
 
 let date = moment().format();
-cron.schedule('*/10 * * * *', async () => {
+cron.schedule('*/5 * * * *', async () => {
   const db = app.get('db');
   // Calls your functions with the current date
   await SentimentService.fetchHistoricalNews(db, 'gold', date, date);
