@@ -275,7 +275,6 @@ const SentimentService = {
   ) {
     console.log(
       'Inserting data into sentiment_analysis table',
-
       subjectId,
       sourceId,
       tokenizedSentiment,

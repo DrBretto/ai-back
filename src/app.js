@@ -108,15 +108,29 @@ cron.schedule('0 6,18 * * *', () => {
     });
 });
 
-let date = moment().format();
-cron.schedule('*/5 * * * *', async () => {
+let currentDate = moment();
+
+// Define your cron schedule
+cron.schedule('*/10 * * * *', async () => {
   const db = app.get('db');
-  // Calls your functions with the current date
+
+  // Check if the current date is a weekend, if so, find the previous weekday
+  while (currentDate.day() === 0 || currentDate.day() === 6) {
+    currentDate.subtract(1, 'days');
+  }
+
+  // Format the date to match the required format
+  const date = currentDate.format('YYYY-MM-DDTHH:mm:ss[Z]');
+
+  // Log the date for debugging purposes
+  console.log('Fetching historical news for date:', date);
+
+  // Call your functions with the formatted date
   await SentimentService.fetchHistoricalNews(db, 'gold', date, date);
   await SentimentService.fetchHistoricalNews(db, 'dollar', date, date);
 
-  // Subtracts one business day from the date
-  date = moment(date).subtract(1, 'businessDays').format();
+  // Subtract one day from the current date for the next iteration
+  currentDate.subtract(1, 'days');
 });
 
 module.exports = app;
