@@ -50,7 +50,7 @@ const SentimentService = {
           'title': subject,
           'published_at_start': startDate,
           'published_at_end': endDate,
-          'per_page': 20,
+          'per_page': 10,
           'categories.taxonomy': 'iab-qag',
           'categories.id[]': 'IAB13',
           'language[]': 'en',
@@ -66,10 +66,7 @@ const SentimentService = {
         subject
       );
 
-      const {
-        tokenizedSentiment,
-        scores: { average, low, high },
-      } = processedData;
+      const { tokenizedSentiment, average, low, high } = processedData;
 
       const subjectId = await this.getOrCreateSubjectID(db, subject); // obtain the subjectId
 

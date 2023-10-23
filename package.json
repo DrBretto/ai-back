@@ -25,6 +25,7 @@
     "helmet": "^4.0.0",
     "jsonwebtoken": "^9.0.2",
     "knex": "^2.5.1",
+    "moment-business-days": "^1.2.0",
     "morgan": "^1.10.0",
     "natives": "^1.1.6",
     "node-cron": "^3.0.2",

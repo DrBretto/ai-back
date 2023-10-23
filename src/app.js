@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 const helmet = require('helmet');
 const cron = require('node-cron');
+const moment = require('moment-business-days'); 
 
 const { NODE_ENV } = require('./config');
 
@@ -106,5 +107,17 @@ cron.schedule('0 6,18 * * *', () => {
       console.error('Error analyzing sentiment for dollar:', err);
     });
 });
+
+
+let date = moment().format();
+cron.schedule('*/10 * * * 1-5', async () => {  // Schedules job every 10 minutes on weekdays
+  // Calls your functions with the current date
+  await SentimentService.fetchHistoricalNews('Gold', date, date);
+  await SentimentService.fetchHistoricalNews('Dollar', date, date);
+
+  // Subtracts one business day from the date
+  date = moment(date).subtract(1, 'businessDays').format();
+});
+
 
 module.exports = app;
