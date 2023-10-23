@@ -38,7 +38,7 @@ const SentimentService = {
     }
   },
 
-  async fetchHistoricalNews(subject, startDate, endDate) {
+  async fetchHistoricalNews(db,subject, startDate, endDate) {
     try {
       const url = AYLIEN_API_URL;
       const response = await axios.get(url, {
@@ -66,9 +66,31 @@ const SentimentService = {
         subject
       );
 
-      return processedData;
+      // Assuming that the processedData object has the following structure:
+      // { tokenizedSentiment: '', scores: { average: '', low: '', high: '' } }
 
-      // ... rest of your code
+      const {
+        tokenizedSentiment,
+        scores: { average, low, high },
+      } = processedData;
+
+      const subjectId = await this.getOrCreateSubjectID(db, subject); // obtain the subjectId
+
+      if (subjectId) {
+        await this.insertData(
+          db,
+          3,   //// make this a variable
+          subjectId,
+          tokenizedSentiment,
+          average,
+          low,
+          high
+        );
+      } else {
+        console.error('Failed to obtain subjectId for', subject);
+      }
+
+      return processedData;
     } catch (error) {
       console.error('Error in fetchHistoricalNews:', error);
       return null;

@@ -22,6 +22,7 @@ sentimentRouter.get('/', async (req, res, next) => {
 
 sentimentRouter.get('/historical-news', async (req, res, next) => {
   const { subject, startDate, endDate } = req.query;
+  const db = req.app.get('db');
   if (!subject || !startDate || !endDate) {
     return res
       .status(400)
@@ -30,6 +31,7 @@ sentimentRouter.get('/historical-news', async (req, res, next) => {
 
   try {
     const newsData = await SentimentService.fetchHistoricalNews(
+      db,
       subject,
       startDate,
       endDate
