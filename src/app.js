@@ -87,7 +87,7 @@ cron.schedule('*/1 * * * *', async () => {
   await StocksService.fetchTodaysData(db, 'NUGT');
 });
 
-cron.schedule('0 6,18 * * *', () => {
+cron.schedule('0 6 * * *', () => {
   const db = app.get('db');
   console.log('Running sentiment analysis for gold and dollar at:', new Date());
 
@@ -109,9 +109,10 @@ cron.schedule('0 6,18 * * *', () => {
 });
 
 let currentDate = moment();
+let daysback = 0;
 
 // Define your cron schedule
-cron.schedule('*/10 * * * *', async () => {
+cron.schedule('*/5 * * * *', async () => {
   const db = app.get('db');
 
   // Check if the current date is a weekend, if so, find the previous weekday
@@ -131,6 +132,8 @@ cron.schedule('*/10 * * * *', async () => {
 
   // Subtract one day from the current date for the next iteration
   currentDate.subtract(1, 'days');
+  daysback++;
+  console.log('days back:', daysback);
 });
 
 module.exports = app;
