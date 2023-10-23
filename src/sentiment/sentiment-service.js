@@ -38,7 +38,7 @@ const SentimentService = {
     }
   },
 
-  async fetchHistoricalNews(db,subject, startDate, endDate) {
+  async fetchHistoricalNews(db, subject, startDate, endDate) {
     try {
       const url = AYLIEN_API_URL;
       const response = await axios.get(url, {
@@ -66,9 +66,6 @@ const SentimentService = {
         subject
       );
 
-      // Assuming that the processedData object has the following structure:
-      // { tokenizedSentiment: '', scores: { average: '', low: '', high: '' } }
-
       const {
         tokenizedSentiment,
         scores: { average, low, high },
@@ -79,12 +76,13 @@ const SentimentService = {
       if (subjectId) {
         await this.insertData(
           db,
-          3,   //// make this a variable
+          3, //// make this a variable ///////////////////////////////////////////////////////////////////////
           subjectId,
           tokenizedSentiment,
           average,
           low,
-          high
+          high,
+          endDate
         );
       } else {
         console.error('Failed to obtain subjectId for', subject);
@@ -275,16 +273,19 @@ const SentimentService = {
     tokenizedSentiment,
     average,
     low,
-    high
+    high,
+    date = new Date().toISOString().split('T')[0]
   ) {
     console.log(
       'Inserting data into sentiment_analysis table',
+
       subjectId,
       sourceId,
       tokenizedSentiment,
       average,
       low,
-      high
+      high,
+      date
     );
     try {
       await db('sentiment_analysis').insert({
@@ -294,6 +295,7 @@ const SentimentService = {
         average_score: average,
         low_score: low,
         high_score: high,
+        date_published: date,
       });
       console.log('Data inserted successfully.');
     } catch (err) {
