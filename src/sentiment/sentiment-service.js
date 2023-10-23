@@ -7,50 +7,9 @@ const AYLIEN_API_KEY = process.env.AYLIEN_API_KEY;
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
+const sh = require('./sentiment-helper');
+
 let totalTokensUsed = 0;
-
-const createBatches = (articleBodies, maxBatchSize) => {
-  let batches = [];
-  let currentBatch = '';
-  for (const article of articleBodies) {
-    // If adding the next article would exceed the maximum batch size,
-    // start a new batch
-    if (currentBatch.length + article.length > maxBatchSize) {
-      batches.push(currentBatch);
-      currentBatch = article;
-    } else {
-      // Otherwise, add the article to the current batch
-      currentBatch += '\n\n' + article;
-    }
-  }
-  // Add the last batch if it's non-empty
-  if (currentBatch) {
-    batches.push(currentBatch);
-  }
-  return batches;
-};
-
-const validateSentimentScore = (sentimentScoreString) => {
-  const sentimentScoreMatch = sentimentScoreString.match(/-?\d+\.\d+/);
-  return sentimentScoreMatch ? parseFloat(sentimentScoreMatch[0]) : NaN;
-};
-
-const calculateScores = (sentimentScores) => {
-  const average =
-    sentimentScores.reduce((sum, score) => sum + score, 0) /
-    sentimentScores.length;
-  const low = Math.min(...sentimentScores);
-  const high = Math.max(...sentimentScores);
-  return {
-    average: average.toFixed(4),
-    low: low.toFixed(4),
-    high: high.toFixed(4),
-  };
-};
-
-const logError = (error, message) => {
-  console.error(`${message}:`, error);
-};
 
 const SentimentService = {
   async scrapeTradingView(subject) {
@@ -99,7 +58,7 @@ const SentimentService = {
       });
 
       const articleBodies = response.data.stories.map((story) => story.body);
-      const articleBatches = createBatches(articleBodies, 12048);
+      const articleBatches = sh.createBatches(articleBodies, 12048);
       const date = response.data.stories[0].published_at;
       const processedData = await this.processAllArticles(
         articleBatches,
@@ -145,7 +104,7 @@ const SentimentService = {
         'sentimentScore',
         subject
       );
-      const sentimentScore = validateSentimentScore(sentimentScoreString);
+      const sentimentScore = sh.validateSentimentScore(sentimentScoreString);
 
       processedData.tokenizedSentiment += tokenizedArticle;
       if (!isNaN(sentimentScore)) {
@@ -153,7 +112,11 @@ const SentimentService = {
       }
     }
 
-    processedData.tokenizedSentiment = await this.getSentimentFromGPT(processedData.tokenizedSentiment, 'reduceSentiment', subject);
+    processedData.tokenizedSentiment = await this.getSentimentFromGPT(
+      processedData.tokenizedSentiment,
+      'reduceSentiment',
+      subject
+    );
     // Calculating high, low and average scores
     const { scores } = processedData;
     const high = Math.max(...scores);
@@ -201,9 +164,9 @@ const SentimentService = {
       case 'tokenizeSentiment':
         userPrompt = `Please list individual key phrases or entities from the following sentiment analysis that are indicative of the strength of ${subject}. Each term should be isolated for easy tokenization and be as concise as possible.\n\n${content}`;
         break;
-        case 'reduceSentiment':
-          userPrompt = `Please reduce this list of key phrases or entities from the following sentiment analysis that are indicative of the strength of ${subject}. remove repeated sentiments and Each term should be isolated for easy tokenization and be as concise as possible.\n\n${content}`;
-          break;
+      case 'reduceSentiment':
+        userPrompt = `Please reduce this list of key phrases or entities from the following sentiment analysis that are indicative of the strength of ${subject}. remove repeated sentiments and Each term should be isolated for easy tokenization and be as concise as possible.\n\n${content}`;
+        break;
       default:
         console.error('Invalid analysis type');
         return null;
@@ -390,7 +353,7 @@ const SentimentService = {
           'sentimentScore',
           sentimentSubject
         );
-        const sentimentScore = validateSentimentScore(sentimentScoreString);
+        const sentimentScore = sh.validateSentimentScore(sentimentScoreString);
         if (
           !isNaN(sentimentScore) &&
           sentimentScore >= -1 &&
@@ -403,7 +366,7 @@ const SentimentService = {
       }
 
       // Calculate the average, low, and high sentiment scores
-      const scores = calculateScores(sentimentScores);
+      const scores = sh.calculateScores(sentimentScores);
 
       console.log(
         `Successfully analyzed ${subject} from ${source} using ${totalTokensUsed} tokens`
@@ -430,7 +393,7 @@ const SentimentService = {
 
       return analyzedArticle;
     } catch (error) {
-      logError(error, 'Error in performSentimentAnalysis');
+      sh.logError(error, 'Error in performSentimentAnalysis');
       return null;
     }
   },
