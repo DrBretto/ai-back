@@ -303,7 +303,7 @@ const SentimentService = {
     }
   },
 
-  async findMissingDate(db, subjectID) {
+  async findMissingDate(db, subjectID, sourceID) {
     let dateCursor = moment();
     let foundDate = null;
     let loopCount = 0; // Add a loop count for debugging
@@ -322,6 +322,7 @@ const SentimentService = {
       try {
         const hasData = await db('sentiment_analysis')
           .where({
+            source_id: sourceID,
             subject_id: subjectID,
             date_published: dateStr,
           })

@@ -54,8 +54,8 @@ module.exports = (app) => {
     const db = app.get('db');
 
     // Assume subjectIDs for 'gold' and 'dollar' are 1 and 2, respectively
-    const missingDateGold = await SentimentService.findMissingDate(db, 1);
-    const missingDateDollar = await SentimentService.findMissingDate(db, 2);
+    const missingDateGold = await SentimentService.findMissingDate(db, 1, 3);
+    const missingDateDollar = await SentimentService.findMissingDate(db, 2, 3);
 
     if (missingDateGold) {
       console.log(
