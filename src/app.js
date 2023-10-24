@@ -109,7 +109,7 @@ cron.schedule('0 6 * * *', () => {
 });
 
 let currentDate = moment();
-let daysback = 20;
+let daysback = 0;
 
 // Define your cron schedule
 cron.schedule('*/5 * * * *', async () => {

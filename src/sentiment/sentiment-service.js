@@ -277,7 +277,6 @@ const SentimentService = {
       'Inserting data into sentiment_analysis table',
       subjectId,
       sourceId,
-      tokenizedSentiment,
       average,
       low,
       high,
