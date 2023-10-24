@@ -57,21 +57,13 @@ const SentimentService = {
         },
       });
 
-      console.log(
-        'Searcing Aylien for ',
-        subject,
-        ' from ',
-        startDate,
-        ' to ',
-        endDate
-      );
+      console.log('Searching Aylien for ', subject, startDate);
 
       const articleBodies = response.data.stories.map((story) => story.body);
-      console.log('Fetched articleBodies from Aylien');
-      const articleBatches = sh.createBatches(articleBodies, 8048);
-      console.log('Split articleBodies into', articleBatches.length, "batches");
+      console.log('Fetched', articleBodies.length, 'articles from Aylien');
+      const articleBatches = sh.createBatches(articleBodies, 12000);
+      console.log('Split articleBodies into', articleBatches.length, 'batches');
       const date = response.data.stories[0].published_at;
-      
 
       const processedData = await this.processAllArticles(
         articleBatches,
