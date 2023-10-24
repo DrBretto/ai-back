@@ -58,7 +58,7 @@ const SentimentService = {
       });
 
       const articleBodies = response.data.stories.map((story) => story.body);
-      const articleBatches = sh.createBatches(articleBodies, 12048);
+      const articleBatches = sh.createBatches(articleBodies, 8048);
       const date = response.data.stories[0].published_at;
       const processedData = await this.processAllArticles(
         articleBatches,

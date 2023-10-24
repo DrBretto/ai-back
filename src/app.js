@@ -117,14 +117,14 @@ cron.schedule('*/5 * * * *', async () => {
 
   // Check if the current date is a weekend, if so, find the previous weekday
   while (currentDate.day() === 0 || currentDate.day() === 6) {
-    currentDate.subtract(1, 'days');
+    currentDate.subtract(20, 'days');
   }
 
   // Format the date to match the required format
   const date = currentDate.format('YYYY-MM-DDTHH:mm:ss[Z]');
 
   // Log the date for debugging purposes
-  console.log('Fetching historical news for date:', date);
+  console.log('Fetching historical news for date:', currentDate);
 
   // Call your functions with the formatted date
   await SentimentService.fetchHistoricalNews(db, 'gold', date, date);
