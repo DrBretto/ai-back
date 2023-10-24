@@ -4,27 +4,19 @@
 // const cheerio = require('cheerio');
 
 const createBatches = (articleBodies, maxBatchSize) => {
-  let batches = [];
-  let currentBatch = '';
-  for (const article of articleBodies) {
+  // Concatenate all articles into one large string
+  const allArticles = articleBodies.join('\n\n');
 
-    // If adding the next article would exceed the maximum batch size,
-    // start a new batch
-    if (currentBatch.length + article.length > maxBatchSize) {
-      batches.push(currentBatch);
-      currentBatch = article;
-    } else {
-      // Otherwise, add the article to the current batch
-      currentBatch += '\n\n' + article;
-    }
+  let batches = [];
+  let position = 0;
+
+  // Loop through the large string, creating batches of the specified max size
+  while (position < allArticles.length) {
+    const batch = allArticles.substring(position, position + maxBatchSize);
+    batches.push(batch);
+    position += maxBatchSize;
   }
-  // Add the last batch if it's non-empty
-  if (currentBatch) {
-    batches.push(currentBatch);
-  }
-  batches.forEach((batch, index) => {
-    console.log(`Batch ${index} size:`, batch.length);
-  });
+
   return batches;
 };
 

@@ -57,15 +57,22 @@ const SentimentService = {
         },
       });
 
-      const articleBodies = response.data.stories.map((story) => story.body);
-      const articleBatches = sh.createBatches(articleBodies, 8048);
-      const date = response.data.stories[0].published_at;
-
       console.log(
-        'OOOOOOOOOOOOOOOOOOOOOOOOOOO',
-        articleBatches.length,
-        '1111111111111111111111111111111111111'
+        'Searcing Aylien for ',
+        subject,
+        ' from ',
+        startDate,
+        ' to ',
+        endDate
       );
+
+      const articleBodies = response.data.stories.map((story) => story.body);
+      console.log('Fetched articleBodies from Aylien');
+      const articleBatches = sh.createBatches(articleBodies, 8048);
+      console.log('Split articleBodies into', articleBatches.length, "batches");
+      const date = response.data.stories[0].published_at;
+      
+
       const processedData = await this.processAllArticles(
         articleBatches,
         date,
@@ -218,7 +225,7 @@ const SentimentService = {
 
     try {
       const response = await axios.post(url, body, config);
-      console.log('Received response from GPT-3.5 Turbo:');
+      //console.log('Received response from GPT-3.5 Turbo:');
       totalTokensUsed += response.data.usage.total_tokens;
 
       return response.data.choices[0].message.content.trim();
