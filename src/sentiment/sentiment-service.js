@@ -306,10 +306,8 @@ const SentimentService = {
   async findMissingDate(db, subjectID, sourceID) {
     let dateCursor = moment();
     let foundDate = null;
-    let loopCount = 0; // Add a loop count for debugging
 
     while (!foundDate) {
-
       while (dateCursor.day() === 0 || dateCursor.day() === 6) {
         dateCursor.subtract(1, 'days');
       }
@@ -333,18 +331,6 @@ const SentimentService = {
       } catch (error) {
         // Log any database errors
         console.error('Database query error:', error);
-      }
-
-      // Increment and log the loop count
-      loopCount++;
-      console.log('Loop count:', loopCount);
-
-      // Break out of the loop if it runs too many times to prevent potential infinite loop
-      if (loopCount > 300) {
-        console.error(
-          'Loop ran too many times, exiting to prevent potential infinite loop.'
-        );
-        break;
       }
     }
 
