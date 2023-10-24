@@ -7,6 +7,7 @@ const createBatches = (articleBodies, maxBatchSize) => {
   let batches = [];
   let currentBatch = '';
   for (const article of articleBodies) {
+
     // If adding the next article would exceed the maximum batch size,
     // start a new batch
     if (currentBatch.length + article.length > maxBatchSize) {
@@ -21,6 +22,9 @@ const createBatches = (articleBodies, maxBatchSize) => {
   if (currentBatch) {
     batches.push(currentBatch);
   }
+  batches.forEach((batch, index) => {
+    console.log(`Batch ${index} size:`, batch.length);
+  });
   return batches;
 };
 
