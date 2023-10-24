@@ -309,10 +309,7 @@ const SentimentService = {
     let loopCount = 0; // Add a loop count for debugging
 
     while (!foundDate) {
-      // Log the current date being checked
-      console.log('Checking date:', dateCursor.format('YYYY-MM-DD'));
 
-      // Skip weekends
       while (dateCursor.day() === 0 || dateCursor.day() === 6) {
         dateCursor.subtract(1, 'days');
       }
@@ -327,9 +324,6 @@ const SentimentService = {
             date_published: dateStr,
           })
           .first();
-
-        // Log the result of the database query
-        console.log('Database query result:', hasData);
 
         if (!hasData) {
           foundDate = dateStr;
