@@ -109,7 +109,7 @@ cron.schedule('0 6 * * *', () => {
 });
 
 let currentDate = moment();
-let daysback = 0;
+let daysback = 20;
 
 // Define your cron schedule
 cron.schedule('*/5 * * * *', async () => {
@@ -117,7 +117,7 @@ cron.schedule('*/5 * * * *', async () => {
 
   // Check if the current date is a weekend, if so, find the previous weekday
   while (currentDate.day() === 0 || currentDate.day() === 6) {
-    currentDate.subtract(20, 'days');
+    currentDate.subtract(1, 'days');
   }
 
   // Format the date to match the required format
