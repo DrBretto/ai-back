@@ -61,7 +61,7 @@ const SentimentService = {
 
       const articleBodies = response.data.stories.map((story) => story.body);
       console.log('Fetched', articleBodies.length, 'articles from Aylien');
-      const articleBatches = sh.createBatches(articleBodies, 12000);
+      const articleBatches = sh.createBatches(articleBodies, 8000);
       console.log('Split articleBodies into', articleBatches.length, 'batches');
       const date = response.data.stories[0].published_at;
 
@@ -89,7 +89,6 @@ const SentimentService = {
       } else {
         console.error('Failed to obtain subjectId for', subject);
       }
-
       return processedData;
     } catch (error) {
       console.error('Error in fetchHistoricalNews:', error);
