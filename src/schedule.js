@@ -50,7 +50,7 @@ module.exports = (app) => {
       });
   });
 
-  cron.schedule('*/10 * * * *', async () => {
+  cron.schedule('*/8 * * * *', async () => {
     const db = app.get('db');
 
     // Assume subjectIDs for 'gold' and 'dollar' are 1 and 2, respectively

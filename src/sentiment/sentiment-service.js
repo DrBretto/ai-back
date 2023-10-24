@@ -303,29 +303,53 @@ const SentimentService = {
     }
   },
 
-  // In SentimentService.js
   async findMissingDate(db, subjectID) {
     let dateCursor = moment();
     let foundDate = null;
+    let loopCount = 0; // Add a loop count for debugging
 
     while (!foundDate) {
+      // Log the current date being checked
+      console.log('Checking date:', dateCursor.format('YYYY-MM-DD'));
+
       // Skip weekends
       while (dateCursor.day() === 0 || dateCursor.day() === 6) {
         dateCursor.subtract(1, 'days');
       }
 
       const dateStr = dateCursor.format('YYYY-MM-DD');
-      const hasData = await db('sentiment_analysis')
-        .where({
-          subjectID: subjectID,
-          date_published: dateStr,
-        })
-        .first();
 
-      if (!hasData) {
-        foundDate = dateStr;
-      } else {
-        dateCursor.subtract(1, 'days');
+      try {
+        const hasData = await db('sentiment_analysis')
+          .where({
+            subjectID: subjectID,
+            date_published: dateStr,
+          })
+          .first();
+
+        // Log the result of the database query
+        console.log('Database query result:', hasData);
+
+        if (!hasData) {
+          foundDate = dateStr;
+        } else {
+          dateCursor.subtract(1, 'days');
+        }
+      } catch (error) {
+        // Log any database errors
+        console.error('Database query error:', error);
+      }
+
+      // Increment and log the loop count
+      loopCount++;
+      console.log('Loop count:', loopCount);
+
+      // Break out of the loop if it runs too many times to prevent potential infinite loop
+      if (loopCount > 300) {
+        console.error(
+          'Loop ran too many times, exiting to prevent potential infinite loop.'
+        );
+        break;
       }
     }
 
