@@ -1,13 +1,9 @@
 const cron = require('node-cron');
-const moment = require('moment-business-days');
 const StocksService = require('./stocks/stocks-service');
 const SentimentService = require('./sentiment/sentiment-service');
 
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth() + 1; // Months are 0-based in JS
-let currentDate = moment();
-let daysback = 97;
-currentDate.subtract(daysback, 'days')
 
 module.exports = (app) => {
   const db = app.get('db');
@@ -54,22 +50,38 @@ module.exports = (app) => {
       });
   });
 
-  cron.schedule('*/5 * * * *', async () => {
-    //Historical News Scheduler
-    while (currentDate.day() === 0 || currentDate.day() === 6) {
-      currentDate.subtract(1, 'days');
+  cron.schedule('*/10 * * * *', async () => {
+    const db = app.get('db');
+
+    // Assume subjectIDs for 'gold' and 'dollar' are 1 and 2, respectively
+    const missingDateGold = await SentimentService.findMissingDate(db, 1);
+    const missingDateDollar = await SentimentService.findMissingDate(db, 2);
+
+    if (missingDateGold) {
+      console.log(
+        'Fetching historical news for gold on date:',
+        missingDateGold
+      );
+      await SentimentService.fetchHistoricalNews(
+        db,
+        'gold',
+        missingDateGold,
+        missingDateGold
+      );
     }
 
-    const date = currentDate.format('YYYY-MM-DDTHH:mm:ss[Z]');
-
-    console.log('Fetching historical news for date:', currentDate);
-
-    await SentimentService.fetchHistoricalNews(db, 'gold', date, date);
-    await SentimentService.fetchHistoricalNews(db, 'dollar', date, date);
-
-    currentDate.subtract(1, 'days');
-    daysback++;
-    console.log('days back:', daysback);
+    if (missingDateDollar) {
+      console.log(
+        'Fetching historical news for dollar on date:',
+        missingDateDollar
+      );
+      await SentimentService.fetchHistoricalNews(
+        db,
+        'dollar',
+        missingDateDollar,
+        missingDateDollar
+      );
+    }
   });
 
   //Backlog Historical Price Scheduler////////////////////////////////////////

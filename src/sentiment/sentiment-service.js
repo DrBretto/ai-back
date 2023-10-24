@@ -1,5 +1,6 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const moment = require('moment');
 
 const AYLIEN_API_URL = 'https://api.aylien.com/news/stories';
 const AYLIEN_APP_ID = process.env.AYLIEN_APP_ID;
@@ -300,6 +301,35 @@ const SentimentService = {
     } catch (err) {
       console.error('Error inserting data:', err.code);
     }
+  },
+
+  // In SentimentService.js
+  async findMissingDate(db, subjectID) {
+    let dateCursor = moment();
+    let foundDate = null;
+
+    while (!foundDate) {
+      // Skip weekends
+      while (dateCursor.day() === 0 || dateCursor.day() === 6) {
+        dateCursor.subtract(1, 'days');
+      }
+
+      const dateStr = dateCursor.format('YYYY-MM-DD');
+      const hasData = await db('sentiment_analysis')
+        .where({
+          subjectID: subjectID,
+          date_published: dateStr,
+        })
+        .first();
+
+      if (!hasData) {
+        foundDate = dateStr;
+      } else {
+        dateCursor.subtract(1, 'days');
+      }
+    }
+
+    return foundDate;
   },
 
   async performSentimentAnalysis(db, subject, source) {
