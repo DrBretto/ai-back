@@ -322,7 +322,7 @@ const SentimentService = {
       try {
         const hasData = await db('sentiment_analysis')
           .where({
-            subjectID: subjectID,
+            subject_id: subjectID,
             date_published: dateStr,
           })
           .first();
