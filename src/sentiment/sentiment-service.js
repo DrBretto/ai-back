@@ -63,7 +63,7 @@ const SentimentService = {
 
       console.log(
         'OOOOOOOOOOOOOOOOOOOOOOOOOOO',
-        articleBatches,
+        articleBatches.length,
         '1111111111111111111111111111111111111'
       );
       const processedData = await this.processAllArticles(
