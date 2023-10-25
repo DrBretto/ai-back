@@ -5,6 +5,6 @@ def process_data(data):
     print(len(data))
 
 if __name__ == '__main__':
-    data_str = sys.argv[1]
-    data = json.loads(data_str)
-    process_data(data)
+    with open(sys.argv[1], 'r') as file:
+        data = json.load(file)
+        process_data(data)
