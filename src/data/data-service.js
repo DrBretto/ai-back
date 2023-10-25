@@ -1,10 +1,9 @@
-// data-service.js
 const fs = require('fs');
-const path = require('path');
+const path = require('path'); // Import the path module
 const { exec } = require('child_process');
 
-const CACHE_DIR = path.join(__dirname, '../cache');
-const CACHE_FILE = path.join(CACHE_DIR, 'pricing-cache.json');
+const CACHE_DIR = path.join(__dirname, '../cache'); // Use path.join to ensure correct path
+const CACHE_FILE = path.join(CACHE_DIR, 'pricing-cache.json'); // Use path.join for the cache file
 
 const DataService = {
   async getPricingData(db) {
