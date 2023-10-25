@@ -4,10 +4,14 @@ const { exec } = require('child_process');
 
 // Define the base directory path for your project
 const BASE_DIR = path.join(__dirname, '..');
-
+console.log(__dirname)
+console.log(BASE_DIR)
 // Define the cache directory and data file paths
 const CACHE_DIR = path.join(BASE_DIR, 'cache');
 const DATA_FILE = path.join(CACHE_DIR, 'pricing-cache.json');
+console.log(CACHE_DIR)
+console.log(DATA_FILE)
+
 
 const DataService = {
   async getPricingData(db) {
