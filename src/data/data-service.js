@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path'); // Import the path module
 const { exec } = require('child_process');
 
-const CACHE_DIR = path.join(__dirname, '../cache'); // Use path.join to ensure correct path
-const CACHE_FILE = path.join(CACHE_DIR, 'pricing-cache.json'); // Use path.join for the cache file
+// Define the base directory path for cache files
+const CACHE_BASE_DIR = path.join(__dirname, '../cache');
 
 const DataService = {
   async getPricingData(db) {
@@ -18,7 +18,15 @@ const DataService = {
   },
 
   async processDataWithPython(data) {
-    // Save data to a cache file
+    // Ensure the cache directory exists
+    if (!fs.existsSync(CACHE_BASE_DIR)) {
+      fs.mkdirSync(CACHE_BASE_DIR, { recursive: true });
+    }
+
+    // Define the cache file path
+    const CACHE_FILE = path.join(CACHE_BASE_DIR, 'pricing-cache.json');
+
+    // Save data to the cache file
     fs.writeFileSync(CACHE_FILE, JSON.stringify(data));
 
     // Execute the Python script to process data
