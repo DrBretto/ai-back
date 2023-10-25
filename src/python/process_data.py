@@ -6,7 +6,7 @@ def process_data(data):
     print("Received data:")
     print(json.dumps(data, indent=4))
     
-    count = len(data)  # Count the data points
+    count = len(data) if isinstance(data, list) else 0  # Count the data points
     result = {"count": count}
     
     # Write the result to a results file
