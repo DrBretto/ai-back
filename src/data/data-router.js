@@ -12,13 +12,19 @@ dataRouter.get('/process-prices', async (req, res, next) => {
 
     const process = spawn('python3', ['./python/process_data.py', JSON.stringify(prices)]);
     let scriptOutput = '';
+    let scriptError = '';  // Add this line to capture error output
     
     process.stdout.on('data', (data) => {
       scriptOutput += data.toString();
     });
 
+    process.stderr.on('data', (data) => {  // Add this block to capture error output
+      scriptError += data.toString();
+    });
+
     process.on('close', (code) => {
       if (code !== 0) {
+        console.error('Python script error:', scriptError);  // Log the error output
         return next(new Error('Python script failed'));
       }
       res.json({ count: scriptOutput });
@@ -27,5 +33,6 @@ dataRouter.get('/process-prices', async (req, res, next) => {
     next(error);
   }
 });
+
 
 module.exports = dataRouter;
