@@ -5,12 +5,14 @@ const path = require('path');
 const DataService = {
   async getPricingData(db) {
     const prices = await db.select('closing_price').from('stockrealtime');
-
     const data = prices.map((price) => price.closing_price);
 
     // Log the length of data and first few data points
-    console.log('Data length:', data.length);  
-    console.log('First 10 data points:', data.slice(0, 10));  
+    console.log('Data length:', data.length);
+    console.log('First 10 data points:', data.slice(0, 10));
+
+    // Log a preview of the JSON string
+    console.log('JSON string preview:', JSON.stringify(data).substring(0, 100));
 
     // Write data to a temporary file
     const filePath = path.join(__dirname, 'tempData.json');
@@ -29,10 +31,10 @@ const DataService = {
           fs.unlinkSync(filePath);
 
           if (error) {
-            console.log('Error from Python script:', error);  // Log error from Python script
+            console.log('Error from Python script:', error); // Log error from Python script
             reject(error);
           } else {
-            console.log('Output from Python script:', stdout);  // Log output from Python script
+            console.log('Output from Python script:', stdout); // Log output from Python script
             resolve(stdout);
           }
         }
