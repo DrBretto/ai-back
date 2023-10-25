@@ -1,20 +1,16 @@
-import sys
+import requests
 import json
 
-def process_data(data):
-    # Log the received data to understand its structure
-    print("Received data:")
-    print(json.dumps(data, indent=4))
-    
-    count = len(data) if isinstance(data, list) else 0  # Count the data points
-    result = {"count": count}
-    
-    # Write the result to a results file
-    with open('results.json', 'w') as result_file:
-        json.dump(result, result_file)
+def main():
+    # Make a request to the Node.js endpoint to get data
+    response = requests.get('http://localhost:10000/api/data')
+    data = response.json()
 
-if __name__ == '__main__':
-    data_file = sys.argv[1]
-    with open(data_file, 'r') as file:
-        data = json.load(file)
-    process_data(data)
+    # Count the number of price points
+    count = len(data)
+
+    # Send result to stdout
+    print(json.dumps({'count': count}))
+
+if __name__ == "__main__":
+    main()
