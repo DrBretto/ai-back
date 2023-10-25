@@ -1,11 +1,13 @@
 const fs = require('fs');
-const path = require('path'); // Import the path module
+const path = require('path');
 const { exec } = require('child_process');
 
-// Define the base directory path for cache files
-const BASE_DIR = path.join(__dirname, '..'); // Go up one directory to the base directory
-const CACHE_DIR = path.join(BASE_DIR, 'cache'); // Define the cache directory path
-const CACHE_FILE = path.join(CACHE_DIR, 'pricing-cache.json'); // Define the cache file path
+// Define the base directory path for your project
+const BASE_DIR = path.join(__dirname, '..');
+
+// Define the cache directory and data file paths
+const CACHE_DIR = path.join(BASE_DIR, 'cache');
+const DATA_FILE = path.join(CACHE_DIR, 'pricing-cache.json');
 
 const DataService = {
   async getPricingData(db) {
@@ -25,12 +27,12 @@ const DataService = {
       fs.mkdirSync(CACHE_DIR, { recursive: true });
     }
 
-    // Save data to the cache file
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(data));
+    // Save data to the data file
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data));
 
     // Execute the Python script to process data
     const pythonScript = path.join(BASE_DIR, 'python', 'process_data.py');
-    const command = `python ${pythonScript} ${CACHE_FILE}`;
+    const command = `python ${pythonScript} ${DATA_FILE}`;
 
     exec(command, (error, stdout, stderr) => {
       if (error) {
@@ -38,7 +40,12 @@ const DataService = {
         throw error;
       }
 
-      const count = parseInt(stdout);
+      // Read the result from the results file
+      const resultFilePath = path.join(BASE_DIR, 'python', 'results.json');
+      const resultData = fs.readFileSync(resultFilePath, 'utf8');
+      const result = JSON.parse(resultData);
+
+      const count = result.count;
       console.log(`Number of price points received: ${count}`);
     });
   },
