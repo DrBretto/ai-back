@@ -1,11 +1,10 @@
-# python/process_data.py
 import sys
 import json
 
-def main():
-    data = json.loads(sys.argv[1])
-    count = len(data)
-    print(count)
+def process_data(data):
+    print(len(data))
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    with open(sys.argv[1], 'r') as file:
+        data = json.load(file)
+        process_data(data)
