@@ -2,11 +2,16 @@ import sys
 import json
 
 def process_data(data):
-    count = len(data)
+    # Log the received data to understand its structure
+    print("Received data:")
+    print(json.dumps(data, indent=4))
+    
+    count = len(data)  # Count the data points
     result = {"count": count}
     
-    # Write the result to the console and return it
-    print(result["count"])
+    # Write the result to a results file
+    with open('results.json', 'w') as result_file:
+        json.dump(result, result_file)
 
 if __name__ == '__main__':
     data_file = sys.argv[1]
