@@ -3,7 +3,7 @@ const path = require('path'); // Import the path module
 const { exec } = require('child_process');
 
 // Define the base directory path for cache files
-const CACHE_BASE_DIR = path.join(__dirname, '../cache');
+const BASE_DIR = path.join(__dirname, '..'); // Go up one directory to the base directory
 
 const DataService = {
   async getPricingData(db) {
@@ -18,22 +18,25 @@ const DataService = {
   },
 
   async processDataWithPython(data) {
+    // Define the cache directory path
+    const CACHE_DIR = path.join(BASE_DIR, 'cache');
+
     // Ensure the cache directory exists
-    if (!fs.existsSync(CACHE_BASE_DIR)) {
-      fs.mkdirSync(CACHE_BASE_DIR, { recursive: true });
+    if (!fs.existsSync(CACHE_DIR)) {
+      fs.mkdirSync(CACHE_DIR, { recursive: true });
     }
 
     // Define the cache file path
-    const CACHE_FILE = path.join(CACHE_BASE_DIR, 'pricing-cache.json');
+    const CACHE_FILE = path.join(CACHE_DIR, 'pricing-cache.json');
 
     // Save data to the cache file
     fs.writeFileSync(CACHE_FILE, JSON.stringify(data));
 
     // Execute the Python script to process data
-    const pythonScript = path.join(__dirname, '../python/process_data.py');
+    const pythonScript = path.join(BASE_DIR, 'python', 'process_data.py');
     const command = `python ${pythonScript} ${CACHE_FILE}`;
 
-    exec(command, (error, stdout) => {
+    exec(command, (error, stdout, stderr) => {
       if (error) {
         console.error('Error executing Python script:', error);
         throw error;
