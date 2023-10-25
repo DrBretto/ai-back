@@ -2,15 +2,18 @@
 const express = require('express');
 const DataService = require('./data-service');
 const { spawn } = require('child_process');
+const path = require('path');
 
 const dataRouter = express.Router();
 
 dataRouter.get('/process-prices', async (req, res, next) => {
   try {
-    const db = req.app.get('db');
-    const prices = await DataService.getPricingData(db);
 
-    const process = spawn('python3', ['../python/process_data.py', JSON.stringify(prices)]);
+      const db = req.app.get('db');
+      const prices = await DataService.getPricingData(db);
+  
+      const scriptPath = path.join(__dirname, '..', 'python', 'process_data.py');
+      const process = spawn('python3', [scriptPath, JSON.stringify(prices)]);
     let scriptOutput = '';
     let scriptError = '';  // Add this line to capture error output
     
