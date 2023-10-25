@@ -6,8 +6,6 @@ def process_data(data):
 
 if __name__ == '__main__':
     with open(sys.argv[1], 'r') as file:
-        data = json.load(file)
-        # Log length of data read from file and first few data points
-        print(f'Length of data read from file: {len(data)}')
-        print(f'First 10 data points read from file: {data[:10]}')  
+        data = json.load(file)  # This line reads the data as JSON, which will be a list in Python
         process_data(data)
+
