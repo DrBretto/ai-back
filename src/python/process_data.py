@@ -2,6 +2,7 @@ import sys
 import json
 
 def process_data(data):
+    print(f'Data read from file: {data}')
     print(len(data))
 
 if __name__ == '__main__':
