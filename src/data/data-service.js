@@ -1,6 +1,10 @@
+// data-service.js
 const fs = require('fs');
-const { exec } = require('child_process');
 const path = require('path');
+const { exec } = require('child_process');
+
+const CACHE_DIR = path.join(__dirname, '../cache');
+const CACHE_FILE = path.join(CACHE_DIR, 'pricing-cache.json');
 
 const DataService = {
   async getPricingData(db) {
@@ -11,35 +15,27 @@ const DataService = {
     console.log('Data length:', data.length);
     console.log('First 10 data points:', data.slice(0, 10));
 
-    // Log a preview of the JSON string
-    console.log('JSON string preview:', JSON.stringify(data).substring(0, 100));
+    return data;
+  },
 
-    // Write data to a temporary file
-    const filePath = path.join(__dirname, 'tempData.json');
-    fs.writeFileSync(filePath, JSON.stringify(data));
+  async processDataWithPython(data) {
+    // Save data to a cache file
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(data));
 
-    return new Promise((resolve, reject) => {
-      exec(
-        `python3 ${path.join(
-          __dirname,
-          '..',
-          'python',
-          'process_data.py'
-        )} ${filePath}`,
-        (error, stdout) => {
-          // Delete the temporary file
-          fs.unlinkSync(filePath);
+    // Execute the Python script to process data
+    const pythonScript = path.join(__dirname, '../python/process_data.py');
+    const command = `python ${pythonScript} ${CACHE_FILE}`;
 
-          if (error) {
-            console.log('Error from Python script:', error); // Log error from Python script
-            reject(error);
-          } else {
-            console.log('Output from Python script:', stdout); // Log output from Python script
-            resolve(stdout);
-          }
-        }
-      );
+    exec(command, (error, stdout) => {
+      if (error) {
+        console.error('Error executing Python script:', error);
+        throw error;
+      }
+
+      const count = parseInt(stdout);
+      console.log(`Number of price points received: ${count}`);
     });
   },
 };
+
 module.exports = DataService;
