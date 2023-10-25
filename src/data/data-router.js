@@ -10,7 +10,7 @@ dataRouter.get('/process-prices', async (req, res, next) => {
     const db = req.app.get('db');
     const prices = await DataService.getPricingData(db);
 
-    const process = spawn('python3', ['./python/process_data.py', JSON.stringify(prices)]);
+    const process = spawn('python3', ['../python/process_data.py', JSON.stringify(prices)]);
     let scriptOutput = '';
     let scriptError = '';  // Add this line to capture error output
     
