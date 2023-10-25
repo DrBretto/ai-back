@@ -5,8 +5,12 @@ const fs = require('fs');
 const path = require('path');
 
 const dataRouter = express.Router();
-const CACHE_DIR = path.join(__dirname, '../cache');
+const BASE_DIR = __dirname;
+
+const CACHE_DIR = path.join(BASE_DIR, 'cache');
 const CACHE_FILE = path.join(CACHE_DIR, 'pricing-cache.json');
+
+console.log("fucking goddamn router", CACHE_FILE) 
 
 dataRouter.get('/process-prices', async (req, res, next) => {
   try {
