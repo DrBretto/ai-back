@@ -22,7 +22,7 @@ const DataService = {
       console.log('Current working directory:', process.cwd());
       console.log('scriptPath:', scriptPath);
       exec(
-        '/opt/render/.local/bin/python3.7 src/python/process_data.py',
+        './venv/bin/python3 src/python/process_data.py',
         (error, stdout, stderr) => {
           if (error) {
             console.error(`Error in processData: ${error}`);
