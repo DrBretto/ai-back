@@ -14,8 +14,12 @@ const DataService = {
   },
 
   async processData(data) {
-    const dataPath = path.join(__dirname, '..src/cache/data.json');
-    const resultPath = path.join(__dirname, '..src/cache/result.json');
+    console.log(process.cwd());
+
+    const dataPath = path.join('/opt/render/project/src/src/cache/data.json');
+    const resultPath = path.join(
+      '/opt/render/project/src/src/cache/result.json'
+    );
 
     // Write data to a file
     fs.writeFileSync(dataPath, JSON.stringify(data));
