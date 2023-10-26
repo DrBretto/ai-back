@@ -15,7 +15,7 @@ const DataService = {
 
   processData() {
     return new Promise((resolve, reject) => {
-      const scriptPath = path.join('process_data.py');
+      const scriptPath = path.join('/opt/render/project/srcprocess_data.py');
       console.log('Current working directory:', process.cwd()); 
       console.log('scriptPath:', scriptPath);
       exec(`python3 ${scriptPath}`, (error, stdout, stderr) => {
