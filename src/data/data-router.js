@@ -22,7 +22,6 @@ router.get('/process', async (req, res, next) => {
     res.json({ count: result });
   } catch (error) {
     console.error('Error object in /process route handler:', error);
-    console.log('Response object in /process route handler:', res);
     next(error);
   }
 });

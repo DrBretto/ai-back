@@ -5,7 +5,8 @@ def main():
     # Make a request to the Node.js endpoint to get data
     response = requests.get('http://localhost:10000/api/data')
     print(f'Response status: {response.status_code}')  # Log the response status
-    print(f'Response text: {response.text}')  # Log the response text
+    print(f"Response status code: {response.status_code}")
+
     data = response.json()
 
     # ... rest of your code ...

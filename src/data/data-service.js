@@ -25,8 +25,9 @@ const DataService = {
         '. env/bin/activate && env/bin/python src/python/process_data.py',
         (error, stdout, stderr) => {
           if (error) {
-            console.error(`Error in processData: ${error}`);
+            console.error(`Error in processData: ${error.message}`);
             console.error(`Stderr: ${stderr}`);
+            
             reject(error); // You might want to reject the promise here
             return;
           }
