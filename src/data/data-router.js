@@ -7,13 +7,14 @@ router.get('/data', async (req, res, next) => {
   const db = req.app.get('db');
   try {
     const data = await DataService.getData(db);
+    console.log('Data:', data);  // Log the data here
     res.json(data);
   } catch (error) {
-    console.error('Error object in /data route handler:', error);
-    console.log('Response object in /data route handler:', res);
+    console.error('Error:', error);
     next(error);
   }
 });
+
 
 router.get('/process', async (req, res, next) => {
   try {
