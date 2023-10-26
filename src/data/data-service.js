@@ -21,15 +21,31 @@ const DataService = {
       );
       console.log('Current working directory:', process.cwd());
       console.log('scriptPath:', scriptPath);
-      exec('pipenv run python3 src/python/process_data.py', (error, stdout, stderr) => {
+
+      const { exec } = require('child_process');
+      exec('which python3', (error, stdout, stderr) => {
         if (error) {
-          console.error(`Error in processData: ${error}`);
-          console.error(`Stderr: ${stderr}`);
+          console.error(`Error: ${error.message}`);
           return;
         }
-        console.log(`Python script output: ${stdout}`);
+        if (stderr) {
+          console.error(`Error: ${stderr}`);
+          return;
+        }
+        console.log(`Python Path: ${stdout}`);
       });
-      
+
+      exec(
+        'pipenv run python3 src/python/process_data.py',
+        (error, stdout, stderr) => {
+          if (error) {
+            console.error(`Error in processData: ${error}`);
+            console.error(`Stderr: ${stderr}`);
+            return;
+          }
+          console.log(`Python script output: ${stdout}`);
+        }
+      );
     });
   },
 };
