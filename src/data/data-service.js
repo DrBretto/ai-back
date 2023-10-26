@@ -35,16 +35,17 @@ const DataService = {
       });
 
       exec(
-        'source venv/bin/activate && /usr/bin/python3 src/python/process_data.py',
+        '. venv/bin/activate && /usr/bin/python3 src/python/process_data.py',
         (error, stdout, stderr) => {
-          if (error) {
-            console.error(`Error in processData: ${error}`);
-            console.error(`Stderr: ${stderr}`);
-            return;
-          }
-          console.log(`Python script output: ${stdout}`);
+            if (error) {
+                console.error(`Error in processData: ${error}`);
+                console.error(`Stderr: ${stderr}`);
+                return;
+            }
+            console.log(`Python script output: ${stdout}`);
         }
-      );
+    );
+    
     });
   },
 };
