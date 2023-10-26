@@ -21,17 +21,15 @@ const DataService = {
       );
       console.log('Current working directory:', process.cwd());
       console.log('scriptPath:', scriptPath);
-      exec(
-        './venv/bin/python3 src/python/process_data.py',
-        (error, stdout, stderr) => {
-          if (error) {
-            console.error(`Error in processData: ${error}`);
-            console.error(`Stderr: ${stderr}`);
-            return;
-          }
-          console.log(`Python script output: ${stdout}`);
+      exec('pipenv run python3 src/python/process_data.py', (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error in processData: ${error}`);
+          console.error(`Stderr: ${stderr}`);
+          return;
         }
-      );
+        console.log(`Python script output: ${stdout}`);
+      });
+      
     });
   },
 };
