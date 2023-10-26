@@ -1,7 +1,7 @@
 const exec = require('child_process').exec;
 const path = require('path');
 
-const DataService = {
+class DataService {
   async getData(db) {
     try {
       const data = await db('stockrealtime').select('close_price');
@@ -11,9 +11,9 @@ const DataService = {
       console.error('Error in getData:', error);
       throw error;
     }
-  },
+  }
 
-  processData: (data) => {
+  processData(data) {
     // Passing data as argument here
     return new Promise((resolve, reject) => {
       const scriptPath = path.join(
@@ -46,7 +46,9 @@ const DataService = {
         }
       });
     });
-  },
-};
+  }
+}
+
+module.exports = DataService;
 
 module.exports = DataService;
