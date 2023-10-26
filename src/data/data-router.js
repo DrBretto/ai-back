@@ -1,5 +1,5 @@
 const express = require('express');
-const DataService = require('../services/DataService');
+const DataService = require('./data-service');
 const router = express.Router();
 
 router.get('/data', async (req, res, next) => {
