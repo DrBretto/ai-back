@@ -20,7 +20,9 @@ router.get('/process', async (req, res, next) => {
   try {
     const db = req.app.get('db');
     const dataService = new DataService();
-    const count = await dataService.processData(db);
+    const data = await dataService.getData(db);
+    const count = await dataService.processData(data);
+
     console.log('Count in /data/process route handler:', count); // Log count here
     res.json({ count });
   } catch (error) {
