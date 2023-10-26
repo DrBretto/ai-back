@@ -15,23 +15,23 @@ const DataService = {
 
   processData() {
     return new Promise((resolve, reject) => {
-      const scriptPath = path.join(process.cwd(), '/src/python/process_data.py');
+      const scriptPath = path.join(
+        process.cwd(),
+        '/src/python/process_data.py'
+      );
       console.log('Current working directory:', process.cwd());
       console.log('scriptPath:', scriptPath);
-      exec(`python3 ${scriptPath}`, (error, stdout, stderr) => {
-        if (error) {
-          console.error('Error in processData:', error);
-          console.error('Stderr:', stderr);
-          reject(error);
-        } else {
-          try {
-            resolve(JSON.parse(stdout));
-          } catch (parseError) {
-            console.error('Error parsing JSON:', parseError);
-            reject(parseError);
+      exec(
+        '/opt/render/.local/bin/python3.7 src/python/process_data.py',
+        (error, stdout, stderr) => {
+          if (error) {
+            console.error(`Error in processData: ${error}`);
+            console.error(`Stderr: ${stderr}`);
+            return;
           }
+          console.log(`Python script output: ${stdout}`);
         }
-      });
+      );
     });
   },
 };
