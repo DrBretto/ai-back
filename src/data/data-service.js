@@ -16,11 +16,17 @@ const DataService = {
   async processData(data) {
     console.log(process.cwd());
 
-    const cacheDirPath1 = path.join(process.cwd(), 'src/cache');
-    const cacheDirPath2 = path.join(process.cwd(), 'cache');
+    const dirPath1 = path.join(process.cwd(), 'src');
+    const dirPath2 = process.cwd();
 
-    console.log('Does src/cache exist?', fs.existsSync(cacheDirPath1));
-    console.log('Does cache exist?', fs.existsSync(cacheDirPath2));
+    console.log(
+      'Contents of /opt/render/project/src/src:',
+      fs.readdirSync(dirPath1)
+    );
+    console.log(
+      'Contents of /opt/render/project/src:',
+      fs.readdirSync(dirPath2)
+    );
 
     const dataPath = path.join(process.cwd(), 'cache/data.json');
     const resultPath = path.join(process.cwd(), 'cache/result.json');
