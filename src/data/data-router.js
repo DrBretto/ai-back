@@ -15,8 +15,8 @@ router.get('/data', async (req, res, next) => {
 
 router.get('/process', async (req, res, next) => {
   try {
-    const result = await DataService.processData();
-    res.json({ count: result });
+    const count = await DataService.processData();
+    res.json({ count }); // Send back the count value
   } catch (error) {
     next(error);
   }
