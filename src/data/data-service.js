@@ -34,17 +34,26 @@ const DataService = {
         console.log(`Python Path: ${stdout}`);
       });
 
-      exec(
-        '. venv/bin/activate && /usr/bin/python3 src/python/process_data.py',
-        (error, stdout, stderr) => {
+      processData() {
+        return new Promise((resolve, reject) => {
+          const scriptPath = path.join(
+            process.cwd(),
+            '/src/python/process_data.py'
+          );
+          console.log('Current working directory:', process.cwd());
+          console.log('scriptPath:', scriptPath);
+    
+          exec('. env/bin/activate && /usr/bin/python3 src/python/process_data.py', (error, stdout, stderr) => {
             if (error) {
-                console.error(`Error in processData: ${error}`);
-                console.error(`Stderr: ${stderr}`);
-                return;
+              console.error(`Error in processData: ${error}`);
+              console.error(`Stderr: ${stderr}`);
+              return;
             }
             console.log(`Python script output: ${stdout}`);
-        }
-    );
+          });
+        });
+      },
+    
     
     });
   },
