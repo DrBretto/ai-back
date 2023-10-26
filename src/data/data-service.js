@@ -16,20 +16,8 @@ const DataService = {
   async processData(data) {
     console.log(process.cwd());
 
-    const dirPath1 = path.join(process.cwd(), 'src');
-    const dirPath2 = process.cwd();
-
-    console.log(
-      'Contents of /opt/render/project/src/src:',
-      fs.readdirSync(dirPath1)
-    );
-    console.log(
-      'Contents of /opt/render/project/src:',
-      fs.readdirSync(dirPath2)
-    );
-
-    const dataPath = path.join(process.cwd(), 'cache/data.json');
-    const resultPath = path.join(process.cwd(), 'cache/result.json');
+    const dataPath = path.join(process.cwd(), 'src/cache/data.json');
+    const resultPath = path.join(process.cwd(), 'src/cache/result.json');
 
     // Write data to a file
     fs.writeFileSync(dataPath, JSON.stringify(data));
