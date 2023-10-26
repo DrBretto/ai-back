@@ -2,7 +2,7 @@ const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-class DataService {
+const DataService = {
     async processData(data) {
         const dataPath = path.join(__dirname, '../cache/data.json');
         const resultPath = path.join(__dirname, '../cache/result.json');
@@ -31,6 +31,6 @@ class DataService {
             });
         });
     }
-}
+};
 
-module.exports = new DataService();
+module.exports = DataService;
