@@ -12,7 +12,7 @@ const DataService = {
     }
   },
 
-  async processData() {
+  processData() {
     return new Promise((resolve, reject) => {
       exec('python3 process_data.py', (error, stdout, stderr) => {
         if (error) {
@@ -20,7 +20,13 @@ const DataService = {
           console.error('Stderr:', stderr);
           reject(error);
         } else {
-          resolve(JSON.parse(stdout));
+          console.log('Python script output:', stdout); // Log the output from the Python script
+          try {
+            resolve(JSON.parse(stdout));
+          } catch (parseError) {
+            console.error('Error parsing JSON:', parseError);
+            reject(parseError);
+          }
         }
       });
     });
