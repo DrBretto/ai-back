@@ -41,7 +41,9 @@ const DataService = {
           fs.unlinkSync(dataPath);
           fs.unlinkSync(resultPath);
 
-          resolve(result);
+
+          resolve(result.count);
+
         }
       );
     });

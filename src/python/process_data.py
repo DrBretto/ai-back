@@ -19,4 +19,5 @@ if __name__ == '__main__':
 
     # Writing the result to a new file
     with open(result_path, 'w') as file:
-        file.write(result)
+        json.dump({"count": result}, file)
+
