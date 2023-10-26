@@ -34,7 +34,7 @@ const DataService = {
         console.log(`Python Path: ${stdout}`);
       });
 
-      processData() {
+      processData: () => {
         return new Promise((resolve, reject) => {
           const scriptPath = path.join(
             process.cwd(),
