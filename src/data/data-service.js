@@ -1,54 +1,36 @@
-const exec = require('child_process').exec;
+const { exec } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 class DataService {
-  async getData(db) {
-    try {
-      const data = await db('stockrealtime').select('closing_price');
-      console.log('Data fetched from database:', data);
-      return data.map((row) => row.close_price);
-    } catch (error) {
-      console.error('Error in getData:', error);
-      throw error;
+    async processData(data) {
+        const dataPath = path.join(__dirname, '../cache/data.json');
+        const resultPath = path.join(__dirname, '../cache/result.json');
+
+        // Write data to a file
+        fs.writeFileSync(dataPath, JSON.stringify(data));
+
+        return new Promise((resolve, reject) => {
+            exec(`. env/bin/activate && env/bin/python src/python/process_data.py ${dataPath} ${resultPath}`, (error, stdout, stderr) => {
+                if (error) {
+                    console.error('Error:', error);
+                    console.error('Standard Output:', stdout);
+                    console.error('Standard Error:', stderr);
+                    reject(error);
+                    return;
+                }
+
+                // Read result from a file
+                const result = JSON.parse(fs.readFileSync(resultPath, 'utf8'));
+
+                // Optionally, delete temporary files
+                fs.unlinkSync(dataPath);
+                fs.unlinkSync(resultPath);
+
+                resolve(result);
+            });
+        });
     }
-  }
-
-  processData(data) {
-    // Passing data as argument here
-    return new Promise((resolve, reject) => {
-      const scriptPath = path.join(
-        process.cwd(),
-        '/src/python/process_data.py'
-      );
-      console.log('Current working directory:', process.cwd());
-      console.log('scriptPath:', scriptPath);
-      console.log('Data to be processed:', JSON.stringify(data, null, 2)); // Log data here
-
-      const command = `. env/bin/activate && echo '${JSON.stringify(
-        data
-      )}' | env/bin/python src/python/process_data.py`; // Passing data here
-      console.log('Command:', command);
-
-      exec(command, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error in processData: ${error}`);
-          console.error(`Stderr: ${stderr}`);
-          reject(error);
-          return;
-        }
-        console.log(`Python script output: ${stdout}`);
-        try {
-          const result = JSON.parse(stdout);
-          resolve(result.count);
-        } catch (parseError) {
-          console.error(`Error parsing JSON: ${parseError}`);
-          reject(parseError);
-        }
-      });
-    });
-  }
 }
 
-module.exports = DataService;
-
-module.exports = DataService;
+module.exports = new DataService();
