@@ -22,7 +22,6 @@ const DataService = {
       console.log('Current working directory:', process.cwd());
       console.log('scriptPath:', scriptPath);
 
-      const { exec } = require('child_process');
       exec('which python3', (error, stdout, stderr) => {
         if (error) {
           console.error(`Error: ${error.message}`);
