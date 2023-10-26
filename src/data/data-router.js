@@ -7,7 +7,7 @@ router.get('/data', async (req, res, next) => {
     const db = req.app.get('db');
     const dataService = new DataService();
     const data = await dataService.getData(db);
-    console.log('Data in /data route handler:', data);  // Log data here
+    console.log('Data in /data route handler:', data); // Log data here
     res.json(data);
   } catch (error) {
     console.error('Error in /data route handler:', error);
@@ -16,12 +16,12 @@ router.get('/data', async (req, res, next) => {
 });
 
 router.get('/data/process', async (req, res, next) => {
+  console.log('Tell chatGPT to eat my ass. /data/process endpoint hit');
   try {
-    console.log("Tell chatGPT to eat my ass. /data/process endpoint hit")
     const db = req.app.get('db');
     const dataService = new DataService();
     const count = await dataService.processData(db);
-    console.log('Count in /data/process route handler:', count);  // Log count here
+    console.log('Count in /data/process route handler:', count); // Log count here
     res.json({ count });
   } catch (error) {
     console.error('Error in /process route handler:', error);
