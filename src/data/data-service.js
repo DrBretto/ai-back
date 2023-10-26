@@ -16,6 +16,12 @@ const DataService = {
   async processData(data) {
     console.log(process.cwd());
 
+    const cacheDirPath1 = path.join(process.cwd(), 'src/cache');
+    const cacheDirPath2 = path.join(process.cwd(), 'cache');
+
+    console.log('Does src/cache exist?', fs.existsSync(cacheDirPath1));
+    console.log('Does cache exist?', fs.existsSync(cacheDirPath2));
+
     const dataPath = path.join(process.cwd(), 'cache/data.json');
     const resultPath = path.join(process.cwd(), 'cache/result.json');
 
