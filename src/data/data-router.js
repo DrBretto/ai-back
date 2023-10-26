@@ -1,27 +1,27 @@
 const express = require('express');
+const DataService = require('../services/DataService');
 const router = express.Router();
 
-const DataService = require('./data-service');
-
 router.get('/data', async (req, res, next) => {
-  const db = req.app.get('db');
   try {
-    const data = await DataService.getData(db);
-    console.log('Data:', data);  // Log the data here
+    const db = req.app.get('db');
+    const dataService = new DataService();
+    const data = await dataService.getData(db);
     res.json(data);
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in /data route handler:', error);
     next(error);
   }
 });
 
-
-router.get('/process', async (req, res, next) => {
+router.get('/data/process', async (req, res, next) => {
   try {
-    const result = await DataService.processData();
-    res.json({ count: result });
+    const db = req.app.get('db');
+    const dataService = new DataService();
+    const count = await dataService.processData(db);
+    res.json({ count });
   } catch (error) {
-    console.error('Error object in /process route handler:', error);
+    console.error('Error in /process route handler:', error);
     next(error);
   }
 });
