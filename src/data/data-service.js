@@ -12,11 +12,12 @@ const DataService = {
     }
   },
 
-  processData() {
+  async processData() {
     return new Promise((resolve, reject) => {
-      exec('python3 process_data.py', (error, stdout) => {
+      exec('python3 process_data.py', (error, stdout, stderr) => {
         if (error) {
           console.error('Error in processData:', error);
+          console.error('Stderr:', stderr);
           reject(error);
         } else {
           resolve(JSON.parse(stdout));
