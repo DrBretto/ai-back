@@ -17,6 +17,7 @@ router.get('/data', async (req, res, next) => {
 
 router.get('/data/process', async (req, res, next) => {
   try {
+    console.log("Tell chatGPT to eat my ass. /data/process endpoint hit")
     const db = req.app.get('db');
     const dataService = new DataService();
     const count = await dataService.processData(db);
