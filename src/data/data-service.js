@@ -4,7 +4,7 @@ const path = require('path');
 class DataService {
   async getData(db) {
     try {
-      const data = await db('stockrealtime').select('close_price');
+      const data = await db('stockrealtime').select('closing_price');
       console.log('Data fetched from database:', data);
       return data.map((row) => row.close_price);
     } catch (error) {
