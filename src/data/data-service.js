@@ -13,7 +13,8 @@ const DataService = {
     }
   },
 
-  processData: () => {
+  processData: (data) => {
+    // Passing data as argument here
     return new Promise((resolve, reject) => {
       const scriptPath = path.join(
         process.cwd(),
@@ -21,9 +22,11 @@ const DataService = {
       );
       console.log('Current working directory:', process.cwd());
       console.log('scriptPath:', scriptPath);
+      console.log('Data to be processed:', JSON.stringify(data, null, 2)); // Log data here
 
-      const command =
-        '. env/bin/activate && env/bin/python src/python/process_data.py';
+      const command = `. env/bin/activate && echo '${JSON.stringify(
+        data
+      )}' | env/bin/python src/python/process_data.py`; // Passing data here
       console.log('Command:', command);
 
       exec(command, (error, stdout, stderr) => {
@@ -45,7 +48,5 @@ const DataService = {
     });
   },
 };
-
-module.exports = DataService;
 
 module.exports = DataService;

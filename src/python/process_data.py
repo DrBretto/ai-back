@@ -1,13 +1,11 @@
-import requests
+import sys
 import json
 
 def main():
-    url = 'http://localhost:8000/api/data'
-    print(f'URL: {url}')  # Log the URL
-    response = requests.get(url)
-    print(f'Response text: {response.text}')  # Log the response text
+    input_data = sys.stdin.read()  # Reading data from stdin
+    print(f'Input data: {input_data}')  # Log input data here
     try:
-        data = response.json()
+        data = json.loads(input_data)
     except json.decoder.JSONDecodeError as e:
         print(f'JSON Decode Error: {e}')
         return
