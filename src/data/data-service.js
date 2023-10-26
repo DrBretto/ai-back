@@ -31,7 +31,13 @@ const DataService = {
             return;
           }
           console.log(`Python script output: ${stdout}`);
-          resolve(stdout); // And resolve it here
+          try {
+            const result = JSON.parse(stdout);
+            resolve(result.count); // Now resolve with the count value
+          } catch (parseError) {
+            console.error(`Error parsing JSON: ${parseError}`);
+            reject(parseError);
+          }
         }
       );
     });
