@@ -2,7 +2,7 @@ const express = require('express');
 const DataService = require('./data-service');
 const router = express.Router();
 
-router.get('/data', async (req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
     const db = req.app.get('db');
     const dataService = new DataService();
@@ -15,7 +15,7 @@ router.get('/data', async (req, res, next) => {
   }
 });
 
-router.get('/data/process', async (req, res, next) => {
+router.get('/process', async (req, res, next) => {
   console.log('Tell chatGPT to eat my ass. /data/process endpoint hit');
   try {
     const db = req.app.get('db');
