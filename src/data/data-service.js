@@ -22,7 +22,7 @@ const DataService = {
       console.log('scriptPath:', scriptPath);
 
       exec(
-        'source env/bin/activate && env/bin/python src/python/process_data.py',
+        '. env/bin/activate && env/bin/python src/python/process_data.py',
         (error, stdout, stderr) => {
           if (error) {
             console.error(`Error in processData: ${error}`);
