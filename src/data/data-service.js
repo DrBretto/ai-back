@@ -1,4 +1,3 @@
-// data-service.js
 const exec = require('child_process').exec;
 const path = require('path');
 
@@ -13,7 +12,7 @@ const DataService = {
     }
   },
 
-  processData() {
+  processData: () => {
     return new Promise((resolve, reject) => {
       const scriptPath = path.join(
         process.cwd(),
@@ -22,39 +21,19 @@ const DataService = {
       console.log('Current working directory:', process.cwd());
       console.log('scriptPath:', scriptPath);
 
-      exec('which python3', (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error: ${error.message}`);
-          return;
+      exec(
+        '. env/bin/activate && /usr/bin/python3 src/python/process_data.py',
+        (error, stdout, stderr) => {
+          if (error) {
+            console.error(`Error in processData: ${error}`);
+            console.error(`Stderr: ${stderr}`);
+            reject(error); // You might want to reject the promise here
+            return;
+          }
+          console.log(`Python script output: ${stdout}`);
+          resolve(stdout); // And resolve it here
         }
-        if (stderr) {
-          console.error(`Error: ${stderr}`);
-          return;
-        }
-        console.log(`Python Path: ${stdout}`);
-      });
-
-      processData: () => {
-        return new Promise((resolve, reject) => {
-          const scriptPath = path.join(
-            process.cwd(),
-            '/src/python/process_data.py'
-          );
-          console.log('Current working directory:', process.cwd());
-          console.log('scriptPath:', scriptPath);
-    
-          exec('. env/bin/activate && /usr/bin/python3 src/python/process_data.py', (error, stdout, stderr) => {
-            if (error) {
-              console.error(`Error in processData: ${error}`);
-              console.error(`Stderr: ${stderr}`);
-              return;
-            }
-            console.log(`Python script output: ${stdout}`);
-          });
-        });
-      },
-    
-    
+      );
     });
   },
 };
