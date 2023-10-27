@@ -196,8 +196,8 @@ const SentimentService = {
          context of {subject}'s financial strength. For each new term, please do the following:
 
         - If the new term matches the meaning of a term in the master list, provide the term's ID number from the master list.
-        - If the new term does not match any term in the master list but is relevant, assign a value of 0.
-        - If the new term is irrelevant for financial analysis, assign a value of -1.
+        - If the new term does not match any term in the master list but is definitely relevant, assign a value of 0.
+        - If the new term is irrelevant for financial analysis or is way too specific to be useful, assign a value of -1.
         ${content}
         Please provide the results in the following JSON format:
         [{"term": "exampleTerm1", "value": 1}, {"term": "exampleTerm2", "value": 0}]
@@ -319,7 +319,9 @@ const SentimentService = {
 
   async fetchMasterList(db) {
     try {
-      const masterListData = await db('master_tokens').select('id', 'term');
+      const masterListData = await db('master_tokens')
+        .select('id', 'term')
+        .where('omit', false); // Exclude entries where omit is true
       // Convert the array of objects to a string, with each term-id pairing on a new line
       const masterListString = masterListData
         .map((entry) => `${entry.id}:${entry.term}`)
@@ -387,13 +389,13 @@ const SentimentService = {
   },
 
   async insertMasterTerm(db, term) {
-    console.log("new term", term)
+    console.log('new term', term);
     try {
       const [newIdObject] = await db('master_tokens')
         .insert({ term })
         .returning('id');
       const newId = newIdObject.id;
-      console.log("new term ID:", newId)
+      console.log('new term ID:', newId);
       return newId;
     } catch (error) {
       console.error('Error inserting term into master list:', error);
