@@ -190,7 +190,14 @@ const SentimentService = {
         userPrompt = `Please reduce this list of key phrases or entities from the following sentiment analysis that are indicative of the strength of ${subject}. remove repeated sentiments and Each term should be isolated for easy tokenization and be as concise as possible.\n\n${content}`;
         break;
       case 'compareTerms':
-        userPrompt = `Process the following list of new terms against a master list, comparing their meaning in the context of ${subject}'s strength. Pair each term with its matching term's number from the master list if a match is found. Assign a value of 0 if no match is found, and -1 if a term is irrelevant for financial sentiment analysis. Format the response as a JSON string with objects containing a 'term' and 'value' property, like: [{"term": "gold", "value": 1}, {"term": "silver", "value": 0}, ...].`;
+        userPrompt = `I have a master list of terms and a list of new terms. I want to compare the new terms against the master list in the context of {subject}'s financial strength. For each new term, please do the following:
+        - If the new term matches a term in the master list, provide the term's ID number from the master list.
+        - If the new term does not match any term in the master list but is relevant, assign a value of 0.
+        - If the new term is irrelevant for financial analysis, assign a value of -1.
+        
+        Please provide the results in the following JSON format:
+        [{"term": "exampleTerm1", "value": 1}, {"term": "exampleTerm2", "value": 0}, ...]
+        `;
         break;
       default:
         console.error('Invalid analysis type');
