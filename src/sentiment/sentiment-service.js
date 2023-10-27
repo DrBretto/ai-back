@@ -190,7 +190,11 @@ const SentimentService = {
         userPrompt = `Please reduce this list of key phrases or entities from the following sentiment analysis that are indicative of the strength of ${subject}. remove repeated sentiments and Each term should be isolated for easy tokenization and be as concise as possible.\n\n${content}`;
         break;
       case 'compareTerms':
-        userPrompt = `I have a master list of terms and a list of new terms. I want to compare the new terms against the master list in the context of {subject}'s financial strength. For each new term, please do the following:
+        userPrompt = `Below are two lists of terms related to the financial strength of ${subject}. The first is a Master List of 
+        previously analyzed terms, each associated with a unique ID. The second is a New Terms list that needs to be 
+        analyzed and compared against the Master List.  I want to compare the new terms against the master list in the
+         context of {subject}'s financial strength. For each new term, please do the following:
+         
         - If the new term matches the meaning of a term in the master list, provide the term's ID number from the master list.
         - If the new term does not match any term in the master list but is relevant, assign a value of 0.
         - If the new term is irrelevant for financial analysis, assign a value of -1.
