@@ -324,7 +324,7 @@ const SentimentService = {
     try {
       const termsToInsert = []; // Array to hold terms to be inserted into the master list
       const tokenValues = []; // Array to hold token values for updating the sentiment analysis database
-
+      console.log('processGPTresponse:', response);
       response.forEach((item) => {
         const { term, value } = item;
         if (value >= 1) {
@@ -428,7 +428,7 @@ const SentimentService = {
         return;
       }
       const sentimentTerms = sentimentEntry.tokenized_sentiment;
-
+      console.log('1: sentimentTerms:', sentimentTerms);
       // 2. Fetch the master list of terms
       const masterList = await this.fetchMasterList(db);
       if (!masterList) {
@@ -439,7 +439,7 @@ const SentimentService = {
       // 3. Send the data to GPT-3 for comparison
       const formattedInput = `MasterList:${masterList}\n\nNewTerms:${sentimentTerms}`;
 
-      console.log('formattedInput:', formattedInput);
+      console.log('2: formattedInput:', formattedInput);
 
       const gptResponse = await this.getSentimentFromGPT(
         formattedInput,
@@ -451,9 +451,11 @@ const SentimentService = {
         console.error('Failed to get response from GPT-3');
         return;
       }
-
+      console.log('3: gptResponse:', gptResponse);
       // Parse the GPT-3 response
       const parsedResponse = await this.parseGPTResponse(gptResponse);
+
+      console.log('4: parsedResponse:', parsedResponse);
 
       // Now call processGPTResponse with the parsed response
       const tokenValues = await this.processGPTResponse(parsedResponse, db);
@@ -461,7 +463,7 @@ const SentimentService = {
         console.error('Failed to process GPT-3 response');
         return;
       }
-      console.log('tokenValues:', tokenValues);
+      console.log('5: tokenValues:', tokenValues);
 
       // 5. Update the sentiment analysis database
       await this.updateSentimentAnalysis(db, tokenValues, sentimentAnalysisId);
