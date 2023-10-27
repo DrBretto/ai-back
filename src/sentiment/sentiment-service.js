@@ -405,8 +405,6 @@ const SentimentService = {
   },
 
   async parseGPTResponse(gptResponse) {
-
-    console.log('gptResponse in parssegptresponse:', gptResponse)
     // Find the positions of the enclosing square brackets
     const startIndex = gptResponse.indexOf('[');
     const endIndex = gptResponse.lastIndexOf(']');
@@ -419,8 +417,6 @@ const SentimentService = {
     // Extract the JSON-formatted string
     let jsonString = gptResponse.substring(startIndex, endIndex + 1);
     jsonString = jsonString.replace(/\.\.\./g, '');
-
-
 
     console.log('jsonString after modifications:', jsonString);
 
