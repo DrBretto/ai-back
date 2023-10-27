@@ -457,6 +457,7 @@ const SentimentService = {
         console.error('Failed to process GPT-3 response');
         return;
       }
+      console.log('tokenValues:', tokenValues);
 
       // 5. Update the sentiment analysis database
       await this.updateSentimentAnalysis(db, tokenValues, sentimentAnalysisId);
