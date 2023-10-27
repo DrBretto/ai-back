@@ -191,7 +191,7 @@ const SentimentService = {
         break;
       case 'compareTerms':
         userPrompt = `I have a master list of terms and a list of new terms. I want to compare the new terms against the master list in the context of {subject}'s financial strength. For each new term, please do the following:
-        - If the new term matches a term in the master list, provide the term's ID number from the master list.
+        - If the new term matches the meaning of a term in the master list, provide the term's ID number from the master list.
         - If the new term does not match any term in the master list but is relevant, assign a value of 0.
         - If the new term is irrelevant for financial analysis, assign a value of -1.
         
