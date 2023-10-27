@@ -439,7 +439,7 @@ const SentimentService = {
       // 3. Send the data to GPT-3 for comparison
       const formattedInput = `MasterList:${masterList}\n\nNewTerms:${sentimentTerms}`;
 
-      console.lg('formattedInput:', formattedInput);
+      console.log('formattedInput:', formattedInput);
 
       const gptResponse = await this.getSentimentFromGPT(
         formattedInput,
