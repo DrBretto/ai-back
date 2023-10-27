@@ -48,4 +48,17 @@ sentimentRouter.get('/historical-news', async (req, res, next) => {
   }
 });
 
+sentimentRouter.get('/compare-terms/:id', async (req, res, next) => {
+  const { id } = req.params;
+  const db = req.app.get('db');
+
+  try {
+    await SentimentService.performTermComparison(db, id);
+    res.status(200).send('Term comparison completed successfully');
+  } catch (error) {
+    console.error('Error in /compare-terms/:id endpoint:', error);
+    next(error);
+  }
+});
+
 module.exports = sentimentRouter;

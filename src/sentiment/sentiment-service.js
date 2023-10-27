@@ -189,6 +189,9 @@ const SentimentService = {
       case 'reduceSentiment':
         userPrompt = `Please reduce this list of key phrases or entities from the following sentiment analysis that are indicative of the strength of ${subject}. remove repeated sentiments and Each term should be isolated for easy tokenization and be as concise as possible.\n\n${content}`;
         break;
+      case 'compareTerms':
+        userPrompt = `placeholder prompt for compareTerms`;
+        break;
       default:
         console.error('Invalid analysis type');
         return null;
@@ -300,6 +303,138 @@ const SentimentService = {
       console.log('Data inserted successfully.');
     } catch (err) {
       console.error('Error inserting data:', err.code);
+    }
+  },
+
+  async fetchMasterList(db) {
+    try {
+      const masterList = await db('master_tokens').select('id', 'term');
+      return masterList;
+    } catch (error) {
+      console.error('Error fetching master list:', error);
+      return null;
+    }
+  },
+
+  async processGPTResponse(response, db) {
+    try {
+      const termsToInsert = []; // Array to hold terms to be inserted into the master list
+      const tokenValues = []; // Array to hold token values for updating the sentiment analysis database
+
+      response.forEach((item) => {
+        const { term, value } = item;
+        if (value >= 1) {
+          // If the value is 1 or higher, add the value to the tokenValues array
+          tokenValues.push(value);
+        } else if (value === 0) {
+          // If the value is 0, add the term to the termsToInsert array for later insertion into the master list
+          termsToInsert.push(term);
+        }
+        // If the value is -1, we ignore the term
+      });
+
+      // Insert new terms into the master list and update tokenValues array with new IDs
+      for (const term of termsToInsert) {
+        const newId = await this.insertMasterTerm(db, term);
+        if (newId) {
+          tokenValues.push(newId);
+        }
+      }
+
+      return tokenValues;
+    } catch (error) {
+      console.error('Error processing GPT response:', error);
+      return null;
+    }
+  },
+
+  async fetchSentimentAnalysisEntry(db, sentimentAnalysisId) {
+    try {
+      const entry = await db('sentiment_analysis')
+        .where('id', sentimentAnalysisId)
+        .first();
+      return entry;
+    } catch (error) {
+      console.error('Error fetching sentiment analysis entry:', error);
+      return null;
+    }
+  },
+
+  async updateSentimentAnalysis(db, tokenValues, sentimentAnalysisId) {
+    try {
+      await db('sentiment_analysis')
+        .where('id', sentimentAnalysisId)
+        .update({
+          master_token_values: JSON.stringify(tokenValues),
+        });
+      console.log('Sentiment analysis updated successfully.');
+    } catch (error) {
+      console.error('Error updating sentiment analysis:', error);
+    }
+  },
+
+  async insertMasterTerm(db, term) {
+    try {
+      const [newId] = await db('master_tokens')
+        .insert({ term })
+        .returning('id');
+      return newId;
+    } catch (error) {
+      console.error('Error inserting term into master list:', error);
+      return null;
+    }
+  },
+
+  async performTermComparison(db, sentimentAnalysisId) {
+    try {
+      // 1. Fetch a sentiment analysis entry
+      const sentimentEntry = await this.fetchSentimentAnalysisEntry(
+        db,
+        sentimentAnalysisId
+      );
+      if (!sentimentEntry) {
+        console.error(
+          'No sentiment analysis entry found for ID:',
+          sentimentAnalysisId
+        );
+        return;
+      }
+      const sentimentTerms = JSON.parse(sentimentEntry.tokenized_sentiment);
+
+      // 2. Fetch the master list of terms
+      const masterList = await this.fetchMasterList(db);
+      if (!masterList) {
+        console.error('Failed to fetch master list');
+        return;
+      }
+
+      // 3. Send the data to GPT-3 for comparison
+      const gptResponse = await this.getSentimentFromGPT(
+        sentimentTerms,
+        'compareTerms',
+        masterList
+      );
+      if (!gptResponse) {
+        console.error('Failed to get response from GPT-3');
+        return;
+      }
+
+      // 4. Process the GPT-3 response
+      const tokenValues = await this.processGPTResponse(gptResponse, db);
+      if (!tokenValues) {
+        console.error('Failed to process GPT-3 response');
+        return;
+      }
+
+      // 5. Update the sentiment analysis database
+      await this.updateSentimentAnalysis(db, tokenValues, sentimentAnalysisId);
+
+      console.log(
+        'Term comparison completed successfully for sentiment analysis ID:',
+        sentimentAnalysisId
+      );
+    } catch (error) {
+      console.error('Error performing term comparison:', error);
     }
   },
 

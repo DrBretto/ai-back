@@ -68,3 +68,8 @@ CREATE TABLE sentiment_analysis (
   high_score NUMERIC(6, 4)
 );
 
+CREATE TABLE master_tokens (
+    id SERIAL PRIMARY KEY,
+    term VARCHAR(255) UNIQUE NOT NULL,
+    token_value INT UNIQUE NOT NULL
+);
