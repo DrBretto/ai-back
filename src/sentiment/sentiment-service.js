@@ -438,6 +438,15 @@ const SentimentService = {
         return;
       }
       const sentimentTerms = sentimentEntry.tokenized_sentiment;
+      // Check for a null or undefined value
+      if (sentimentTerms === null || sentimentTerms === undefined) {
+        console.error(
+          'Tokenized sentiment is null or undefined for id:',
+          sentimentAnalysisId
+        );
+        return; // Exit the function early
+      }
+
       // 2. Fetch the master list of terms
       const masterList = await this.fetchMasterList(db);
       if (!masterList) {
