@@ -441,15 +441,17 @@ const SentimentService = {
   async insertMasterTerm(db, term) {
     console.log('Inserting new term into master list:', term);
     try {
-      const [newId] = await db('master_tokens')
+      const [newIdObject] = await db('master_tokens')
         .insert({ term })
         .returning('id');
+      const newId = newIdObject.id;
       return newId;
     } catch (error) {
       console.error('Error inserting term into master list:', error);
       return null;
     }
   },
+  
 
   async parseGPTResponse(gptResponse) {
     // Find the positions of the enclosing square brackets
