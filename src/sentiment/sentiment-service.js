@@ -190,7 +190,7 @@ const SentimentService = {
         userPrompt = `Please reduce this list of key phrases or entities from the following sentiment analysis that are indicative of the strength of ${subject}. remove repeated sentiments and Each term should be isolated for easy tokenization and be as concise as possible.\n\n${content}`;
         break;
       case 'compareTerms':
-        userPrompt = `placeholder prompt for compareTerms`;
+        userPrompt = `Process the following list of new terms against a master list, comparing their meaning in the context of ${subject}'s strength. Pair each term with its matching term's number from the master list if a match is found. Assign a value of 0 if no match is found, and -1 if a term is irrelevant for financial sentiment analysis. Format the response as a JSON string with objects containing a 'term' and 'value' property, like: [{"term": "gold", "value": 1}, {"term": "silver", "value": 0}, ...].`;
         break;
       default:
         console.error('Invalid analysis type');
@@ -308,8 +308,12 @@ const SentimentService = {
 
   async fetchMasterList(db) {
     try {
-      const masterList = await db('master_tokens').select('id', 'term');
-      return masterList;
+      const masterListData = await db('master_tokens').select('id', 'term');
+      // Convert the array of objects to a string, with each term-id pairing on a new line
+      const masterListString = masterListData
+        .map((entry) => `${entry.id}:${entry.term}`)
+        .join('\n');
+      return masterListString;
     } catch (error) {
       console.error('Error fetching master list:', error);
       return null;
@@ -362,11 +366,9 @@ const SentimentService = {
 
   async updateSentimentAnalysis(db, tokenValues, sentimentAnalysisId) {
     try {
-      await db('sentiment_analysis')
-        .where('id', sentimentAnalysisId)
-        .update({
-          master_token_values: JSON.stringify(tokenValues),
-        });
+      await db('sentiment_analysis').where('id', sentimentAnalysisId).update({
+        token_values: tokenValues,
+      });
       console.log('Sentiment analysis updated successfully.');
     } catch (error) {
       console.error('Error updating sentiment analysis:', error);
@@ -385,7 +387,32 @@ const SentimentService = {
     }
   },
 
-  async performTermComparison(db, sentimentAnalysisId) {
+  async parseGPTResponse(gptResponse) {
+    // Find the positions of the enclosing square brackets
+    const startIndex = gptResponse.indexOf('[');
+    const endIndex = gptResponse.lastIndexOf(']');
+
+    if (startIndex === -1 || endIndex === -1 || startIndex >= endIndex) {
+      console.error('Invalid GPT-3 response format:', gptResponse);
+      return null;
+    }
+
+    // Extract the JSON-formatted string
+    const jsonString = gptResponse.substring(startIndex, endIndex + 1);
+
+    // Parse the JSON-formatted string into an array of objects
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(jsonString);
+    } catch (error) {
+      console.error('Error parsing JSON string:', error);
+      return null;
+    }
+
+    return parsedResponse;
+  },
+
+  async performTermComparison(db, sentimentAnalysisId, subject) {
     try {
       // 1. Fetch a sentiment analysis entry
       const sentimentEntry = await this.fetchSentimentAnalysisEntry(
@@ -399,7 +426,7 @@ const SentimentService = {
         );
         return;
       }
-      const sentimentTerms = JSON.parse(sentimentEntry.tokenized_sentiment);
+      const sentimentTerms = sentimentEntry.tokenized_sentiment;
 
       // 2. Fetch the master list of terms
       const masterList = await this.fetchMasterList(db);
@@ -409,18 +436,23 @@ const SentimentService = {
       }
 
       // 3. Send the data to GPT-3 for comparison
+      const formattedInput = `MasterList:${masterList}\n\nNewTerms:${sentimentTerms}`;
       const gptResponse = await this.getSentimentFromGPT(
-        sentimentTerms,
+        formattedInput,
         'compareTerms',
-        masterList
+        subject
       );
+
       if (!gptResponse) {
         console.error('Failed to get response from GPT-3');
         return;
       }
 
-      // 4. Process the GPT-3 response
-      const tokenValues = await this.processGPTResponse(gptResponse, db);
+      // Parse the GPT-3 response
+      const parsedResponse = await this.parseGPTResponse(gptResponse);
+
+      // Now call processGPTResponse with the parsed response
+      const tokenValues = await this.processGPTResponse(parsedResponse, db);
       if (!tokenValues) {
         console.error('Failed to process GPT-3 response');
         return;
