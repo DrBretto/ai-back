@@ -377,6 +377,7 @@ const SentimentService = {
   },
 
   async insertMasterTerm(db, term) {
+    console.log('Inserting new term into master list:', term);
     try {
       const [newId] = await db('master_tokens')
         .insert({ term })
