@@ -240,56 +240,6 @@ const SentimentService = {
     }
   },
 
-  async getTokensFromGPT(content, analysisType, subject) {
-    const apiKey = OPENAI_API_KEY;
-    const url = OPENAI_API_URL;
-    let userPrompt = '';
-
-    userPrompt = `Below are two lists of terms related to the financial strength of ${subject}. The first is a Master List of 
-        previously analyzed terms, each associated with a unique ID. The second is a New Terms list that needs to be 
-        analyzed and compared against the Master List.  I want to compare the new terms against the master list in the
-         context of {subject}'s financial strength. For each new term, please do the following:
-         
-        - If the new term matches the meaning of a term in the master list, provide the term's ID number from the master list.
-        - If the new term does not match any term in the master list but is relevant, assign a value of 0.
-        - If the new term is irrelevant for financial analysis, assign a value of -1.
-        
-        Please provide the results in the following JSON format:
-        [{"term": "exampleTerm1", "value": 1}, {"term": "exampleTerm2", "value": 0}, ...]
-        `;
-
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-    };
-
-    const body = {
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a financial analyst specialized in commodities.',
-        },
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ],
-    };
-
-    try {
-      const response = await axios.post(url, body, config);
-      totalTokensUsed += response.data.usage.total_tokens;
-
-      return response.data.choices[0].message.content.trim();
-    } catch (error) {
-      console.error(`Error in getSentimentFromGPT for ${analysisType}:`, error);
-      return null;
-    }
-  },
-
   async getOrCreateSubjectID(db, subject) {
     try {
       // Try to find the subject ID in the database
@@ -503,6 +453,7 @@ const SentimentService = {
         'compareTerms',
         subject
       );
+      console.log('gptResponse', gptResponse);
 
       if (!gptResponse) {
         console.error('Failed to get response from GPT-3');
