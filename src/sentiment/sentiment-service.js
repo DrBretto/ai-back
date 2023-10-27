@@ -199,10 +199,9 @@ const SentimentService = {
         - If the new term does not match any term in the master list but is definitely relevant, assign a value of 0.
         - If the new term is irrelevant for financial analysis or is way too specific to be useful, assign a value of -1.
         ${content}
-        Please provide the results in the following JSON format:
+        Please do not truncate your response. Please provide the results in the following JSON format with no unnecessary characters:
         [{"term": "exampleTerm1", "value": 1}, {"term": "exampleTerm2", "value": 0}]
-        Please do not truncate your response. Please generate the entire json code so I can parse it properly
-        `;
+         `;
         break;
       default:
         console.error('Invalid analysis type');
