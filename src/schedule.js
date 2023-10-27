@@ -90,9 +90,10 @@ module.exports = (app) => {
     console.log('Processing unprocessed entry at:', new Date());
 
     try {
-      // Fetch the first entry with token_values as null
+      // Fetch the first entry with token_values as null, ordered by id
       const entry = await db('sentiment_analysis')
         .whereNull('token_values')
+        .orderBy('id', 'asc') // Ensure entries are processed in order of their id
         .first();
 
       if (entry) {
