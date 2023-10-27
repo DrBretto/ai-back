@@ -200,7 +200,7 @@ const SentimentService = {
         - If the new term is irrelevant for financial analysis, assign a value of -1.
         ${content}
         Please provide the results in the following JSON format:
-        [{"term": "exampleTerm1", "value": 1}, {"term": "exampleTerm2", "value": 0}, ...]
+        [{"term": "exampleTerm1", "value": 1}, {"term": "exampleTerm2", "value": 0}]
         Please do not truncate your response.
         `;
         break;
