@@ -84,6 +84,32 @@ module.exports = (app) => {
     }
   });
 
+  cron.schedule('*/2 * * * *', async () => {
+    //Every 2 Minute Sentiment Analysis Scheduler
+    console.log('Processing unprocessed entry at:', new Date());
+
+    try {
+      // Fetch the first entry with token_values as null
+      const entry = await db('sentiment_analysis')
+        .whereNull('token_values')
+        .first();
+
+      if (entry) {
+        // If an unprocessed entry is found, trigger your sentiment analysis functions
+        const sentimentAnalysisId = entry.id;
+        await SentimentService.performTermComparison(db, sentimentAnalysisId);
+        console.log(
+          'Successfully processed entry with id:',
+          sentimentAnalysisId
+        );
+      } else {
+        console.log('No unprocessed entries found.');
+      }
+    } catch (error) {
+      console.error('Error processing unprocessed entry:', error);
+    }
+  });
+
   //Backlog Historical Price Scheduler////////////////////////////////////////
   // cron.schedule('*/10 * * * *', async () => {
   //   const db = app.get('db');
