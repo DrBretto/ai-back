@@ -85,6 +85,7 @@ module.exports = (app) => {
   });
 
   cron.schedule('*/2 * * * *', async () => {
+    const db = app.get('db');
     //Every 2 Minute Sentiment Analysis Scheduler
     console.log('Processing unprocessed entry at:', new Date());
 
