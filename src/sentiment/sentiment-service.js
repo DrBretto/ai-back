@@ -199,8 +199,10 @@ const SentimentService = {
         - If the new term does not match any term in the master list but is definitely relevant, assign a value of 0.
         - If the new term is irrelevant for financial analysis or is way too specific to be useful, assign a value of -1.
         ${content}
-        Please do not truncate your response. Generate the entire list. Please provide the results in the following JSON format with no unnecessary characters:
+        Please provide the results in the following JSON format:
         [{"term": "exampleTerm1", "value": 1}, {"term": "exampleTerm2", "value": 0}]
+        Please do not truncate your response. Generate the entire list. If you are unable to
+        generate the entire list, just properly finish the json entry so I can still parse it.
          `;
         break;
       default:
