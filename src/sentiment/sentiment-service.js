@@ -201,6 +201,7 @@ const SentimentService = {
         ${content}
         Please provide the results in the following JSON format:
         [{"term": "exampleTerm1", "value": 1}, {"term": "exampleTerm2", "value": 0}, ...]
+        Please do not truncate your response.
         `;
         break;
       default:
