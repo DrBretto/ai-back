@@ -399,7 +399,7 @@ const SentimentService = {
       console.log('new term ID:', newId);
       return newId;
     } catch (error) {
-      console.error('Error inserting term into master list:', error);
+      console.error('Error inserting term into master list');
       return null;
     }
   },
