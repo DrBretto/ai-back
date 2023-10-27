@@ -365,6 +365,7 @@ const SentimentService = {
   },
 
   async updateSentimentAnalysis(db, tokenValues, sentimentAnalysisId) {
+    console.log('Token values to update:', tokenValues);
     try {
       await db('sentiment_analysis').where('id', sentimentAnalysisId).update({
         token_values: tokenValues,
