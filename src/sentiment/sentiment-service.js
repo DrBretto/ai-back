@@ -194,12 +194,12 @@ const SentimentService = {
       case 'compareTerms':
         userPrompt = `Below are two lists of terms related to the financial strength of ${subject}. The first is a Master List of 
         previously analyzed terms, each associated with a unique ID. The second is a New Terms list that needs to be 
-        analyzed and compared against the Master List.  I want to compare the new terms against the master list in the
+        analyzed and compared against the Master List. I want to compare the new terms against the master list in the
          context of {subject}'s financial strength. Identify only 5-10 of the most relevant and important terms.
           For each important term, please do the following:
         
-        - If the new term matches the sentiment and meaning of a term in the master list, provide the term's ID number from the master list.
-        - If the new term does not match any term in the master list but is definitely relevant, assign a value of 0.
+        - For each new term, find the closest match on the master list and provide the term's ID number from the master list.
+        - If the new term does not match any term in the master list but is definitely relevant to the trading of ${subject}, assign a value of 0.
         - If the new term is irrelevant for financial analysis or is way too specific to be useful, assign a value of -1.
 
         ${content}
