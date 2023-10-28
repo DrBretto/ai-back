@@ -181,10 +181,12 @@ const SentimentService = {
         userPrompt = `Give a detailed sentiment analysis, describing the strength of ${subject}, based on the following news articles:\n\n${content}`;
         break;
       case 'sentimentScore':
-        userPrompt = `Please quantize this sentiment analysis. The score should be a float between -1 and 1 where 1 is extremely positive and -1 is extremly negative and 0 is neutral:\n\n${content}`;
+        userPrompt = `Please quantize this sentiment analysis. The score should be a float between -1 and 1 where 1 is extremely positive 
+        and -1 is extremly negative and 0 is neutral:\n\n${content}`;
         break;
       case 'tokenizeSentiment':
-        userPrompt = `Please list individual key phrases or entities from the following sentiment analysis that are indicative of the strength of ${subject}. Each term should be isolated for easy tokenization and be as concise as possible.\n\n${content}`;
+        userPrompt = `Please list individual key phrases or entities from the following sentiment analysis that are indicative of the 
+        strength of ${subject}. Only the most important terms for prediction of ${subject} prices. Each term should be isolated for easy tokenization and be as concise as possible. Format your response with a comma separated list\n\n${content}`;
         break;
       case 'reduceSentiment':
         userPrompt = `Please reduce this list of key phrases or entities from the following sentiment analysis that are indicative of the strength of ${subject}. remove repeated sentiments and Each term should be isolated for easy tokenization and be as concise as possible.\n\n${content}`;
