@@ -237,7 +237,10 @@ const SentimentService = {
 
       return response.data.choices[0].message.content.trim();
     } catch (error) {
-      console.error(`Error in getSentimentFromGPT for ${analysisType}:`, error.code);
+      console.error(
+        `Error in getSentimentFromGPT for ${analysisType}:`,
+        error.code
+      );
       return null;
     }
   },
@@ -402,7 +405,7 @@ const SentimentService = {
       console.log('new term ID:', term, newId);
       return newId;
     } catch (error) {
-      console.error('Error inserting term into master list');
+      console.error('Error inserting term into master list:', term);
       return null;
     }
   },
