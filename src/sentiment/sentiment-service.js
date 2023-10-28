@@ -377,7 +377,8 @@ const SentimentService = {
     try {
       const masterListData = await db('master_tokens')
         .select('id', 'term')
-        .where('omit', false); // Exclude entries where omit is true
+        .where('omit', false)
+        .limit(100); // Exclude entries where omit is true
       // Convert the array of objects to a string, with each term-id pairing on a new line
       const masterListString = masterListData
         .map((entry) => `${entry.id}:${entry.term}`)
