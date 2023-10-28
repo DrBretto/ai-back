@@ -196,7 +196,7 @@ const SentimentService = {
          context of {subject}'s financial strength. Identify only 5-10 of the most relevant and important terms.
           For each important term, please do the following:
         
-        - If the new term matches the meaning of a term in the master list, provide the term's ID number from the master list.
+        - If the new term matches the sentiment and meaning of a term in the master list, provide the term's ID number from the master list.
         - If the new term does not match any term in the master list but is definitely relevant, assign a value of 0.
         - If the new term is irrelevant for financial analysis or is way too specific to be useful, assign a value of -1.
 
