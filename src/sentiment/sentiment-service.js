@@ -390,13 +390,12 @@ const SentimentService = {
   },
 
   async insertMasterTerm(db, term) {
-    console.log('new term', term);
     try {
       const [newIdObject] = await db('master_tokens')
         .insert({ term })
         .returning('id');
       const newId = newIdObject.id;
-      console.log('new term ID:', newId);
+      console.log('new term ID:',term, newId);
       return newId;
     } catch (error) {
       console.error('Error inserting term into master list');
@@ -418,7 +417,6 @@ const SentimentService = {
     let jsonString = gptResponse.substring(startIndex, endIndex + 1);
     jsonString = jsonString.replace(/\.\.\./g, '');
 
-    console.log('jsonString after modifications:', jsonString);
 
     // Parse the JSON-formatted string into an array of objects
     let parsedResponse;
@@ -471,7 +469,7 @@ const SentimentService = {
         'compareTerms',
         subject
       );
-      console.log('gptResponse', gptResponse);
+
 
       if (!gptResponse) {
         console.error('Failed to get response from GPT-3');
