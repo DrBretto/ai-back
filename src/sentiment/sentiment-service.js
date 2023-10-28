@@ -247,56 +247,6 @@ const SentimentService = {
     }
   },
 
-  async compareTermsWithMasterList(masterList, query, subject) {
-    const apiKey = OPENAI_API_KEY;
-    const url = OPENAI_API_URL;
-
-    // Prepare master list message
-    const masterListMessage = {
-      role: 'user',
-      content: `Master List:\n${masterList}\nEnd of Master List`,
-    };
-
-    // Prepare query message based on the provided query content
-    const queryMessage = {
-      role: 'user',
-      content: `Below is a New Terms list that needs to be analyzed and compared against the Master List in the context of ${subject}'s 
-      financial strength. Identify 5-10 of the most important terms and follow the instructions as previously described.\n\n${query}\n
-      Please provide the results in the following JSON format:\n[{"term": "exampleTerm1", "value": 1}, {"term": "exampleTerm2", "value": 0}]\n
-      Please do not truncate your response. Generate the entire list.`,
-    };
-
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-    };
-
-    const body = {
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a financial analyst specialized in commodities.',
-        },
-        masterListMessage,
-        queryMessage,
-      ],
-    };
-
-    try {
-      const response = await axios.post(url, body, config);
-      // Assuming you have a variable to keep track of total tokens used
-      totalTokensUsed += response.data.usage.total_tokens;
-
-      return response.data.choices[0].message.content.trim();
-    } catch (error) {
-      console.error('Error in compareTermsWithMasterList:', error.code);
-      return null;
-    }
-  },
-
   async getOrCreateSubjectID(db, subject) {
     try {
       // Try to find the subject ID in the database
@@ -517,10 +467,11 @@ const SentimentService = {
         console.error('Failed to fetch master list');
         return;
       }
+      const combinedContent = `Master List:\n${masterList}\n\nNew Terms:\n${sentimentTerms}`;
 
-      const gptResponse = await this.compareTermsWithMasterList(
-        masterList,
-        sentimentTerms,
+      const gptResponse = await this.getSentimentFromGPT(
+        combinedContent,
+        'compareTerms',
         subject
       );
 
