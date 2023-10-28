@@ -237,7 +237,7 @@ const SentimentService = {
 
       return response.data.choices[0].message.content.trim();
     } catch (error) {
-      console.error(`Error in getSentimentFromGPT for ${analysisType}:`, error);
+      console.error(`Error in getSentimentFromGPT for ${analysisType}:`, error.code);
       return null;
     }
   },
@@ -361,7 +361,7 @@ const SentimentService = {
 
       return tokenValues;
     } catch (error) {
-      console.error('Error processing GPT response:', error);
+      console.error('Error processing GPT response:', error.code);
       return null;
     }
   },
@@ -373,7 +373,7 @@ const SentimentService = {
         .first();
       return entry;
     } catch (error) {
-      console.error('Error fetching sentiment analysis entry:', error);
+      console.error('Error fetching sentiment analysis entry:', error.code);
       return null;
     }
   },
@@ -390,12 +390,16 @@ const SentimentService = {
   },
 
   async insertMasterTerm(db, term) {
+    if (typeof term !== 'string' || term.trim() === '') {
+      console.warn('Invalid term format, skipping:', term);
+      return null;
+    }
     try {
       const [newIdObject] = await db('master_tokens')
         .insert({ term })
         .returning('id');
       const newId = newIdObject.id;
-      console.log('new term ID:',term, newId);
+      console.log('new term ID:', term, newId);
       return newId;
     } catch (error) {
       console.error('Error inserting term into master list');
@@ -416,7 +420,6 @@ const SentimentService = {
     // Extract the JSON-formatted string
     let jsonString = gptResponse.substring(startIndex, endIndex + 1);
     jsonString = jsonString.replace(/\.\.\./g, '');
-
 
     // Parse the JSON-formatted string into an array of objects
     let parsedResponse;
@@ -469,7 +472,6 @@ const SentimentService = {
         'compareTerms',
         subject
       );
-
 
       if (!gptResponse) {
         console.error('Failed to get response from GPT-3');
