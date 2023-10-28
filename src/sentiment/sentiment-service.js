@@ -422,7 +422,7 @@ const SentimentService = {
 
     // Extract the JSON-formatted string
     let jsonString = gptResponse.substring(startIndex, endIndex + 1);
-    jsonString = jsonString.replace(/\.\.\./g, '');
+    jsonString = jsonString.replace(/\./g, '');
 
     // Parse the JSON-formatted string into an array of objects
     let parsedResponse;
