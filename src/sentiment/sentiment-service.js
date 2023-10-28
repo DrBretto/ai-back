@@ -194,8 +194,8 @@ const SentimentService = {
         previously analyzed terms, each associated with a unique ID. The second is a New Terms list that needs to be 
         analyzed and compared against the Master List.  I want to compare the new terms against the master list in the
          context of {subject}'s financial strength. For each new term, please do the following:
-
-        - If the new term matches the meaning of a term in the master list, provide the term's ID number from the master list.
+        - Pick no more than the 10 most important relevant terms from new terms list.
+        - If the new term matches the general meaning of a term in the master list, provide the term's ID number from the master list.
         - If the new term does not match any term in the master list but is definitely relevant, assign a value of 0.
         - If the new term is irrelevant for financial analysis or is way too specific to be useful, assign a value of -1.
         ${content}
