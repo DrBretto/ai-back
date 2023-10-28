@@ -50,40 +50,6 @@ module.exports = (app) => {
       });
   });
 
-  cron.schedule('*/5 * * * *', async () => {
-    const db = app.get('db');
-
-    // Assume subjectIDs for 'gold' and 'dollar' are 1 and 2, respectively
-    const missingDateGold = await SentimentService.findMissingDate(db, 1, 3);
-    const missingDateDollar = await SentimentService.findMissingDate(db, 2, 3);
-
-    if (missingDateGold) {
-      console.log(
-        'Fetching historical news for gold on date:',
-        missingDateGold
-      );
-      await SentimentService.fetchHistoricalNews(
-        db,
-        'gold',
-        missingDateGold,
-        missingDateGold
-      );
-    }
-
-    if (missingDateDollar) {
-      console.log(
-        'Fetching historical news for dollar on date:',
-        missingDateDollar
-      );
-      await SentimentService.fetchHistoricalNews(
-        db,
-        'dollar',
-        missingDateDollar,
-        missingDateDollar
-      );
-    }
-  });
-
   cron.schedule('*/1 * * * *', async () => {
     const db = app.get('db');
     //Every 2 Minute Sentiment Analysis Scheduler
@@ -112,7 +78,42 @@ module.exports = (app) => {
     }
   });
 
-  //Backlog Historical Price Scheduler////////////////////////////////////////
+  //Backlog Historical Schedulers////////////////////////////////////////
+
+  // cron.schedule('*/5 * * * *', async () => {
+  //   const db = app.get('db');
+
+  //   // Assume subjectIDs for 'gold' and 'dollar' are 1 and 2, respectively
+  //   const missingDateGold = await SentimentService.findMissingDate(db, 1, 3);
+  //   const missingDateDollar = await SentimentService.findMissingDate(db, 2, 3);
+
+  //   if (missingDateGold) {
+  //     console.log(
+  //       'Fetching historical news for gold on date:',
+  //       missingDateGold
+  //     );
+  //     await SentimentService.fetchHistoricalNews(
+  //       db,
+  //       'gold',
+  //       missingDateGold,
+  //       missingDateGold
+  //     );
+  //   }
+
+  //   if (missingDateDollar) {
+  //     console.log(
+  //       'Fetching historical news for dollar on date:',
+  //       missingDateDollar
+  //     );
+  //     await SentimentService.fetchHistoricalNews(
+  //       db,
+  //       'dollar',
+  //       missingDateDollar,
+  //       missingDateDollar
+  //     );
+  //   }
+  // });
+
   // cron.schedule('*/10 * * * *', async () => {
   //   const db = app.get('db');
   //   const monthToFetch = `${currentYear}-${currentMonth
