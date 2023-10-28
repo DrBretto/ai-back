@@ -429,7 +429,7 @@ const SentimentService = {
     try {
       parsedResponse = JSON.parse(jsonString);
     } catch (error) {
-      console.error('Error parsing JSON string:', error);
+      console.error('Error parsing JSON string:', error.code);
       return null;
     }
 
