@@ -3,38 +3,106 @@ const path = require('path');
 const fs = require('fs');
 
 const DataService = {
-  async getData(db) {
+  async getData(db, batchSize = 100) {
     try {
-      // Retrieve data from the database
-      const historicalData = await db('stockhistory').select('*');
-      const realtimeData = await db('stockrealtime').select('*');
-      const sentimentData = await db('sentiment_analysis').select('*');
+      // Paths to the cache files
+      const historicalPath = path.join(
+        process.cwd(),
+        'src/cache/historical.json'
+      );
+      const realtimePath = path.join(process.cwd(), 'src/cache/realtime.json');
+      const sentimentPath = path.join(
+        process.cwd(),
+        'src/cache/sentiment.json'
+      );
 
-      // Organize data by stock_id and type
-      const organizedData = {
-        NUGT: {
-          historical: historicalData.filter((row) => row.stock_id === 1),
-          realtime: realtimeData.filter((row) => row.stock_id === 1),
-          sentiment: sentimentData.filter((row) => row.stock_id === 2),
-        },
-        JDST: {
-          historical: historicalData.filter((row) => row.stock_id === 2),
-          realtime: realtimeData.filter((row) => row.stock_id === 2),
-          sentiment: sentimentData.filter((row) => row.stock_id === 1),
-        },
+      // Function to fetch and process data in batches
+      const processBatchedData = async (
+        table,
+        stockIdMap,
+        dateColumn,
+        filePath
+      ) => {
+        let offset = 0;
+        let hasMoreData = true;
+        let lastUpdateTime = {};
+
+        // Load last update time if file exists
+        if (fs.existsSync(filePath)) {
+          const existingData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+          lastUpdateTime = {
+            NUGT:
+              existingData.NUGT.length > 0
+                ? existingData.NUGT.slice(-1)[0][dateColumn]
+                : '1970-01-01 00:00:00',
+            JDST:
+              existingData.JDST.length > 0
+                ? existingData.JDST.slice(-1)[0][dateColumn]
+                : '1970-01-01 00:00:00',
+          };
+        }
+
+        while (hasMoreData) {
+          const newData = await db(table)
+            .select('*')
+            .orderBy(dateColumn, 'asc')
+            .limit(batchSize)
+            .offset(offset);
+          hasMoreData = newData.length === batchSize;
+          offset += batchSize;
+
+          // Organize and filter new data by stock_id and date
+          const organizedData = {
+            NUGT: newData.filter(
+              (row) =>
+                row.stock_id === stockIdMap.NUGT &&
+                row[dateColumn] > lastUpdateTime.NUGT
+            ),
+            JDST: newData.filter(
+              (row) =>
+                row.stock_id === stockIdMap.JDST &&
+                row[dateColumn] > lastUpdateTime.JDST
+            ),
+          };
+
+          // Merge new data with existing data and write to file
+          if (fs.existsSync(filePath)) {
+            const existingData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            existingData.NUGT.push(...organizedData.NUGT);
+            existingData.JDST.push(...organizedData.JDST);
+            fs.writeFileSync(filePath, JSON.stringify(existingData, null, 2));
+          } else {
+            fs.writeFileSync(filePath, JSON.stringify(organizedData, null, 2));
+          }
+        }
       };
 
-      // Write data to a file
-      const dataPath = path.join(process.cwd(), 'src/cache/data.json');
-      fs.writeFileSync(dataPath, JSON.stringify(organizedData, null, 2)); // The null, 2 arguments format the JSON for readability
+      // Process each type of data separately
+      await processBatchedData(
+        'stockhistory',
+        { NUGT: 1, JDST: 2 },
+        'date_time',
+        historicalPath
+      );
+      await processBatchedData(
+        'stockrealtime',
+        { NUGT: 1, JDST: 2 },
+        'date_time',
+        realtimePath
+      );
+      await processBatchedData(
+        'sentiment_analysis',
+        { NUGT: 2, JDST: 1 },
+        'date_published',
+        sentimentPath
+      );
 
-      return dataPath; // Return the path to the data file
+      return { historicalPath, realtimePath, sentimentPath }; // Return the paths to the data files
     } catch (error) {
       console.error('Error in getData:', error);
       throw error;
     }
   },
-
   async trainModel() {
     console.log(process.cwd());
 
