@@ -29,4 +29,21 @@ router.get('/process', async (req, res, next) => {
   }
 });
 
+router.get('/train', async (req, res, next) => {
+  try {
+    const db = req.app.get('db');
+
+    // Retrieve and organize data
+    await DataService.getData(db);
+
+    // Train the model
+    const trainingResult = await DataService.trainModel();
+
+    res.json(trainingResult);
+  } catch (error) {
+    console.error('Error in /train route handler:', error);
+    next(error);
+  }
+});
+
 module.exports = router;
