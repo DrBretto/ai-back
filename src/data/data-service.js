@@ -17,7 +17,6 @@ const DataService = {
   },
 
   async getData(db, batchSize = 100) {
-    DataService.deleteCache();
     try {
       // Paths to the cache files
       const historicalPath = path.join(
@@ -87,7 +86,7 @@ const DataService = {
           writeStream.write(JSON.stringify(organizedData, null, 2));
         }
 
-        writeStream.end();  // Close the write stream
+        writeStream.end(); // Close the write stream
       };
 
       // Process each type of data separately
@@ -116,7 +115,6 @@ const DataService = {
       throw error;
     }
   },
-
 
   async trainModel() {
     console.log(process.cwd());
