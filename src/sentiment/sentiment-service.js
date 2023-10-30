@@ -194,7 +194,7 @@ const SentimentService = {
     };
 
     const body = {
-      model: 'gpt-4-32k',
+      model: 'gpt-3.5-turbo',
       messages: [
         {
           role: 'system',
@@ -478,7 +478,7 @@ const SentimentService = {
       );
 
       if (!gptResponse) {
-        console.error('Failed to get response from GPT-3');
+        console.error('Failed to get response from GPT-4');
         return;
       }
 
