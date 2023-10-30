@@ -23,48 +23,51 @@ const DataService = {
         dateColumn,
         filePath
       ) => {
-        let offset = 0;
-        let hasMoreData = true;
-        let lastUpdateTime = {};
-
-        // Load last update time if file exists
+        let lastId = {
+          NUGT: 0,
+          JDST: 0,
+        };
+      
+        // Load last id if file exists
         if (fs.existsSync(filePath)) {
           const existingData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-          lastUpdateTime = {
+          lastId = {
             NUGT:
               existingData.NUGT.length > 0
-                ? existingData.NUGT.slice(-1)[0][dateColumn]
-                : '1970-01-01 00:00:00',
+                ? existingData.NUGT.slice(-1)[0].id
+                : 0,
             JDST:
               existingData.JDST.length > 0
-                ? existingData.JDST.slice(-1)[0][dateColumn]
-                : '1970-01-01 00:00:00',
+                ? existingData.JDST.slice(-1)[0].id
+                : 0,
           };
         }
-
+      
+        let hasMoreData = true;
+      
         while (hasMoreData) {
           const newData = await db(table)
             .select('*')
-            .orderBy(dateColumn, 'asc')
-            .limit(batchSize)
-            .offset(offset);
+            .where('id', '>', Math.max(lastId.NUGT, lastId.JDST))
+            .orderBy('id', 'asc')
+            .limit(batchSize);
+      
           hasMoreData = newData.length === batchSize;
-          offset += batchSize;
-
-          // Organize and filter new data by stock_id and date
+      
+          // Update the lastId for the next iteration
+          if (newData.length > 0) {
+            lastId = {
+              NUGT: newData[newData.length - 1].id,
+              JDST: newData[newData.length - 1].id,
+            };
+          }
+      
+          // Organize and filter new data by stock_id
           const organizedData = {
-            NUGT: newData.filter(
-              (row) =>
-                row.stock_id === stockIdMap.NUGT &&
-                row[dateColumn] > lastUpdateTime.NUGT
-            ),
-            JDST: newData.filter(
-              (row) =>
-                row.stock_id === stockIdMap.JDST &&
-                row[dateColumn] > lastUpdateTime.JDST
-            ),
+            NUGT: newData.filter((row) => row.stock_id === stockIdMap.NUGT),
+            JDST: newData.filter((row) => row.stock_id === stockIdMap.JDST),
           };
-
+      
           // Merge new data with existing data and write to file
           if (fs.existsSync(filePath)) {
             const existingData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -76,6 +79,7 @@ const DataService = {
           }
         }
       };
+      
 
       // Process each type of data separately
       await processBatchedData(
@@ -103,6 +107,7 @@ const DataService = {
       throw error;
     }
   },
+
   async trainModel() {
     console.log(process.cwd());
 
