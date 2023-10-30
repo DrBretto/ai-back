@@ -115,7 +115,7 @@ const DataService = {
       console.error('Error in getData:', error);
       throw error;
     }
-  }
+  },
 
 
   async trainModel() {
