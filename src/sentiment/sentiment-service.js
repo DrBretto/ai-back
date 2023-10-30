@@ -168,6 +168,56 @@ const SentimentService = {
     }
   },
 
+  async getTokensFromGPT(content, masterList) {
+    const apiKey = OPENAI_API_KEY;
+    const url = OPENAI_API_URL;
+    let userPrompt = `You are provided with a list of predefined sentiments related to financial and economic trends, particularly focusing 
+        on gold and the US dollar. Each sentiment is associated with a unique identifier. Your task is to read through the provided text and 
+        identify any sentiments from the list that are conveyed or implied in the text. Please return a list of the unique identifiers for 
+        these sentiments in a CSV format, enclosed in brackets. Here is the master list of sentiments along with their identifiers:
+
+        ${masterList}
+        
+        Now, please read the following text and identify the sentiments from the master list:
+        
+       ${content}
+        
+        Return the identifiers of the sentiments conveyed in the text in CSV format enclosed in brackets. For example, if the text conveys 
+        sentiments 1, 4, and 7 from the master list, the return should be: [1,4,7]
+        `;
+
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+    };
+
+    const body = {
+      model: 'gpt-4-32k',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a financial analyst specialized in commodities.',
+        },
+        {
+          role: 'user',
+          content: userPrompt,
+        },
+      ],
+    };
+
+    try {
+      const response = await axios.post(url, body, config);
+      totalTokensUsed += response.data.usage.total_tokens;
+
+      return response.data.choices[0].message.content.trim();
+    } catch (error) {
+      console.error(`Error in getSentimentFromGPT`, error.code);
+      return null;
+    }
+  },
+
   async getSentimentFromGPT(content, analysisType, subject) {
     const apiKey = OPENAI_API_KEY;
     const url = OPENAI_API_URL;
@@ -190,23 +240,6 @@ const SentimentService = {
         break;
       case 'reduceSentiment':
         userPrompt = `Please reduce this list of key phrases or entities from the following sentiment analysis that are indicative of the strength of ${subject}. remove repeated sentiments and Each term should be isolated for easy tokenization and be as concise as possible.\n\n${content}`;
-        break;
-      case 'compareTerms':
-        userPrompt = `Below are two lists of terms related to the financial strength of ${subject}. The first is a Master List of 
-        previously analyzed terms, each associated with a unique ID. The second is a New Terms list that needs to be 
-        analyzed and compared against the Master List. I want to compare the new terms against the master list in the
-         context of {subject}'s financial strength. Identify only 5-10 of the most relevant and important terms.
-          For each important term, please do the following:
-        
-        - For each new term, find the closest match on the master list and provide the term's ID number from the master list.
-        - If the new term does not match any term in the master list but is definitely relevant to the trading of ${subject}, assign a value of 0.
-        - If the new term is irrelevant for financial analysis or is way too specific to be useful, assign a value of -1.
-
-        ${content}
-        Please provide the results in the following JSON format:
-        [{"term": "exampleTerm1", "value": 1}, {"term": "exampleTerm2", "value": 0}]
-        
-         `;
         break;
       default:
         console.error('Invalid analysis type');
@@ -341,38 +374,6 @@ const SentimentService = {
     }
   },
 
-  async processGPTResponse(response, db) {
-    try {
-      const termsToInsert = []; // Array to hold terms to be inserted into the master list
-      const tokenValues = []; // Array to hold token values for updating the sentiment analysis database
-
-      response.forEach((item) => {
-        const { term, value } = item;
-        if (value >= 1) {
-          // If the value is 1 or higher, add the value to the tokenValues array
-          tokenValues.push(value);
-        } else if (value === 0) {
-          // If the value is 0, add the term to the termsToInsert array for later insertion into the master list
-          termsToInsert.push(term);
-        }
-        // If the value is -1, we ignore the term
-      });
-
-      // Insert new terms into the master list and update tokenValues array with new IDs
-      for (const term of termsToInsert) {
-        const newId = await this.insertMasterTerm(db, term);
-        if (newId) {
-          tokenValues.push(newId);
-        }
-      }
-
-      return tokenValues;
-    } catch (error) {
-      console.error('Error processing GPT response:', error.code);
-      return null;
-    }
-  },
-
   async fetchSentimentAnalysisEntry(db, sentimentAnalysisId) {
     try {
       const entry = await db('sentiment_analysis')
@@ -420,27 +421,29 @@ const SentimentService = {
     const endIndex = gptResponse.lastIndexOf(']');
 
     if (startIndex === -1 || endIndex === -1 || startIndex >= endIndex) {
-      console.error('Invalid GPT-3 response format:', gptResponse);
+      console.error('Invalid GPT-4 response format:', gptResponse);
       return null;
     }
 
-    // Extract the JSON-formatted string
-    let jsonString = gptResponse.substring(startIndex, endIndex + 1);
-    jsonString = jsonString.replace(/\./g, '');
+    // Extract the CSV-formatted string
+    const csvString = gptResponse.substring(startIndex + 1, endIndex);
 
-    // Parse the JSON-formatted string into an array of objects
-    let parsedResponse;
-    try {
-      parsedResponse = JSON.parse(jsonString);
-    } catch (error) {
-      console.error('Error parsing JSON string:', error.code);
+    // Split the CSV string into an array of strings
+    const stringArray = csvString.split(',');
+
+    // Parse the array of strings into an array of integers
+    const intArray = stringArray.map((str) => parseInt(str, 10));
+
+    // Check for any NaN values in case of parsing failure
+    if (intArray.some(isNaN)) {
+      console.error('Error parsing string to integer:', csvString);
       return null;
     }
 
-    return parsedResponse;
+    return intArray;
   },
 
-  async performTermComparison(db, sentimentAnalysisId, subject) {
+  async performTermComparison(db, sentimentAnalysisId) {
     try {
       const sentimentEntry = await this.fetchSentimentAnalysisEntry(
         db,
@@ -468,12 +471,10 @@ const SentimentService = {
         console.error('Failed to fetch master list');
         return;
       }
-      const combinedContent = `Master List:\n${masterList}\n\nNew Terms:\n${sentimentTerms}`;
 
-      const gptResponse = await this.getSentimentFromGPT(
-        combinedContent,
-        'compareTerms',
-        subject
+      const gptResponse = await this.getTokensFromGPT(
+        sentimentTerms,
+        masterList
       );
 
       if (!gptResponse) {
@@ -481,13 +482,7 @@ const SentimentService = {
         return;
       }
 
-      const parsedResponse = await this.parseGPTResponse(gptResponse);
-
-      const tokenValues = await this.processGPTResponse(parsedResponse, db);
-      if (!tokenValues) {
-        console.error('Failed to process GPT-3 response');
-        return;
-      }
+      const tokenValues = await this.parseGPTResponse(gptResponse);
 
       await this.updateSentimentAnalysis(db, tokenValues, sentimentAnalysisId);
 

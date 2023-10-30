@@ -50,33 +50,33 @@ module.exports = (app) => {
       });
   });
 
-  // cron.schedule('*/1 * * * *', async () => {
-  //   const db = app.get('db');
-  //   //Every 2 Minute Sentiment Analysis Scheduler
-  //   console.log('Processing unprocessed entry at:', new Date());
+  cron.schedule('*/1 * * * *', async () => {
+    const db = app.get('db');
+    //Every 2 Minute Sentiment Analysis Scheduler
+    console.log('Processing unprocessed entry at:', new Date());
 
-  //   try {
-  //     // Fetch the first entry with token_values as null, ordered by id
-  //     const entry = await db('sentiment_analysis')
-  //       .whereNull('token_values')
-  //       .orderBy('id', 'asc') // Ensure entries are processed in order of their id
-  //       .first();
+    try {
+      // Fetch the first entry with token_values as null, ordered by id
+      const entry = await db('sentiment_analysis')
+        .whereNull('token_values')
+        .orderBy('id', 'asc') // Ensure entries are processed in order of their id
+        .first();
 
-  //     if (entry) {
-  //       // If an unprocessed entry is found, trigger your sentiment analysis functions
-  //       const sentimentAnalysisId = entry.id;
-  //       await SentimentService.performTermComparison(db, sentimentAnalysisId);
-  //       console.log(
-  //         'Successfully processed entry with id:',
-  //         sentimentAnalysisId
-  //       );
-  //     } else {
-  //       console.log('No unprocessed entries found.');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error processing unprocessed entry:', error);
-  //   }
-  // });
+      if (entry) {
+        // If an unprocessed entry is found, trigger your sentiment analysis functions
+        const sentimentAnalysisId = entry.id;
+        await SentimentService.performTermComparison(db, sentimentAnalysisId);
+        console.log(
+          'Successfully processed entry with id:',
+          sentimentAnalysisId
+        );
+      } else {
+        console.log('No unprocessed entries found.');
+      }
+    } catch (error) {
+      console.error('Error processing unprocessed entry:', error);
+    }
+  });
 
   //Backlog Historical Schedulers////////////////////////////////////////
 
