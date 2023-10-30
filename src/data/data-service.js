@@ -3,7 +3,21 @@ const path = require('path');
 const fs = require('fs');
 
 const DataService = {
+  deleteCache() {
+    const files = [
+      path.join(process.cwd(), 'src/cache/historical.json'),
+      path.join(process.cwd(), 'src/cache/realtime.json'),
+      path.join(process.cwd(), 'src/cache/sentiment.json'),
+    ];
+    files.forEach((file) => {
+      if (fs.existsSync(file)) {
+        fs.unlinkSync(file);
+      }
+    });
+  },
+
   async getData(db, batchSize = 100) {
+    DataService.deleteCache();
     try {
       // Paths to the cache files
       const historicalPath = path.join(
@@ -27,7 +41,7 @@ const DataService = {
           NUGT: 0,
           JDST: 0,
         };
-      
+
         // Load last id if file exists
         if (fs.existsSync(filePath)) {
           const existingData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -42,18 +56,19 @@ const DataService = {
                 : 0,
           };
         }
-      
+
         let hasMoreData = true;
-      
+        const writeStream = fs.createWriteStream(filePath, { flags: 'a' }); // Create write stream
+
         while (hasMoreData) {
           const newData = await db(table)
             .select('*')
             .where('id', '>', Math.max(lastId.NUGT, lastId.JDST))
             .orderBy('id', 'asc')
             .limit(batchSize);
-      
+
           hasMoreData = newData.length === batchSize;
-      
+
           // Update the lastId for the next iteration
           if (newData.length > 0) {
             lastId = {
@@ -61,25 +76,19 @@ const DataService = {
               JDST: newData[newData.length - 1].id,
             };
           }
-      
+
           // Organize and filter new data by stock_id
           const organizedData = {
             NUGT: newData.filter((row) => row.stock_id === stockIdMap.NUGT),
             JDST: newData.filter((row) => row.stock_id === stockIdMap.JDST),
           };
-      
-          // Merge new data with existing data and write to file
-          if (fs.existsSync(filePath)) {
-            const existingData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-            existingData.NUGT.push(...organizedData.NUGT);
-            existingData.JDST.push(...organizedData.JDST);
-            fs.writeFileSync(filePath, JSON.stringify(existingData, null, 2));
-          } else {
-            fs.writeFileSync(filePath, JSON.stringify(organizedData, null, 2));
-          }
+
+          // Write organized data to the file incrementally
+          writeStream.write(JSON.stringify(organizedData, null, 2));
         }
+
+        writeStream.end();  // Close the write stream
       };
-      
 
       // Process each type of data separately
       await processBatchedData(
@@ -106,7 +115,8 @@ const DataService = {
       console.error('Error in getData:', error);
       throw error;
     }
-  },
+  }
+
 
   async trainModel() {
     console.log(process.cwd());

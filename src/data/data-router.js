@@ -46,4 +46,9 @@ router.get('/train', async (req, res, next) => {
   }
 });
 
+router.get('/delete-cache', (req, res) => {
+  DataService.deleteCache();
+  res.send('Cache deleted successfully.');
+});
+
 module.exports = router;

@@ -16,7 +16,7 @@ CREATE TABLE Stocks (
 INSERT INTO Stocks (symbol) VALUES ('JDST'), ('NUGT');
 
 CREATE TABLE StockHistory (
-    history_id SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     stock_id INT REFERENCES Stocks(stock_id),
     date_time TIMESTAMPTZ NOT NULL,
     closing_price DECIMAL(10, 4) NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE StockHistory (
 );
 
 CREATE TABLE StockRealtime (
-    history_id            SERIAL PRIMARY KEY,
+    id            SERIAL PRIMARY KEY,
     stock_id              INT REFERENCES Stocks(stock_id),
     date_time             TIMESTAMPTZ NOT NULL,
     closing_price         DECIMAL(10, 4) NOT NULL,
