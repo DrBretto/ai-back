@@ -18,6 +18,7 @@ const DataService = {
 
   async getData(db, batchSize = 100) {
     try {
+      console.log('Starting getData...');
       // Paths to the cache files
       const historicalPath = path.join(
         process.cwd(),
@@ -36,6 +37,7 @@ const DataService = {
         dateColumn,
         filePath
       ) => {
+        console.log(`Starting processBatchedData for table ${table}...`);
         let lastId = {
           NUGT: 0,
           JDST: 0,
@@ -60,6 +62,9 @@ const DataService = {
         const writeStream = fs.createWriteStream(filePath, { flags: 'a' }); // Create write stream
 
         while (hasMoreData) {
+          console.log(
+            `Processing batch with lastId: ${JSON.stringify(lastId)}`
+          );
           const newData = await db(table)
             .select('*')
             .where('id', '>', Math.max(lastId.NUGT, lastId.JDST))
@@ -70,6 +75,7 @@ const DataService = {
 
           // Update the lastId for the next iteration
           if (newData.length > 0) {
+            console.log(`Processed batch of ${newData.length} records.`);
             lastId = {
               NUGT: newData[newData.length - 1].id,
               JDST: newData[newData.length - 1].id,
@@ -108,7 +114,7 @@ const DataService = {
         'date_published',
         sentimentPath
       );
-
+      console.log('Completed getData.');
       return { historicalPath, realtimePath, sentimentPath }; // Return the paths to the data files
     } catch (error) {
       console.error('Error in getData:', error);
