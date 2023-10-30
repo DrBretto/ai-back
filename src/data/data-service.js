@@ -16,104 +16,137 @@ const DataService = {
     });
   },
 
-  async getData(db, batchSize = 100) {
+  async processBatchedData(db, table, stockIdMap, idColumn, filePath, header) {
+    console.log(`Starting processBatchedData for table ${table}...`);
+    let lastId = {
+      NUGT: 0,
+      JDST: 0,
+    };
+    let hasMoreData = true;
+    let batchCount = 0;
+
+    const createCSVWriter = (filePath, header) => {
+      const writeStream = fs.createWriteStream(filePath, { flags: 'a' });
+      writeStream.write(header.join(',') + '\n');
+      return {
+        write: (records) => {
+          records.forEach((record) => {
+            const row = header.map((field) => `"${record[field]}"`).join(',');
+            writeStream.write(row + '\n');
+          });
+        },
+        end: () => {
+          writeStream.end();
+        },
+      };
+    };
+
+    const csvWriter = createCSVWriter(filePath, header);
+
+    while (hasMoreData) {
+      const newData = await db(table)
+        .select('*')
+        .where(idColumn, '>', Math.max(lastId.NUGT, lastId.JDST))
+        .orderBy(idColumn, 'asc')
+        .limit(100);
+
+      hasMoreData = newData.length === 100;
+
+      // Update the lastId for the next iteration
+      if (newData.length > 0) {
+        lastId = {
+          NUGT: newData[newData.length - 1][idColumn],
+          JDST: newData[newData.length - 1][idColumn],
+        };
+      }
+
+      csvWriter.write(newData);
+
+      batchCount++;
+      if (batchCount % 100 === 0) {
+        console.log(
+          `Processed ${batchCount * 100} records from table ${table}.`
+        );
+      }
+    }
+
+    csvWriter.end();
+    console.log(`Completed processBatchedData for table ${table}.`);
+  },
+
+  async getData(db) {
+
+    DataService.deleteCache();
     try {
       console.log('Starting getData...');
-      // Paths to the cache files
       const historicalPath = path.join(
         process.cwd(),
-        'src/cache/historical.json'
+        'src/cache/historical_data.csv'
       );
-      const realtimePath = path.join(process.cwd(), 'src/cache/realtime.json');
+      const realtimePath = path.join(
+        process.cwd(),
+        'src/cache/realtime_data.csv'
+      );
       const sentimentPath = path.join(
         process.cwd(),
-        'src/cache/sentiment.json'
+        'src/cache/sentiment_data.csv'
       );
 
-      // Function to fetch and process data in batches
-      const processBatchedData = async (
-        table,
-        stockIdMap,
-        dateColumn,
-        filePath
-      ) => {
-        console.log(`Starting processBatchedData for table ${table}...`);
-        let lastId = {
-          NUGT: 0,
-          JDST: 0,
-        };
-
-        // Load last id if file exists
-        if (fs.existsSync(filePath)) {
-          const existingData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-          lastId = {
-            NUGT:
-              existingData.NUGT.length > 0
-                ? existingData.NUGT.slice(-1)[0].id
-                : 0,
-            JDST:
-              existingData.JDST.length > 0
-                ? existingData.JDST.slice(-1)[0].id
-                : 0,
-          };
-        }
-
-        let hasMoreData = true;
-        const writeStream = fs.createWriteStream(filePath, { flags: 'a' }); // Create write stream
-
-        while (hasMoreData) {
-          console.log(
-            `Processing batch with lastId: ${JSON.stringify(lastId)}`
-          );
-          const newData = await db(table)
-            .select('*')
-            .where('id', '>', Math.max(lastId.NUGT, lastId.JDST))
-            .orderBy('id', 'asc')
-            .limit(batchSize);
-
-          hasMoreData = newData.length === batchSize;
-
-          // Update the lastId for the next iteration
-          if (newData.length > 0) {
-            console.log(`Processed batch of ${newData.length} records.`);
-            lastId = {
-              NUGT: newData[newData.length - 1].id,
-              JDST: newData[newData.length - 1].id,
-            };
-          }
-
-          // Organize and filter new data by stock_id
-          const organizedData = {
-            NUGT: newData.filter((row) => row.stock_id === stockIdMap.NUGT),
-            JDST: newData.filter((row) => row.stock_id === stockIdMap.JDST),
-          };
-
-          // Write organized data to the file incrementally
-          writeStream.write(JSON.stringify(organizedData, null, 2));
-        }
-
-        writeStream.end(); // Close the write stream
-      };
-
-      // Process each type of data separately
-      await processBatchedData(
+      await this.processBatchedData(
+        db,
         'stockhistory',
         { NUGT: 1, JDST: 2 },
-        'date_time',
-        historicalPath
+        'history_id',
+        historicalPath,
+        [
+          'history_id',
+          'stock_id',
+          'date_time',
+          'closing_price',
+          'high_price',
+          'low_price',
+          'volume',
+        ]
       );
-      await processBatchedData(
+
+      await this.processBatchedData(
+        db,
         'stockrealtime',
         { NUGT: 1, JDST: 2 },
-        'date_time',
-        realtimePath
+        'history_id',
+        realtimePath,
+        [
+          'history_id',
+          'stock_id',
+          'date_time',
+          'closing_price',
+          'high_price',
+          'low_price',
+          'opening_price',
+          'daily_change',
+          'daily_percent_change',
+          'previous_close',
+        ]
       );
-      await processBatchedData(
+
+      await this.processBatchedData(
+        db,
         'sentiment_analysis',
         { NUGT: 2, JDST: 1 },
-        'date_published',
-        sentimentPath
+        'id',
+        sentimentPath,
+        [
+          'id',
+          'pull_date',
+          'subject_id',
+          'source_id',
+          'tokenized_sentiment',
+          'average_score',
+          'low_score',
+          'high_score',
+        ]
       );
+
       console.log('Completed getData.');
       return { historicalPath, realtimePath, sentimentPath }; // Return the paths to the data files
     } catch (error) {
