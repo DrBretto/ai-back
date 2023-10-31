@@ -12,10 +12,14 @@ def get_data_from_db():
         'host': os.environ['DB_HOST']
     }
     with psycopg2.connect(**db_config) as conn:
-        # Replace with your actual table names
-        historical_data = pd.read_sql('SELECT * FROM stockhistory', conn, parse_dates=['date_published'])
-        realtime_data = pd.read_sql('SELECT * FROM stockrealtime', conn, parse_dates=['date_published'])
-        sentiment_data = pd.read_sql('SELECT * FROM sentiment_analysis', conn, parse_dates=['date_published'])
+        # Use the correct table names and load data in chunks
+        chunksize = 1000  # Adjust this value based on your memory capacity and the size of your data
+        historical_data = pd.concat(
+            [chunk for chunk in pd.read_sql('SELECT * FROM stockhistory', conn, chunksize=chunksize, parse_dates=['date_published'])])
+        realtime_data = pd.concat(
+            [chunk for chunk in pd.read_sql('SELECT * FROM stockrealtime', conn, chunksize=chunksize, parse_dates=['date_published'])])
+        sentiment_data = pd.concat(
+            [chunk for chunk in pd.read_sql('SELECT * FROM sentiment_analysis', conn, chunksize=chunksize, parse_dates=['date_published'])])
 
         # Convert to ISO 8601 format
         historical_data['date_published'] = historical_data['date_published'].dt.isoformat()
