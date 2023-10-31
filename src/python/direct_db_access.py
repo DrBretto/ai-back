@@ -26,9 +26,9 @@ def get_data_from_db():
 
 def inspect_data(historical_data, realtime_data, sentiment_data):
     first_line = {
-        'historical': historical_data.iloc[0].to_dict() if not historical_data.empty else None,
-        'realtime': realtime_data.iloc[0].to_dict() if not realtime_data.empty else None,
-        'sentiment': sentiment_data.iloc[0].to_dict() if not sentiment_data.empty else None
+        'historical': historical_data.iloc[0].apply(str).to_dict() if not historical_data.empty else None,
+        'realtime': realtime_data.iloc[0].apply(str).to_dict() if not realtime_data.empty else None,
+        'sentiment': sentiment_data.iloc[0].apply(str).to_dict() if not sentiment_data.empty else None
     }
     return first_line
 
