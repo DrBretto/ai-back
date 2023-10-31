@@ -12,9 +12,11 @@ def get_data_from_db():
         'host': os.environ['DB_HOST']
     }
     with psycopg2.connect(**db_config) as conn:
-        historical_data = pd.read_sql('SELECT * FROM stockhistory LIMIT 1', conn)
-        realtime_data = pd.read_sql('SELECT * FROM stockrealtime LIMIT 1', conn)
-        sentiment_data = pd.read_sql('SELECT * FROM sentiment_analysis LIMIT 1', conn)
+        # Convert Timestamp objects to string
+        historical_data = historical_data.applymap(lambda x: x.isoformat() if isinstance(x, pd.Timestamp) else x)
+        realtime_data = realtime_data.applymap(lambda x: x.isoformat() if isinstance(x, pd.Timestamp) else x)
+        sentiment_data = sentiment_data.applymap(lambda x: x.isoformat() if isinstance(x, pd.Timestamp) else x)
+
     
     return historical_data, realtime_data, sentiment_data
 
