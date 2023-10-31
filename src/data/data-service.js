@@ -155,13 +155,15 @@ const DataService = {
 
   async trainModel() {
     console.log(process.cwd());
-
-    const dataPath = path.join(process.cwd(), 'src/cache/data.json');
+  
+    const historicalPath = path.join(process.cwd(), 'src/cache/historical_data.csv');
+    const realtimePath = path.join(process.cwd(), 'src/cache/realtime_data.csv');
+    const sentimentPath = path.join(process.cwd(), 'src/cache/sentiment_data.csv');
     const resultPath = path.join(process.cwd(), 'src/cache/result.json');
-
+  
     return new Promise((resolve, reject) => {
       exec(
-        `. env/bin/activate && env/bin/python src/python/train_model.py ${dataPath} ${resultPath}`,
+        `. env/bin/activate && env/bin/python src/python/train_model.py ${historicalPath} ${realtimePath} ${sentimentPath} ${resultPath}`,
         (error, stdout, stderr) => {
           if (error) {
             console.error('Error:', error);
@@ -170,18 +172,19 @@ const DataService = {
             reject(error);
             return;
           }
-
+  
           // Read result from a file
           const result = JSON.parse(fs.readFileSync(resultPath, 'utf8'));
-
+  
           // Optionally, delete temporary files
           fs.unlinkSync(resultPath);
-
+  
           resolve(result);
         }
       );
     });
   },
+  
 
   async processData(data) {
     console.log(process.cwd());

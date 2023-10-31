@@ -8,7 +8,7 @@ def inspect_data(historical_path, realtime_path, sentiment_path):
     realtime_data = pd.read_csv(realtime_path)
     sentiment_data = pd.read_csv(sentiment_path)
 
-    # Filtering data by stock_id
+    # Filtering data by stock_id or subject_id
     nugt_historical = historical_data[historical_data['stock_id'] == 1]
     jdst_historical = historical_data[historical_data['stock_id'] == 2]
 
@@ -34,6 +34,10 @@ def inspect_data(historical_path, realtime_path, sentiment_path):
     return first_line
 
 if __name__ == '__main__':
+    if len(sys.argv) != 5:
+        print("Usage: python train_model.py <historical_path> <realtime_path> <sentiment_path> <result_path>")
+        sys.exit(1)
+
     historical_path = sys.argv[1]
     realtime_path = sys.argv[2]
     sentiment_path = sys.argv[3]
