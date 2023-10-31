@@ -75,7 +75,6 @@ const DataService = {
   },
 
   async getData(db) {
-
     this.deleteCache();
     try {
       console.log('Starting getData...');
@@ -155,14 +154,54 @@ const DataService = {
     }
   },
 
+  // Inside your DataService object in DataService.js
+
+  async directDbAccess() {
+    try {
+      console.log('Starting directDbAccess...');
+
+      return new Promise((resolve, reject) => {
+        exec(
+          `. env/bin/activate && env/bin/python src/python/direct_db_access.py`,
+          (error, stdout, stderr) => {
+            if (error) {
+              console.error('Error:', error);
+              console.error('Standard Output:', stdout);
+              console.error('Standard Error:', stderr);
+              reject(error);
+              return;
+            }
+
+            // Parse the result from stdout
+            const result = JSON.parse(stdout);
+
+            resolve(result);
+          }
+        );
+      });
+    } catch (error) {
+      console.error('Error in directDbAccess:', error);
+      throw error;
+    }
+  },
+
   async trainModel() {
     console.log(process.cwd());
-  
-    const historicalPath = path.join(process.cwd(), 'src/cache/historical_data.csv');
-    const realtimePath = path.join(process.cwd(), 'src/cache/realtime_data.csv');
-    const sentimentPath = path.join(process.cwd(), 'src/cache/sentiment_data.csv');
+
+    const historicalPath = path.join(
+      process.cwd(),
+      'src/cache/historical_data.csv'
+    );
+    const realtimePath = path.join(
+      process.cwd(),
+      'src/cache/realtime_data.csv'
+    );
+    const sentimentPath = path.join(
+      process.cwd(),
+      'src/cache/sentiment_data.csv'
+    );
     const resultPath = path.join(process.cwd(), 'src/cache/result.json');
-  
+
     return new Promise((resolve, reject) => {
       exec(
         `. env/bin/activate && env/bin/python src/python/train_model.py ${historicalPath} ${realtimePath} ${sentimentPath} ${resultPath}`,
@@ -174,19 +213,18 @@ const DataService = {
             reject(error);
             return;
           }
-  
+
           // Read result from a file
           const result = JSON.parse(fs.readFileSync(resultPath, 'utf8'));
-  
+
           // Optionally, delete temporary files
           fs.unlinkSync(resultPath);
-  
+
           resolve(result);
         }
       );
     });
   },
-  
 
   async processData(data) {
     console.log(process.cwd());

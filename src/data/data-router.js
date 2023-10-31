@@ -46,6 +46,17 @@ router.get('/train', async (req, res, next) => {
   }
 });
 
+router.get('/direct', async (req, res) => {
+  try {
+    const dataService = new DataService();
+    const result = await dataService.directDbAccess();
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 router.get('/delete-cache', (req, res) => {
   DataService.deleteCache();
   res.send('Cache deleted successfully.');
