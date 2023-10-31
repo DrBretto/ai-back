@@ -18,8 +18,8 @@ def get_data_from_db():
         sentiment_data = pd.read_sql('SELECT * FROM sentiment_analysis LIMIT 1', conn, parse_dates=['date_published'])
 
         # Convert to ISO 8601 format
-        historical_data['date_published'] = historical_data['date_published'].dt.isoformat()
-        realtime_data['date_published'] = realtime_data['date_published'].dt.isoformat()
+        historical_data['date_published'] = historical_data['date_time'].dt.isoformat()
+        realtime_data['date_published'] = realtime_data['date_time'].dt.isoformat()
         sentiment_data['date_published'] = sentiment_data['date_published'].dt.isoformat()
     
     return historical_data, realtime_data, sentiment_data
