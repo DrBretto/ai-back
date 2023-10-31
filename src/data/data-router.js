@@ -46,14 +46,15 @@ router.get('/train', async (req, res, next) => {
   }
 });
 
-router.get('/direct', async (req, res) => {
+router.get('/direct', async (req, res, next) => {
   try {
-    const dataService = new DataService();
-    const result = await dataService.directDbAccess();
+    // Direct DB access and data retrieval
+    const result = await DataService.directDbAccess();
+
     res.json(result);
   } catch (error) {
-    console.error(error);
-    res.status(500).send('Internal Server Error');
+    console.error('Error in /direct-db-access route handler:', error);
+    next(error);
   }
 });
 
