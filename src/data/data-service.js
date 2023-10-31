@@ -75,6 +75,8 @@ const DataService = {
   },
 
   async getData(db) {
+
+    this.deleteCache();
     try {
       console.log('Starting getData...');
       const historicalPath = path.join(
