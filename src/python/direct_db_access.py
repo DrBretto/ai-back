@@ -12,15 +12,15 @@ def get_data_from_db():
         'host': os.environ['DB_HOST']
     }
     with psycopg2.connect(**db_config) as conn:
-        # Load data from database
-        historical_data = pd.read_sql('SELECT * FROM historical_data', conn)
-        realtime_data = pd.read_sql('SELECT * FROM realtime_data', conn)
-        sentiment_data = pd.read_sql('SELECT * FROM sentiment_data', conn)
+        # Query data from database and convert date columns to pandas Timestamp objects
+        historical_data = pd.read_sql('SELECT * FROM historical_data', conn, parse_dates=['date_column'])
+        realtime_data = pd.read_sql('SELECT * FROM realtime_data', conn, parse_dates=['date_column'])
+        sentiment_data = pd.read_sql('SELECT * FROM sentiment_data', conn, parse_dates=['date_column'])
 
-        # Convert Timestamp objects to string
-        historical_data = historical_data.applymap(lambda x: x.isoformat() if isinstance(x, pd.Timestamp) else x)
-        realtime_data = realtime_data.applymap(lambda x: x.isoformat() if isinstance(x, pd.Timestamp) else x)
-        sentiment_data = sentiment_data.applymap(lambda x: x.isoformat() if isinstance(x, pd.Timestamp) else x)
+        # Convert Timestamp objects to ISO 8601 format
+        historical_data['date_column'] = historical_data['date_column'].dt.isoformat()
+        realtime_data['date_column'] = realtime_data['date_column'].dt.isoformat()
+        sentiment_data['date_column'] = sentiment_data['date_column'].dt.isoformat()
 
     return historical_data, realtime_data, sentiment_data
 
