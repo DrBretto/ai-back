@@ -12,16 +12,16 @@ def get_data_from_db():
         'host': os.environ['DB_HOST']
     }
     with psycopg2.connect(**db_config) as conn:
-        # Query data from database and convert date columns to pandas Timestamp objects
-        historical_data = pd.read_sql('SELECT * FROM historical_data', conn, parse_dates=['date_column'])
-        realtime_data = pd.read_sql('SELECT * FROM realtime_data', conn, parse_dates=['date_column'])
-        sentiment_data = pd.read_sql('SELECT * FROM sentiment_data', conn, parse_dates=['date_column'])
+        # Replace with your actual table names
+        historical_data = pd.read_sql('SELECT * FROM stockhistory', conn, parse_dates=['date_published'])
+        realtime_data = pd.read_sql('SELECT * FROM stockrealtime', conn, parse_dates=['date_published'])
+        sentiment_data = pd.read_sql('SELECT * FROM sentiment_analysis', conn, parse_dates=['date_published'])
 
-        # Convert Timestamp objects to ISO 8601 format
-        historical_data['date_column'] = historical_data['date_column'].dt.isoformat()
-        realtime_data['date_column'] = realtime_data['date_column'].dt.isoformat()
-        sentiment_data['date_column'] = sentiment_data['date_column'].dt.isoformat()
-
+        # Convert to ISO 8601 format
+        historical_data['date_published'] = historical_data['date_published'].dt.isoformat()
+        realtime_data['date_published'] = realtime_data['date_published'].dt.isoformat()
+        sentiment_data['date_published'] = sentiment_data['date_published'].dt.isoformat()
+    
     return historical_data, realtime_data, sentiment_data
 
 def inspect_data(historical_data, realtime_data, sentiment_data):
