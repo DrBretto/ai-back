@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import os
 from torch.utils.data import TensorDataset, DataLoader
+import json
 
 class SimpleLSTM(nn.Module):
     def __init__(self, input_size=1, hidden_layer_size=100, output_size=1):
@@ -94,7 +95,7 @@ if __name__ == '__main__':
             if i%25 == 1:
                 print(f'Epoch {i} Iteration loss: {single_loss.item()}')
 
-    print('Data handled successfully')
+    print(json.dumps({'message': 'Data handled successfully'}))
 
 
 
