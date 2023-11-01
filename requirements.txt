@@ -5,3 +5,4 @@ psycopg2-binary==2.9.9
 requests==2.31.0
 scikit-learn==0.20.4
 tensorflow==1.14.0
+setuptools==57.5.0
