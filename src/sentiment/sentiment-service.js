@@ -437,7 +437,7 @@ const SentimentService = {
     // Check for any NaN values in case of parsing failure
     if (intArray.some(isNaN)) {
       console.error('Error parsing string to integer:', csvString);
-      return null;
+      return [0];
     }
 
     return intArray;
