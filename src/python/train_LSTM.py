@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 import psycopg2
 import pandas as pd
+import numpy as np
 import os
 from torch.utils.data import TensorDataset, DataLoader
 
@@ -61,8 +62,8 @@ def preprocess_data():
     X_train, X_test = X_data[:split_idx], X_data[split_idx:]
     y_train, y_test = y_data[:split_idx], y_data[split_idx:]
     
-    tensor_x = torch.Tensor(X_train.values)  # transform to torch tensor
-    tensor_y = torch.Tensor(y_train.values)
+    tensor_x = torch.Tensor(X_train.values.astype(np.float32))  # transform to torch tensor
+    tensor_y = torch.Tensor(y_train.values.astype(np.float32))
 
     dataset = TensorDataset(tensor_x, tensor_y)  # create your dataset
     dataloader = DataLoader(dataset, batch_size=256)  # create your dataloader
