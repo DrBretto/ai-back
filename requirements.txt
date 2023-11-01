@@ -2,5 +2,4 @@ numpy
 pandas
 psycopg2
 requests
-scikit-learn
 tensorflow
