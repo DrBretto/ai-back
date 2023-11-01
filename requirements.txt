@@ -1,4 +1,6 @@
 numpy
 pandas
 psycopg2
+scipy==1.4.1
+joblib==0.13.2
 scikit-learn
