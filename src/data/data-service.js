@@ -156,7 +156,7 @@ const DataService = {
 
   // Inside your DataService object in DataService.js
 
-  async directDbAccess() {
+  async trainLSTM() {
     try {
       console.log('Starting directDbAccess...');
 
@@ -183,81 +183,6 @@ const DataService = {
       console.error('Error in directDbAccess:', error);
       throw error;
     }
-  },
-
-  async trainModel() {
-    console.log(process.cwd());
-
-    const historicalPath = path.join(
-      process.cwd(),
-      'src/cache/historical_data.csv'
-    );
-    const realtimePath = path.join(
-      process.cwd(),
-      'src/cache/realtime_data.csv'
-    );
-    const sentimentPath = path.join(
-      process.cwd(),
-      'src/cache/sentiment_data.csv'
-    );
-    const resultPath = path.join(process.cwd(), 'src/cache/result.json');
-
-    return new Promise((resolve, reject) => {
-      exec(
-        `. env/bin/activate && env/bin/python src/python/train_model.py ${historicalPath} ${realtimePath} ${sentimentPath} ${resultPath}`,
-        (error, stdout, stderr) => {
-          if (error) {
-            console.error('Error:', error);
-            console.error('Standard Output:', stdout);
-            console.error('Standard Error:', stderr);
-            reject(error);
-            return;
-          }
-
-          // Read result from a file
-          const result = JSON.parse(fs.readFileSync(resultPath, 'utf8'));
-
-          // Optionally, delete temporary files
-          fs.unlinkSync(resultPath);
-
-          resolve(result);
-        }
-      );
-    });
-  },
-
-  async processData(data) {
-    console.log(process.cwd());
-
-    const dataPath = path.join(process.cwd(), 'src/cache/data.json');
-    const resultPath = path.join(process.cwd(), 'src/cache/result.json');
-
-    // Write data to a file
-    fs.writeFileSync(dataPath, JSON.stringify(data));
-
-    return new Promise((resolve, reject) => {
-      exec(
-        `. env/bin/activate && env/bin/python src/python/process_data.py ${dataPath} ${resultPath}`,
-        (error, stdout, stderr) => {
-          if (error) {
-            console.error('Error:', error);
-            console.error('Standard Output:', stdout);
-            console.error('Standard Error:', stderr);
-            reject(error);
-            return;
-          }
-
-          // Read result from a file
-          const result = JSON.parse(fs.readFileSync(resultPath, 'utf8'));
-
-          // Optionally, delete temporary files
-          fs.unlinkSync(dataPath);
-          fs.unlinkSync(resultPath);
-
-          resolve(result.count);
-        }
-      );
-    });
   },
 };
 

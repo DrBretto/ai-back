@@ -73,3 +73,12 @@ CREATE TABLE master_tokens (
     term VARCHAR(255) UNIQUE NOT NULL,
     token_value INT UNIQUE NOT NULL
 );
+
+CREATE TABLE lstm_training_history (
+    id SERIAL PRIMARY KEY,
+    epoch INT,
+    loss FLOAT,
+    accuracy FLOAT,
+    model_parameters JSONB,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

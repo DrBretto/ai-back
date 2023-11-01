@@ -31,32 +31,17 @@ router.get('/process', async (req, res, next) => {
 
 router.get('/train', async (req, res, next) => {
   try {
-    const db = req.app.get('db');
-
-    // Retrieve and organize data
-    await DataService.getData(db);
-
-    // Train the model
-    const trainingResult = await DataService.trainModel();
-
-    res.json(trainingResult);
-  } catch (error) {
-    console.error('Error in /train route handler:', error);
-    next(error);
-  }
-});
-
-router.get('/direct', async (req, res, next) => {
-  try {
     // Direct DB access and data retrieval
-    const result = await DataService.directDbAccess();
+    const result = await DataService.trainLSTM();
 
     res.json(result);
   } catch (error) {
     console.error('Error in /direct-db-access route handler:', error);
     next(error);
   }
+  
 });
+
 
 router.get('/delete-cache', (req, res) => {
   DataService.deleteCache();
