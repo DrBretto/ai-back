@@ -162,7 +162,7 @@ const DataService = {
 
       return new Promise((resolve, reject) => {
         exec(
-          `. env/bin/activate && env/bin/python src/python/direct_db_access.py`,
+          `. env/bin/activate && env/bin/python src/python/train_LSTM.py`,
           (error, stdout, stderr) => {
             if (error) {
               console.error('Error:', error);
