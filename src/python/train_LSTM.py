@@ -91,8 +91,8 @@ if __name__ == '__main__':
             single_loss.backward()
             optimizer.step()
 
-        if i%25 == 1:
-            print(f'Epoch {i} Iteration loss: {single_loss.item()}')
+            if i%25 == 1:
+                print(f'Epoch {i} Iteration loss: {single_loss.item()}')
 
     print('Data handled successfully')
 
