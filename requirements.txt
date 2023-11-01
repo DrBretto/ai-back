@@ -1,5 +1,4 @@
 numpy
 pandas
-wheel
 psycopg2
 torch 

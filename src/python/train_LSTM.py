@@ -1,16 +1,27 @@
+import torch
+import torch.nn as nn
+from torch.autograd import Variable
 import psycopg2
 import pandas as pd
 import os
-import json
-import numpy as np
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.model_selection import TimeSeriesSplit
-from tensorflow import keras
+from torch.utils.data import TensorDataset, DataLoader
 
-Sequential = keras.models.Sequential
-LSTM = keras.layers.LSTM
-Dense = keras.layers.Dense
-ModelCheckpoint = keras.callbacks.ModelCheckpoint
+class SimpleLSTM(nn.Module):
+    def __init__(self, input_size=1, hidden_layer_size=100, output_size=1):
+        super().__init__()
+        self.hidden_layer_size = hidden_layer_size
+
+        self.lstm = nn.LSTM(input_size, hidden_layer_size)
+
+        self.linear = nn.Linear(hidden_layer_size, output_size)
+
+        self.hidden_cell = (torch.zeros(1,1,self.hidden_layer_size),
+                            torch.zeros(1,1,self.hidden_layer_size))
+
+    def forward(self, input_seq):
+        lstm_out, self.hidden_cell = self.lstm(input_seq.view(len(input_seq) ,1, -1), self.hidden_cell)
+        predictions = self.linear(lstm_out.view(len(input_seq), -1))
+        return predictions[-1]
 
 def get_data_from_db():
     # Obtain DB credentials from environment variables
@@ -34,33 +45,55 @@ def get_data_from_db():
     return historical_data, realtime_data, sentiment_data
 
 
-def preprocess_data(batch_size):
+def preprocess_data():
     historical_data, realtime_data, sentiment_data = get_data_from_db()
 
-    # Sort data by date
+    # Sorting data by date
     historical_data.sort_values(by='date_time', inplace=True)
     realtime_data.sort_values(by='date_time', inplace=True)
     sentiment_data.sort_values(by='date_published', inplace=True)
 
-    # Combine and preprocess data here as needed...
-    # For now, let's assume X_data and y_data are obtained from historical_data
-    # Replace these lines with actual data preprocessing
-    X_data = historical_data.drop('closing_price', axis=1)  # Assuming 'price' is what we want to predict
+    # Assuming 'price' is what we want to predict
+    X_data = historical_data.drop('closing_price', axis=1)  
     y_data = historical_data['closing_price']
+    
+    split_idx = int(len(X_data) * 0.8)  # 80% training, 20% testing
+    X_train, X_test = X_data[:split_idx], X_data[split_idx:]
+    y_train, y_test = y_data[:split_idx], y_data[split_idx:]
+    
+    tensor_x = torch.Tensor(X_train.values)  # transform to torch tensor
+    tensor_y = torch.Tensor(y_train.values)
 
-    # Split the dataset into training and testing sets
-    tscv = TimeSeriesSplit()
-    for train_index, test_index in tscv.split(X_data):
-        X_train, X_test = X_data.iloc[train_index], X_data.iloc[test_index]
-        y_train, y_test = y_data.iloc[train_index], y_data.iloc[test_index]
-        
-        # Process each batch
-        for i in range(0, len(X_train), batch_size):
-            X_batch = X_train[i:i+batch_size]
-            y_batch = y_train[i:i+batch_size]
-            # Further processing...
-    return "Data loaded and sorted successfully"
-        
+    dataset = TensorDataset(tensor_x, tensor_y)  # create your dataset
+    dataloader = DataLoader(dataset, batch_size=256)  # create your dataloader
+
+    return dataloader
+
+
+
 if __name__ == '__main__':
-    success_message = preprocess_data(batch_size=256)
-    print(success_message) 
+    dataloader = preprocess_data()
+    model = SimpleLSTM()
+    loss_function = nn.MSELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+    epochs = 150
+    for i in range(epochs):
+        for seq, labels in dataloader:
+            optimizer.zero_grad()
+            model.hidden_cell = (torch.zeros(1, 1, model.hidden_layer_size),
+                            torch.zeros(1, 1, model.hidden_layer_size))
+
+            y_pred = model(seq)
+
+            single_loss = loss_function(y_pred, labels)
+            single_loss.backward()
+            optimizer.step()
+
+        if i%25 == 1:
+            print(f'Epoch {i} Iteration loss: {single_loss.item()}')
+
+    print('Data handled successfully')
+
+
+
