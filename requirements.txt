@@ -1,11 +1,3 @@
 numpy
 pandas
 psycopg2
-requests
-tensorflow
-scikit-learn
-setuptools
-wheel
-Cython
-numpy
-scipy
