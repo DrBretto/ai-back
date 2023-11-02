@@ -9,8 +9,23 @@ from torch.utils.data import TensorDataset, DataLoader
 import json
 import gc
 
+# Define the window and intervals outside of the function
 lagwindow = 30
 intervals = [1, 15, 60, 1440]
+
+# Define your model class as before, no change needed here
+
+# Modify the normalize_data function to accept min and max values
+def normalize_data(df, min_vals, max_vals):
+    for column in ['closing_price', 'high_price', 'low_price', 'volume']:
+        df[column] = (df[column] - min_vals[column]) / (max_vals[column] - min_vals[column])
+    return df
+
+# Define a function to calculate global min and max values for normalization
+def get_global_min_max(historical_data):
+    min_vals = historical_data[['closing_price', 'high_price', 'low_price', 'volume']].min()
+    max_vals = historical_data[['closing_price', 'high_price', 'low_price', 'volume']].max()
+    return min_vals, max_vals
 
 
 class SimpleLSTM(nn.Module):
@@ -102,18 +117,17 @@ def get_data_from_db(chunksize=10000):
     with psycopg2.connect(**db_config) as conn:
         # Fetch all historical data in chunks
         for chunk in pd.read_sql('SELECT * FROM stockhistory', conn, parse_dates=['date_time'], chunksize=chunksize):
-            # Optimize the chunk's data types here
-            # Concatenate chunk to the main DataFrame
             historical_data = pd.concat([historical_data, chunk])
 
         # Fetch all sentiment data in chunks
         for chunk in pd.read_sql('SELECT * FROM sentiment_analysis', conn, parse_dates=['date_published'], chunksize=chunksize):
-            # Optimize the chunk's data types here
-            # Concatenate chunk to the main DataFrame
             sentiment_data = pd.concat([sentiment_data, chunk])
+
 
     # Process the sentiment data
     sentiment_gold, sentiment_usd = process_sentiment_data(sentiment_data)
+
+    global_min_vals, global_max_vals = get_global_min_max(historical_data)
 
     # Split the historical data into two datasets based on 'stock_id'
     historical_data_jdst = historical_data[historical_data['stock_id'] == 1]
@@ -125,7 +139,7 @@ def get_data_from_db(chunksize=10000):
     del chunk
     gc.collect()
 
-    return historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd
+    return historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd, global_min_vals, global_max_vals
 
 
 def integrate_sentiment(stock_data, sentiment_gold, sentiment_usd):
@@ -162,7 +176,7 @@ def prepare_dataloaders(stock_data_with_sentiment, batch_size):
 
 def process_data(batch_size):
     # Fetch the split data from the DB
-    historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
+    historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd, global_min_vals, global_max_vals = get_data_from_db()
 
     # Sort the data by date
     historical_data_jdst.sort_values(by='date_time', inplace=True)
@@ -170,39 +184,76 @@ def process_data(batch_size):
     sentiment_gold.sort_values(by='date_published', inplace=True)
     sentiment_usd.sort_values(by='date_published', inplace=True)
 
-    # Normalize the data
-    historical_data_jdst_normalized = normalize_data(historical_data_jdst)
-    historical_data_nugt_normalized = normalize_data(historical_data_nugt)
+    # Normalize the historical data using the global min and max values
+    historical_data_jdst_normalized = normalize_data(historical_data_jdst, global_min_vals, global_max_vals)
+    historical_data_nugt_normalized = normalize_data(historical_data_nugt, global_min_vals, global_max_vals)
 
     # Create the lagged features
     historical_data_jdst_with_features = create_lagged_features(historical_data_jdst_normalized)
     historical_data_nugt_with_features = create_lagged_features(historical_data_nugt_normalized)
 
     # Integrate sentiment scores with stock data
-    # Make sure both sentiments are integrated into each dataset
     historical_data_jdst_with_sentiment = integrate_sentiment(historical_data_jdst_with_features, sentiment_gold, sentiment_usd)
     historical_data_nugt_with_sentiment = integrate_sentiment(historical_data_nugt_with_features, sentiment_gold, sentiment_usd)
 
-# Add stock_id back to the datasets if not present
+    # Add stock_id back to the datasets if not present
     historical_data_jdst_with_sentiment['stock_id'] = 1
     historical_data_nugt_with_sentiment['stock_id'] = 2
 
     # Combine the datasets
     combined_data = pd.concat([historical_data_jdst_with_sentiment, historical_data_nugt_with_sentiment])
     combined_data.sort_values(by='date_time', inplace=True)
-    # Prepare a single DataLoader for the combined dataset
-    #combined_dataloader = prepare_dataloaders(combined_data, batch_size)
+
+    # Here we will process the combined data in batches
+    for start in range(0, len(combined_data), batch_size):
+        end = min(start + batch_size, len(combined_data))
+        batch = combined_data.iloc[start:end].copy()
+        
+        # Create lagged features for batch
+        batch_with_lagged_features = create_lagged_features(batch)
+        
+        # Prepare DataLoader for the batch
+        tensor_x = torch.Tensor(batch_with_lagged_features.drop('closing_price', axis=1).values.astype(np.float32))
+        tensor_y = torch.Tensor(batch_with_lagged_features['closing_price'].values.astype(np.float32))
+        dataset = TensorDataset(tensor_x, tensor_y)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        
+        # Training loop can be inserted here if needed
+        # ...
+
+        # Delete the variables to free up memory
+        del batch
+        del batch_with_lagged_features
+        del tensor_x
+        del tensor_y
+        del dataset
+        del dataloader
+        gc.collect()
 
     latest_data_snapshot = combined_data.tail(1)
     return latest_data_snapshot
 
-    #return combined_dataloader
 
 
 if __name__ == '__main__':
-    latest_data_snapshot = process_data(batch_size=64)
+    # Define the batch size
+    batch_size = 64
+
+    # Call the process_data function to process the data
+    latest_data_snapshot = process_data(batch_size)
+
+    # Since process_data is yielding DataLoader objects, we would typically
+    # have a loop here to iterate through these DataLoader objects.
+    # However, since we're only interested in the latest data snapshot here,
+    # we'll convert that to JSON for easy viewing.
+    
     # Convert the latest data snapshot to JSON for easy viewing
-    print(latest_data_snapshot.to_json(orient='records', date_format='iso'))
+    json_snapshot = latest_data_snapshot.to_json(orient='records', date_format='iso')
+
+    # Print the JSON snapshot
+    print(json_snapshot)
+
+    
 
 # if __name__ == '__main__':
 #     dataloader = process_data()
