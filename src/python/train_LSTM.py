@@ -10,6 +10,7 @@ import json
 import gc
 import resource
 import time
+import sys
 
 def log_memory_usage():
     # Using ru_maxrss from resource to get the peak memory usage in kilobytes
@@ -100,7 +101,9 @@ def process_sentiment_data(sentiment_data):
 
 
 def process_in_batches(df, batch_size):
-    for start in range(0, len(df), batch_size):
+    for start in range(0, len(df), batch_size):           
+        log_memory_usage()
+        sys.stdout.flush()
         end = min(start + batch_size, len(df))
         batch = df[start:end]
         # Normalize batch
