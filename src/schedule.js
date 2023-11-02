@@ -62,7 +62,7 @@ module.exports = (app) => {
       //   .first();
 
       const entry = await db('sentiment_analysis')
-        .whereRaw('array_length(token_values, 1) <= 3')
+        .whereRaw('array_length(token_values, 1) <= 5')
         .whereNull('token_values')
         .orderBy('id', 'asc')
         .first();
