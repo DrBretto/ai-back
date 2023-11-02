@@ -158,29 +158,34 @@ const DataService = {
 
   async trainLSTM() {
     try {
-      console.log('Starting directDbAccess...');
+      console.log('Starting LSTM training...');
 
       return new Promise((resolve, reject) => {
         exec(
           `. env/bin/activate && env/bin/python src/python/train_LSTM.py`,
           (error, stdout, stderr) => {
+            // Attempt to read the memory log file whether the script succeeded or failed
+            const logData = fs.readFileSync('memory_log.txt', 'utf8');
+
             if (error) {
               console.error('Error:', error);
               console.error('Standard Output:', stdout);
               console.error('Standard Error:', stderr);
+              console.error('Memory Log:', logData); // Log the memory usage from the file
               reject(error);
               return;
             }
 
             // Parse the result from stdout
             const result = JSON.parse(stdout);
+            console.log('Memory Log:', logData); // Log the memory usage from the file
 
             resolve(result);
           }
         );
       });
     } catch (error) {
-      console.error('Error in directDbAccess:', error);
+      console.error('Error in trainLSTM:', error);
       throw error;
     }
   },

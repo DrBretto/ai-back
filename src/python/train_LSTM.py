@@ -12,10 +12,11 @@ import resource
 import time
 import sys
 
+
 def log_memory_usage():
-    # Using ru_maxrss from resource to get the peak memory usage in kilobytes
     memory_usage_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-    print(f"Memory Usage: {memory_usage_kb / 1024} MB")
+    with open('memory_log.txt', 'a') as f:  # 'a' mode for append to the log file
+        print(f"Memory Usage: {memory_usage_kb / 1024} MB", file=f)
 
 
 
@@ -56,13 +57,13 @@ class SimpleLSTM(nn.Module):
         return predictions[-1]
 
 
-def normalize_data(df):
-    # Perform Min-Max normalization manually using pandas
-    for column in ['closing_price', 'high_price', 'low_price', 'volume']:
-        min_column = df[column].min()
-        max_column = df[column].max()
-        df[column] = (df[column] - min_column) / (max_column - min_column)
-    return df
+# def normalize_data(df):
+#     # Perform Min-Max normalization manually using pandas
+#     for column in ['closing_price', 'high_price', 'low_price', 'volume']:
+#         min_column = df[column].min()
+#         max_column = df[column].max()
+#         df[column] = (df[column] - min_column) / (max_column - min_column)
+#     return df
 
 
 def create_lagged_features(stock_data):
