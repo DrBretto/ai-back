@@ -72,7 +72,7 @@ def combine_and_average_sentiments(sentiment_data):
 def process_sentiment_data(sentiment_data):
     # Ensure no duplicate tokens in the 'token_values' column
     sentiment_data['token_values'] = sentiment_data['token_values'].apply(lambda x: list(set(x)))
-    sentiment_data['date_published'] = sentiment_data['date_published'].dt.tz_localize(None)
+    sentiment_data['date_published'] = sentiment_data['date_published'].dt.tz_localize('America/New_York')
 
     # Now, for each 'subject_id' and 'date_published' pair, combine token values and average scores if there are duplicates
     processed_sentiment = sentiment_data.groupby(['date_published', 'subject_id'], as_index=False).agg({
