@@ -70,18 +70,19 @@ def combine_and_average_sentiments(sentiment_data):
     return averaged_data
 
 def process_sentiment_data(sentiment_data):
-    # First, ensure no duplicate tokens in the 'token_values' column
-    sentiment_data['token_values'] = sentiment_data['token_values'].apply(lambda x: list(set(x)))
-
-    # Now, for each 'subject_id' and 'date_published' pair, we'll combine token values and average scores if there are duplicates
+    # Your existing code to process sentiment data...
     processed_sentiment = sentiment_data.groupby(['date_published', 'subject_id'], as_index=False).agg({
         'high_score': 'mean',
         'low_score': 'mean',
         'average_score': 'mean',
         'token_values': lambda x: list(set().union(*x))
     })
+    
+    # Split the processed sentiment data into two separate DataFrames based on 'subject_id'
+    sentiment_gold = processed_sentiment[processed_sentiment['subject_id'] == 1]
+    sentiment_usd = processed_sentiment[processed_sentiment['subject_id'] == 2]
 
-    return processed_sentiment
+    return sentiment_gold, sentiment_usd
 
 def normalize_data_global_and_impute(stock_data, global_min, global_max):
     # Assuming that 'stock_data' includes data for both stocks and is ready for global normalization
