@@ -56,9 +56,15 @@ module.exports = (app) => {
 
     try {
       // Fetch the first entry with token_values as null, ordered by id
+      // const entry = await db('sentiment_analysis')
+      //   .whereNull('token_values')
+      //   .orderBy('id', 'asc') // Ensure entries are processed in order of their id
+      //   .first();
+
       const entry = await db('sentiment_analysis')
+        .whereRaw('array_length(token_values, 1) <= 3')
         .whereNull('token_values')
-        .orderBy('id', 'asc') // Ensure entries are processed in order of their id
+        .orderBy('id', 'asc')
         .first();
 
       if (entry) {

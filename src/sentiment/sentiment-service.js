@@ -386,11 +386,28 @@ const SentimentService = {
     }
   },
 
+  // async updateSentimentAnalysis(db, tokenValues, sentimentAnalysisId) {
+  //   try {
+  //     await db('sentiment_analysis').where('id', sentimentAnalysisId).update({
+  //       token_values: tokenValues,
+  //     });
+  //     console.log('Sentiment analysis updated successfully.');
+  //   } catch (error) {
+  //     console.error('Error updating sentiment analysis:', error);
+  //   }
+  // },
+
   async updateSentimentAnalysis(db, tokenValues, sentimentAnalysisId) {
     try {
-      await db('sentiment_analysis').where('id', sentimentAnalysisId).update({
-        token_values: tokenValues,
-      });
+      await db.raw(
+        `UPDATE sentiment_analysis 
+        SET token_values = ARRAY(
+          SELECT DISTINCT unnest
+          FROM unnest(token_values || ?)
+        ) 
+        WHERE id = ?`,
+        [tokenValues, sentimentAnalysisId]
+      );
       console.log('Sentiment analysis updated successfully.');
     } catch (error) {
       console.error('Error updating sentiment analysis:', error);
