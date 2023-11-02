@@ -14,9 +14,9 @@ module.exports = (app) => {
       .toString()
       .padStart(2, '0')}`;
     console.log('Fetching history: JDST', monthToFetch);
-    await StocksService.fetchHistoricalData(db, 'JDST', monthToFetch);
+    await StocksService.fetchHistoricalData(db, 'JDST'); //, monthToFetch);
     console.log('Fetching history: NUGT', monthToFetch);
-    await StocksService.fetchHistoricalData(db, 'NUGT', monthToFetch);
+    await StocksService.fetchHistoricalData(db, 'NUGT'); // monthToFetch);
   });
 
   cron.schedule('*/1 * * * *', async () => {
