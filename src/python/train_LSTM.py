@@ -69,17 +69,10 @@ def combine_and_average_sentiments(sentiment_data):
                      .reset_index())
     return averaged_data
 
-def process_sentiment_data(sentiment_data, stock_data):
+def process_sentiment_data(sentiment_data):
     # Ensure no duplicate tokens in the 'token_values' column
     sentiment_data['token_values'] = sentiment_data['token_values'].apply(lambda x: list(set(x)))
-
-    # Convert 'date_published' to match 'date_time' timezone information
-    if stock_data['date_time'].dt.tz:
-        # If stock_data['date_time'] is timezone-aware, adjust sentiment_data['date_published'] accordingly
-        sentiment_data['date_published'] = sentiment_data['date_published'].dt.tz_convert(stock_data['date_time'].dt.tz)
-    else:
-        # If stock_data['date_time'] is timezone-naive, remove timezone from sentiment_data['date_published']
-        sentiment_data['date_published'] = sentiment_data['date_published'].dt.tz_localize(None)
+    sentiment_data['date_published'] = sentiment_data['date_published'].dt.tz_localize(None)
 
     # Now, for each 'subject_id' and 'date_published' pair, combine token values and average scores if there are duplicates
     processed_sentiment = sentiment_data.groupby(['date_published', 'subject_id'], as_index=False).agg({
@@ -94,6 +87,7 @@ def process_sentiment_data(sentiment_data, stock_data):
     sentiment_usd = processed_sentiment[processed_sentiment['subject_id'] == 2]
 
     return sentiment_gold, sentiment_usd
+
 
 def normalize_data_global_and_impute(stock_data, global_min, global_max):
     # Assuming that 'stock_data' includes data for both stocks and is ready for global normalization
