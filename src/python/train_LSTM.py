@@ -7,6 +7,7 @@ import numpy as np
 import os
 from torch.utils.data import TensorDataset, DataLoader
 import json
+import gc
 
 lagwindow = 30
 intervals = [1, 15, 60, 1440]
@@ -85,7 +86,7 @@ def process_in_batches(df, batch_size):
         yield batch_with_lagged_features
 
 
-def get_data_from_db():
+def get_data_from_db(chunksize=10000):
     # Obtain DB credentials from environment variables
     db_config = {
         'dbname': os.environ['DB_NAME'],
@@ -93,12 +94,23 @@ def get_data_from_db():
         'password': os.environ['DB_PASSWORD'],
         'host': os.environ['DB_HOST']
     }
+
+        # Initialize empty DataFrames
+    historical_data = pd.DataFrame()
+    sentiment_data = pd.DataFrame()
     
     with psycopg2.connect(**db_config) as conn:
-        # Fetch all historical data
-        historical_data = pd.read_sql('SELECT * FROM stockhistory', conn, parse_dates=['date_time'])
-        # Fetch all sentiment data
-        sentiment_data = pd.read_sql('SELECT * FROM sentiment_analysis', conn, parse_dates=['date_published'])
+        # Fetch all historical data in chunks
+        for chunk in pd.read_sql('SELECT * FROM stockhistory', conn, parse_dates=['date_time'], chunksize=chunksize):
+            # Optimize the chunk's data types here
+            # Concatenate chunk to the main DataFrame
+            historical_data = pd.concat([historical_data, chunk])
+
+        # Fetch all sentiment data in chunks
+        for chunk in pd.read_sql('SELECT * FROM sentiment_analysis', conn, parse_dates=['date_published'], chunksize=chunksize):
+            # Optimize the chunk's data types here
+            # Concatenate chunk to the main DataFrame
+            sentiment_data = pd.concat([sentiment_data, chunk])
 
     # Process the sentiment data
     sentiment_gold, sentiment_usd = process_sentiment_data(sentiment_data)
@@ -109,6 +121,9 @@ def get_data_from_db():
 
     # At this point, you would also want to ensure that the historical data
     # has a column ready for merging with sentiment data, like a normalized date column
+
+    del chunk
+    gc.collect()
 
     return historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd
 
