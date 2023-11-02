@@ -114,6 +114,7 @@ def get_data_from_db(chunksize=10000):
     print(f"=========before loading data from db===========")
     log_memory_usage()
     print(f"===============================================")
+    sys.stdout.flush()
     # Obtain DB credentials from environment variables
     db_config = {
         'dbname': os.environ['DB_NAME'],
@@ -138,14 +139,14 @@ def get_data_from_db(chunksize=10000):
     print(f"=========after loading data from db===========")
     log_memory_usage()
     print(f"===============================================")
-
+    sys.stdout.flush()
     # Process the sentiment data
     sentiment_gold, sentiment_usd = process_sentiment_data(sentiment_data)
 
     print(f"=========after processing sentiment data=======")
     log_memory_usage()
     print(f"===============================================")
-
+    sys.stdout.flush()
     global_min_vals, global_max_vals = get_global_min_max(historical_data)
 
     # Split the historical data into two datasets based on 'stock_id'
