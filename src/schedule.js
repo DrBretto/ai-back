@@ -2,15 +2,16 @@ const cron = require('node-cron');
 const StocksService = require('./stocks/stocks-service');
 const SentimentService = require('./sentiment/sentiment-service');
 
-let currentYear = new Date().getFullYear();
-let currentMonth = new Date().getMonth() + 1; // Months are 0-based in JS
+
 
 module.exports = (app) => {
   const db = app.get('db');
 
   cron.schedule('0 0 * * *', async () => {
+    let currYear = new Date().getFullYear();
+    let currMonth = new Date().getMonth() + 1; // Months are 0-based in JS
     //Daily Price Scheduler
-    const monthToFetch = `${currentYear}-${currentMonth
+    const monthToFetch = `${currYear}-${currMonth
       .toString()
       .padStart(2, '0')}`;
     console.log('Fetching history: JDST', monthToFetch);
@@ -118,7 +119,9 @@ module.exports = (app) => {
   //     );
   //   }
   // });
-
+  
+  // let currentYear = new Date().getFullYear();
+  // let currentMonth = new Date().getMonth() + 1; // Months are 0-based in JS 
   // cron.schedule('*/10 * * * *', async () => {
   //   const db = app.get('db');
   //   const monthToFetch = `${currentYear}-${currentMonth

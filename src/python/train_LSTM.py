@@ -24,20 +24,13 @@ def log_memory_usage():
 lagwindow = 30
 intervals = [1, 15, 60, 1440]
 
-# Define your model class as before, no change needed here
-
-# Modify the normalize_data function to accept min and max values
-def normalize_data(df, min_vals, max_vals):
+def normalize_data(df):
+    # Perform Min-Max normalization manually using pandas
     for column in ['closing_price', 'high_price', 'low_price', 'volume']:
-        df[column] = (df[column] - min_vals[column]) / (max_vals[column] - min_vals[column])
+        min_column = df[column].min()
+        max_column = df[column].max()
+        df[column] = (df[column] - min_column) / (max_column - min_column)
     return df
-
-# Define a function to calculate global min and max values for normalization
-def get_global_min_max(historical_data):
-    min_vals = historical_data[['closing_price', 'high_price', 'low_price', 'volume']].min()
-    max_vals = historical_data[['closing_price', 'high_price', 'low_price', 'volume']].max()
-    return min_vals, max_vals
-
 
 class SimpleLSTM(nn.Module):
     def __init__(self, input_size=1, hidden_layer_size=100, output_size=1):
@@ -55,15 +48,6 @@ class SimpleLSTM(nn.Module):
         lstm_out, self.hidden_cell = self.lstm(input_seq.view(len(input_seq) ,1, -1), self.hidden_cell)
         predictions = self.linear(lstm_out.view(len(input_seq), -1))
         return predictions[-1]
-
-
-# def normalize_data(df):
-#     # Perform Min-Max normalization manually using pandas
-#     for column in ['closing_price', 'high_price', 'low_price', 'volume']:
-#         min_column = df[column].min()
-#         max_column = df[column].max()
-#         df[column] = (df[column] - min_column) / (max_column - min_column)
-#     return df
 
 
 def create_lagged_features(stock_data):
@@ -127,7 +111,7 @@ def get_data_from_db(chunksize=10000):
         'host': os.environ['DB_HOST']
     }
 
-        # Initialize empty DataFrames
+    # Initialize empty DataFrames
     historical_data = pd.DataFrame()
     sentiment_data = pd.DataFrame()
     
@@ -151,7 +135,6 @@ def get_data_from_db(chunksize=10000):
     log_memory_usage()
     print(f"===============================================")
     sys.stdout.flush()
-    global_min_vals, global_max_vals = get_global_min_max(historical_data)
 
     # Split the historical data into two datasets based on 'stock_id'
     historical_data_jdst = historical_data[historical_data['stock_id'] == 1]
@@ -163,7 +146,7 @@ def get_data_from_db(chunksize=10000):
     del chunk
     gc.collect()
 
-    return historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd, global_min_vals, global_max_vals
+    return historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd
 
 
 def integrate_sentiment(stock_data, sentiment_gold, sentiment_usd):
@@ -200,7 +183,7 @@ def prepare_dataloaders(stock_data_with_sentiment, batch_size):
 
 def process_data(batch_size):
     # Fetch the split data from the DB
-    historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd, global_min_vals, global_max_vals = get_data_from_db()
+    historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
 
     # Sort the data by date
     historical_data_jdst.sort_values(by='date_time', inplace=True)
@@ -209,8 +192,8 @@ def process_data(batch_size):
     sentiment_usd.sort_values(by='date_published', inplace=True)
 
     # Normalize the historical data using the global min and max values
-    historical_data_jdst_normalized = normalize_data(historical_data_jdst, global_min_vals, global_max_vals)
-    historical_data_nugt_normalized = normalize_data(historical_data_nugt, global_min_vals, global_max_vals)
+    historical_data_jdst_normalized = normalize_data(historical_data_jdst)
+    historical_data_nugt_normalized = normalize_data(historical_data_nugt)
 
     # Create the lagged features
     historical_data_jdst_with_features = create_lagged_features(historical_data_jdst_normalized)
