@@ -8,6 +8,15 @@ import os
 from torch.utils.data import TensorDataset, DataLoader
 import json
 import gc
+import resource
+import time
+
+def log_memory_usage():
+    # Using ru_maxrss from resource to get the peak memory usage in kilobytes
+    memory_usage_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    print(f"Memory Usage: {memory_usage_kb / 1024} MB")
+
+
 
 # Define the window and intervals outside of the function
 lagwindow = 30
@@ -102,6 +111,9 @@ def process_in_batches(df, batch_size):
 
 
 def get_data_from_db(chunksize=10000):
+    print(f"=========before loading data from db===========")
+    log_memory_usage()
+    print(f"===============================================")
     # Obtain DB credentials from environment variables
     db_config = {
         'dbname': os.environ['DB_NAME'],
@@ -123,9 +135,16 @@ def get_data_from_db(chunksize=10000):
         for chunk in pd.read_sql('SELECT * FROM sentiment_analysis', conn, parse_dates=['date_published'], chunksize=chunksize):
             sentiment_data = pd.concat([sentiment_data, chunk])
 
+    print(f"=========after loading data from db===========")
+    log_memory_usage()
+    print(f"===============================================")
 
     # Process the sentiment data
     sentiment_gold, sentiment_usd = process_sentiment_data(sentiment_data)
+
+    print(f"=========after processing sentiment data=======")
+    log_memory_usage()
+    print(f"===============================================")
 
     global_min_vals, global_max_vals = get_global_min_max(historical_data)
 
@@ -253,7 +272,7 @@ if __name__ == '__main__':
     # Print the JSON snapshot
     print(json_snapshot)
 
-    
+
 
 # if __name__ == '__main__':
 #     dataloader = process_data()
