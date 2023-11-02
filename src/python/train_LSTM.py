@@ -69,7 +69,7 @@ def combine_and_average_sentiments(sentiment_data):
                      .agg({'high_score': 'mean',
                            'low_score': 'mean',
                            'average_score': 'mean',
-                           'sentiment_values': lambda x: list(set().union(*x))})
+                           'token_values': lambda x: list(set().union(*x))})
                      .reset_index())
     return averaged_data
 
