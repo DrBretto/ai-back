@@ -69,15 +69,26 @@ def combine_and_average_sentiments(sentiment_data):
                      .reset_index())
     return averaged_data
 
-def process_sentiment_data(sentiment_data):
-    # Your existing code to process sentiment data...
+def process_sentiment_data(sentiment_data, stock_data):
+    # Ensure no duplicate tokens in the 'token_values' column
+    sentiment_data['token_values'] = sentiment_data['token_values'].apply(lambda x: list(set(x)))
+
+    # Convert 'date_published' to match 'date_time' timezone information
+    if stock_data['date_time'].dt.tz:
+        # If stock_data['date_time'] is timezone-aware, adjust sentiment_data['date_published'] accordingly
+        sentiment_data['date_published'] = sentiment_data['date_published'].dt.tz_convert(stock_data['date_time'].dt.tz)
+    else:
+        # If stock_data['date_time'] is timezone-naive, remove timezone from sentiment_data['date_published']
+        sentiment_data['date_published'] = sentiment_data['date_published'].dt.tz_localize(None)
+
+    # Now, for each 'subject_id' and 'date_published' pair, combine token values and average scores if there are duplicates
     processed_sentiment = sentiment_data.groupby(['date_published', 'subject_id'], as_index=False).agg({
         'high_score': 'mean',
         'low_score': 'mean',
         'average_score': 'mean',
         'token_values': lambda x: list(set().union(*x))
     })
-    
+
     # Split the processed sentiment data into two separate DataFrames based on 'subject_id'
     sentiment_gold = processed_sentiment[processed_sentiment['subject_id'] == 1]
     sentiment_usd = processed_sentiment[processed_sentiment['subject_id'] == 2]
