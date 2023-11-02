@@ -185,60 +185,29 @@ def process_data(batch_size):
     # Fetch the split data from the DB
     historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
 
-    # Sort the data by date
-    historical_data_jdst.sort_values(by='date_time', inplace=True)
-    historical_data_nugt.sort_values(by='date_time', inplace=True)
-    sentiment_gold.sort_values(by='date_published', inplace=True)
-    sentiment_usd.sort_values(by='date_published', inplace=True)
-
-    # Normalize the historical data using the global min and max values
-    historical_data_jdst_normalized = normalize_data(historical_data_jdst)
-    historical_data_nugt_normalized = normalize_data(historical_data_nugt)
-
-    # Create the lagged features
-    historical_data_jdst_with_features = create_lagged_features(historical_data_jdst_normalized)
-    historical_data_nugt_with_features = create_lagged_features(historical_data_nugt_normalized)
-
     # Integrate sentiment scores with stock data
-    historical_data_jdst_with_sentiment = integrate_sentiment(historical_data_jdst_with_features, sentiment_gold, sentiment_usd)
-    historical_data_nugt_with_sentiment = integrate_sentiment(historical_data_nugt_with_features, sentiment_gold, sentiment_usd)
-
-    # Add stock_id back to the datasets if not present
-    historical_data_jdst_with_sentiment['stock_id'] = 1
-    historical_data_nugt_with_sentiment['stock_id'] = 2
+    historical_data_jdst_with_sentiment = integrate_sentiment(historical_data_jdst, sentiment_gold, sentiment_usd)
+    historical_data_nugt_with_sentiment = integrate_sentiment(historical_data_nugt, sentiment_gold, sentiment_usd)
 
     # Combine the datasets
     combined_data = pd.concat([historical_data_jdst_with_sentiment, historical_data_nugt_with_sentiment])
-    combined_data.sort_values(by='date_time', inplace=True)
+    combined_data.sort_values(by='date_time', inplace=True)  # Ensure the data is sorted by date_time
 
-    # Here we will process the combined data in batches
-    for start in range(0, len(combined_data), batch_size):
-        end = min(start + batch_size, len(combined_data))
-        batch = combined_data.iloc[start:end].copy()
-        
-        # Create lagged features for batch
-        batch_with_lagged_features = create_lagged_features(batch)
-        
-        # Prepare DataLoader for the batch
-        tensor_x = torch.Tensor(batch_with_lagged_features.drop('closing_price', axis=1).values.astype(np.float32))
-        tensor_y = torch.Tensor(batch_with_lagged_features['closing_price'].values.astype(np.float32))
-        dataset = TensorDataset(tensor_x, tensor_y)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
-        
-        # Training loop can be inserted here if needed
-        # ...
+    # Normalize the combined data
+    combined_data_normalized = combined_data.apply(normalize_data)
 
-        # Delete the variables to free up memory
-        del batch
-        del batch_with_lagged_features
-        del tensor_x
-        del tensor_y
-        del dataset
-        del dataloader
-        gc.collect()
+    # Process the normalized combined data in batches
+    dataloaders = prepare_dataloaders(combined_data_normalized, batch_size)
 
-    latest_data_snapshot = combined_data.tail(1)
-    return latest_data_snapshot
+    # At this point, you would typically have a loop to iterate over dataloaders
+    # and perform operations like training your model, etc.
+    # However, since we are focusing on the data processing part here, we can
+    # skip this step or include it based on your specific needs.
+
+    latest_data_snapshot = combined_data_normalized.tail(1)
+    return latest_data_snapshot  # Return the dataloaders as well if they will be used later.
+
+
 
 
 
