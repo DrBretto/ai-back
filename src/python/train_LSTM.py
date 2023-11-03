@@ -168,9 +168,13 @@ def integrate_sentiment(stock_data, sentiment_data):
                                               direction='forward')
     return stock_data_with_sentiment
 
+
+
 def prepare_dataloaders(stock_data_with_sentiment, batch_size):
     dataloaders = []
     for batch in process_in_batches(stock_data_with_sentiment, batch_size):
+        # Convert 'date_published' from timestamp to Unix time (seconds since epoch)
+        batch['date_published'] = batch['date_published'].astype(np.int64) // 10**9
         # Drop the target column 'closing_price' to create input features tensor
         tensor_x = torch.Tensor(batch.drop('closing_price', axis=1).values.astype(np.float32))
         # Create target tensor from 'closing_price'
