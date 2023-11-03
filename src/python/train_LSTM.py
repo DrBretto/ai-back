@@ -90,7 +90,7 @@ def normalize_data_global_and_impute(stock_data, global_min, global_max):
     
     return imputed_data
 
-def process_in_batches(df, batch_size, intervals=defaultIntervals, lagwindow=30, future_window=30, future_interval=1):
+def process_in_batches(df, batch_size, intervals=defaultIntervals, lagwindow=30, future_window=96, future_interval=5):
     for start in range(0, len(df), batch_size):
         end = min(start + batch_size + lagwindow, len(df))  
         batch = df[start:end]
@@ -102,8 +102,6 @@ def process_in_batches(df, batch_size, intervals=defaultIntervals, lagwindow=30,
         batch_with_future_price_points = create_future_price_points(batch_with_lagged_features, future_window, future_interval)
         
         yield batch_with_future_price_points
-
-
 
 def get_data_from_db(chunksize=10000):
 
@@ -169,9 +167,7 @@ class OverlappingWindowDataset(Dataset):
         return torch.Tensor(input_sequence), torch.Tensor(target_sequence)
 
 def prepare_dataloaders(stock_data_with_sentiment, lagwindow, batch_size):
-    # Assuming 'stock_data_with_sentiment' is pre-processed to have the required columns only
 
-    # Initialize the OverlappingWindowDataset with the data and lagwindow
     dataset = OverlappingWindowDataset(
         data=stock_data_with_sentiment, 
         lagwindow=lagwindow
@@ -204,28 +200,17 @@ def process_data(batch_size):
     
     # Instead of calling prepare_dataloaders directly, you iterate over the batches
     for batch_data in process_in_batches(final_combined_data, batch_size):
+        # Log the tail of the batch_data here
+        latest_data_slice = batch_data.tail(1)
         dataloader = prepare_dataloaders(batch_data, lagwindow, batch_size)
 
-    # The rest of the code remains the same...
-    latest_data_snapshot = final_combined_data.tail(1)
-    return latest_data_snapshot  # Return the dataloaders as well if they will be used later.
+    return latest_data_slice  # Returning the latest slice of the batched data.
 
 
 if __name__ == '__main__':
-    # Define the batch size
     batch_size = 256
+    latest_data_slice = process_data(batch_size)
+    json_snapshot = latest_data_slice.to_json(orient='records', date_format='iso')
+    sys.stdout.write(json_snapshot)
 
-    # Call the process_data function to process the data
-    latest_data_snapshot = process_data(batch_size)
-
-    # Since process_data is yielding DataLoader objects, we would typically
-    # have a loop here to iterate through these DataLoader objects.
-    # However, since we're only interested in the latest data snapshot here,
-    # we'll convert that to JSON for easy viewing.
-    
-    # Convert the latest data snapshot to JSON for easy viewing
-    json_snapshot = latest_data_snapshot.to_json(orient='records', date_format='iso')
-
-    # Print the JSON snapshot
-    sys.stdout.write(latest_data_snapshot.to_json(orient='records', date_format='iso'))
 
