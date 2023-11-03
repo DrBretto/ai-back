@@ -8,6 +8,8 @@ from torch.utils.data import TensorDataset, DataLoader
 import gc
 import resource
 import sys
+from datetime import time
+import pytz
 
 
 # Define the window and intervals outside of the function
@@ -72,9 +74,13 @@ def combine_and_average_sentiments(sentiment_data):
 def process_sentiment_data(sentiment_data):
     # Ensure no duplicate tokens in the 'token_values' column
     sentiment_data['token_values'] = sentiment_data['token_values'].apply(lambda x: list(set(x)))
+
+    # Add time (00:00:00) to the date and localize to 'America/New_York' timezone
+    sentiment_data['date_published'] = pd.to_datetime(sentiment_data['date_published'])
+    sentiment_data['date_published'] = sentiment_data['date_published'].apply(lambda x: x.combine(x, time.min))
     sentiment_data['date_published'] = sentiment_data['date_published'].dt.tz_localize('America/New_York')
 
-    # Now, for each 'subject_id' and 'date_published' pair, combine token values and average scores if there are duplicates
+    # Group by 'date_published' and 'subject_id' and aggregate the data
     processed_sentiment = sentiment_data.groupby(['date_published', 'subject_id'], as_index=False).agg({
         'high_score': 'mean',
         'low_score': 'mean',
@@ -87,7 +93,6 @@ def process_sentiment_data(sentiment_data):
     sentiment_usd = processed_sentiment[processed_sentiment['subject_id'] == 2]
 
     return sentiment_gold, sentiment_usd
-
 
 def normalize_data_global_and_impute(stock_data, global_min, global_max):
     # Assuming that 'stock_data' includes data for both stocks and is ready for global normalization
