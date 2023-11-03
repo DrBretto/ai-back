@@ -7,15 +7,14 @@ import os
 from torch.utils.data import TensorDataset, DataLoader, Dataset
 import gc
 import resource
-import sys
 from datetime import time
 from torch.nn.utils.rnn import pad_sequence
+import sys
 
 
 # Define the window and intervals outside of the function
 lagwindow = 30
 defaultIntervals = [1, 15, 60, 1440]
-
 
 def log_memory_usage():
     memory_usage_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
@@ -93,8 +92,6 @@ def normalize_data_global_and_impute(stock_data, global_min, global_max):
 
 def process_in_batches(df, batch_size, intervals=defaultIntervals, lagwindow=30, future_window=30, future_interval=1):
     for start in range(0, len(df), batch_size):
-        log_memory_usage()
-        sys.stdout.flush()
         end = min(start + batch_size + lagwindow, len(df))  
         batch = df[start:end]
         if end + lagwindow > len(df):
@@ -109,10 +106,7 @@ def process_in_batches(df, batch_size, intervals=defaultIntervals, lagwindow=30,
 
 
 def get_data_from_db(chunksize=10000):
-    print(f"=========before loading data from db===========")
-    log_memory_usage()
-    print(f"===============================================")
-    sys.stdout.flush()
+
     # Obtain DB credentials from environment variables
     db_config = {
         'dbname': os.environ['DB_NAME'],
@@ -134,17 +128,8 @@ def get_data_from_db(chunksize=10000):
         for chunk in pd.read_sql('SELECT * FROM sentiment_analysis', conn, parse_dates=['date_published'], chunksize=chunksize):
             sentiment_data = pd.concat([sentiment_data, chunk])
 
-    print(f"=========after loading data from db===========")
-    log_memory_usage()
-
-    sys.stdout.flush()
     # Process the sentiment data
     sentiment_gold, sentiment_usd = process_sentiment_data(sentiment_data)
-
-    print(f"=========after processing sentiment data=======")
-    log_memory_usage()
-
-    sys.stdout.flush()
 
     # Split the historical data into two datasets based on 'stock_id'
     historical_data_jdst = historical_data[historical_data['stock_id'] == 1]
@@ -228,7 +213,7 @@ def process_data(batch_size):
 
 if __name__ == '__main__':
     # Define the batch size
-    batch_size = 64
+    batch_size = 256
 
     # Call the process_data function to process the data
     latest_data_snapshot = process_data(batch_size)
@@ -242,5 +227,5 @@ if __name__ == '__main__':
     json_snapshot = latest_data_snapshot.to_json(orient='records', date_format='iso')
 
     # Print the JSON snapshot
-    print(json_snapshot)
+    sys.stdout.write(latest_data_snapshot.to_json(orient='records', date_format='iso'))
 
