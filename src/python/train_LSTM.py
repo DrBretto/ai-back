@@ -173,17 +173,22 @@ def integrate_sentiment(stock_data, sentiment_data):
 def prepare_dataloaders(stock_data_with_sentiment, batch_size):
     dataloaders = []
     for batch in process_in_batches(stock_data_with_sentiment, batch_size):
-        # Drop the 'date_published' column as it's no longer needed
-        batch = batch.drop(columns=['date_published'])
-        # Drop the target column 'closing_price' to create input features tensor
+        # Ensure that the 'date_published' column is dropped
+        if 'date_published' in batch.columns:
+            batch = batch.drop(columns=['date_published'])
+        # Now drop 'date_time' if it's still present and not needed for model training
+        if 'date_time' in batch.columns:
+            batch = batch.drop(columns=['date_time'])
+        # Create the input features tensor without 'closing_price'
         tensor_x = torch.Tensor(batch.drop('closing_price', axis=1).values.astype(np.float32))
-        # Create target tensor from 'closing_price'
+        # Create the target tensor from 'closing_price'
         tensor_y = torch.Tensor(batch['closing_price'].values.astype(np.float32))
-        # Create your dataset and DataLoader
+        # Create the dataset and DataLoader
         dataset = TensorDataset(tensor_x, tensor_y)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
         dataloaders.append(dataloader)
     return dataloaders
+
 
 def process_data(batch_size):
     # Fetch the data from the DB
