@@ -206,21 +206,16 @@ def process_data(batch_size):
 
     return latest_data_slice  # Returning the latest slice of the batched data.
 
-def rename_duplicates( df ):
-    cols=pd.Series(df.columns)
-    for dup in cols[cols.duplicated()].unique(): 
-        cols[cols[cols == dup].index.values.tolist()] = [dup + '_' + str(i) if i != 0 else dup for i in range(sum(cols == dup))]
-    df.columns=cols
-
 if __name__ == '__main__':
     batch_size = 256
     latest_data_slice = process_data(batch_size)
 
-    # Rename duplicate columns if any
-    rename_duplicates(latest_data_slice)
-
-    # Now convert to JSON
-    json_snapshot = latest_data_slice.to_json(orient='records', date_format='iso')
-
-    # Write the JSON to stdout
-    sys.stdout.write(json_snapshot)
+    # Check if the DataFrame is empty
+    if latest_data_slice.empty:
+        print("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.")
+    else:
+        # Convert to CSV for easier transfer
+        csv_snapshot = latest_data_slice.to_csv(index=False)
+        
+        # Write the CSV to stdout
+        sys.stdout.write(csv_snapshot)
