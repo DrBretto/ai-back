@@ -74,11 +74,6 @@ def process_sentiment_data(sentiment_data):
     # Ensure no duplicate tokens in the 'token_values' column
     sentiment_data['token_values'] = sentiment_data['token_values'].apply(lambda x: list(set(x)))
 
-    # Add time (00:00:00) to the date and localize to 'America/New_York' timezone
-    sentiment_data['date_published'] = pd.to_datetime(sentiment_data['date_published'])
-    sentiment_data['date_published'] = sentiment_data['date_published'].apply(lambda x: x.combine(x, time.min))
-    sentiment_data['date_published'] = sentiment_data['date_published'].dt.tz_localize('UTC').dt.tz_convert('UTC')
-
     # Group by 'date_published' and 'subject_id' and aggregate the data
     processed_sentiment = sentiment_data.groupby(['date_published', 'subject_id'], as_index=False).agg({
         'high_score': 'mean',
