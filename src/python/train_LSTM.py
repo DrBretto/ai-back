@@ -78,7 +78,7 @@ def process_sentiment_data(sentiment_data):
     # Add time (00:00:00) to the date and localize to 'America/New_York' timezone
     sentiment_data['date_published'] = pd.to_datetime(sentiment_data['date_published'])
     sentiment_data['date_published'] = sentiment_data['date_published'].apply(lambda x: x.combine(x, time.min))
-    sentiment_data['date_published'] = sentiment_data['date_published'].dt.tz_convert('UTC')
+    sentiment_data['date_published'] = sentiment_data['date_published'].dt.tz_localize('UTC').dt.tz_convert('UTC')
 
     # Group by 'date_published' and 'subject_id' and aggregate the data
     processed_sentiment = sentiment_data.groupby(['date_published', 'subject_id'], as_index=False).agg({
