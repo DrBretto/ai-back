@@ -38,15 +38,17 @@ def log_memory_usage():
     with open('memory_log.txt', 'a') as f:  # 'a' mode for append to the log file
         print(f"Memory Usage: {memory_usage_kb / 1024} MB", file=f)
 
-def create_lagged_features(stock_data, intervals = defaultIntervals):
-    # 'intervals' could be a list of intervals like [1, 15, 60, 1440] representing minutes
-    # 'window' could be a fixed size or you can adjust as needed, e.g., 30
-    lagged_data = stock_data.copy()
+def create_lagged_features(stock_data, intervals=defaultIntervals):
+    # ... (rest of your existing code for the function)
+    new_frames = []
     for interval in intervals:
         for feature in ['closing_price', 'high_price', 'low_price', 'volume']:
-            for lag in range(1, lagwindow): 
+            for lag in range(1, lagwindow + 1):
                 lagged_column_name = f'{feature}_lag_{interval * lag}'
-                lagged_data[lagged_column_name] = stock_data[feature].shift(lag * interval)
+                lagged_feature = stock_data[feature].shift(lag * interval)
+                lagged_feature_frame = lagged_feature.to_frame(name=lagged_column_name)
+                new_frames.append(lagged_feature_frame)
+    lagged_data = pd.concat([stock_data] + new_frames, axis=1)
     return lagged_data
 
 def calculate_global_min_max(historical_data_jdst, historical_data_nugt):
@@ -137,14 +139,14 @@ def get_data_from_db(chunksize=10000):
 
     print(f"=========after loading data from db===========")
     log_memory_usage()
-    print(f"===============================================")
+
     sys.stdout.flush()
     # Process the sentiment data
     sentiment_gold, sentiment_usd = process_sentiment_data(sentiment_data)
 
     print(f"=========after processing sentiment data=======")
     log_memory_usage()
-    print(f"===============================================")
+
     sys.stdout.flush()
 
     # Split the historical data into two datasets based on 'stock_id'
@@ -168,13 +170,11 @@ def integrate_sentiment(stock_data, sentiment_data):
                                               direction='forward')
     return stock_data_with_sentiment
 
-
-
 def prepare_dataloaders(stock_data_with_sentiment, batch_size):
     dataloaders = []
     for batch in process_in_batches(stock_data_with_sentiment, batch_size):
-        # Convert 'date_published' from timestamp to Unix time (seconds since epoch)
-        batch['date_published'] = batch['date_published'].astype(np.int64) // 10**9
+        # Drop the 'date_published' column as it's no longer needed
+        batch = batch.drop(columns=['date_published'])
         # Drop the target column 'closing_price' to create input features tensor
         tensor_x = torch.Tensor(batch.drop('closing_price', axis=1).values.astype(np.float32))
         # Create target tensor from 'closing_price'
