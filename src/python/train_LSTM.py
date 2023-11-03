@@ -4,39 +4,40 @@ import psycopg2
 import pandas as pd
 import numpy as np
 import os
-from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.data import TensorDataset, DataLoader, Dataset
 import gc
 import resource
 import sys
 from datetime import time
-import pytz
+from torch.nn.utils.rnn import pad_sequence
 
 
 # Define the window and intervals outside of the function
 lagwindow = 30
 defaultIntervals = [1, 15, 60, 1440]
 
-class SimpleLSTM(nn.Module):
-    def __init__(self, input_size=1, hidden_layer_size=100, output_size=1):
-        super().__init__()
-        self.hidden_layer_size = hidden_layer_size
-
-        self.lstm = nn.LSTM(input_size, hidden_layer_size)
-
-        self.linear = nn.Linear(hidden_layer_size, output_size)
-
-        self.hidden_cell = (torch.zeros(1,1,self.hidden_layer_size),
-                            torch.zeros(1,1,self.hidden_layer_size))
-
-    def forward(self, input_seq):
-        lstm_out, self.hidden_cell = self.lstm(input_seq.view(len(input_seq) ,1, -1), self.hidden_cell)
-        predictions = self.linear(lstm_out.view(len(input_seq), -1))
-        return predictions[-1]
 
 def log_memory_usage():
     memory_usage_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     with open('memory_log.txt', 'a') as f:  # 'a' mode for append to the log file
         print(f"Memory Usage: {memory_usage_kb / 1024} MB", file=f)
+
+def create_future_price_points(stock_data, future_window=30, future_interval=1):
+
+    new_frames = []
+    for lead in range(future_interval, future_window * future_interval + 1, future_interval):
+        for feature in ['closing_price', 'high_price', 'low_price', 'volume']:
+            future_column_name = f'{feature}_future_{lead}'
+            future_feature = stock_data[feature].shift(-lead)
+            future_feature_frame = future_feature.to_frame(name=future_column_name)
+            new_frames.append(future_feature_frame)
+
+    future_data = pd.concat([stock_data] + new_frames, axis=1)
+    # Drop the rows at the end that do not have a full set of future data points
+    future_data = future_data.dropna(subset=[f'{feature}_future_{future_window * future_interval}' for feature in ['closing_price', 'high_price', 'low_price', 'volume']])
+    
+    return future_data
+
 
 def create_lagged_features(stock_data, intervals=defaultIntervals):
     # ... (rest of your existing code for the function)
@@ -60,17 +61,6 @@ def calculate_global_min_max(historical_data_jdst, historical_data_nugt):
     global_max = combined_stock_data[['closing_price', 'high_price', 'low_price', 'volume']].max()
     
     return global_min, global_max
-
-def combine_and_average_sentiments(sentiment_data):
-    # Average the scores and combine the tokenized sentiments
-    averaged_data = (sentiment_data
-                     .groupby(['date_published', 'subject_id'])
-                     .agg({'high_score': 'mean',
-                           'low_score': 'mean',
-                           'average_score': 'mean',
-                           'token_values': lambda x: list(set().union(*x))})
-                     .reset_index())
-    return averaged_data
 
 def process_sentiment_data(sentiment_data):
     # Ensure no duplicate tokens in the 'token_values' column
@@ -101,15 +91,22 @@ def normalize_data_global_and_impute(stock_data, global_min, global_max):
     
     return imputed_data
 
-def process_in_batches(df, batch_size):
-    for start in range(0, len(df), batch_size):           
+def process_in_batches(df, batch_size, intervals=defaultIntervals, lagwindow=30, future_window=30, future_interval=1):
+    for start in range(0, len(df), batch_size):
         log_memory_usage()
         sys.stdout.flush()
-        end = min(start + batch_size, len(df))
+        end = min(start + batch_size + lagwindow, len(df))  
         batch = df[start:end]
-        # Create lagged features for batch without re-normalizing
-        batch_with_lagged_features = create_lagged_features(batch, [1, 15, 60, 1440])
-        yield batch_with_lagged_features
+        if end + lagwindow > len(df):
+            batch = df[start:]  
+        
+        batch_with_lagged_features = create_lagged_features(batch, intervals)
+        # Create future price points here
+        batch_with_future_price_points = create_future_price_points(batch_with_lagged_features, future_window, future_interval)
+        
+        yield batch_with_future_price_points
+
+
 
 def get_data_from_db(chunksize=10000):
     print(f"=========before loading data from db===========")
@@ -169,26 +166,36 @@ def integrate_sentiment(stock_data, sentiment_data):
                                               left_on='date_time', right_on='date_published', 
                                               direction='forward')
     return stock_data_with_sentiment
+class OverlappingWindowDataset(Dataset):
+    def __init__(self, data, lagwindow):
+        self.data = data
+        self.window_size = lagwindow
 
-def prepare_dataloaders(stock_data_with_sentiment, batch_size):
-    dataloaders = []
-    for batch in process_in_batches(stock_data_with_sentiment, batch_size):
-        # Ensure that the 'date_published' column is dropped
-        if 'date_published' in batch.columns:
-            batch = batch.drop(columns=['date_published'])
-        # Now drop 'date_time' if it's still present and not needed for model training
-        if 'date_time' in batch.columns:
-            batch = batch.drop(columns=['date_time'])
-        # Create the input features tensor without 'closing_price'
-        tensor_x = torch.Tensor(batch.drop('closing_price', axis=1).values.astype(np.float32))
-        # Create the target tensor from 'closing_price'
-        tensor_y = torch.Tensor(batch['closing_price'].values.astype(np.float32))
-        # Create the dataset and DataLoader
-        dataset = TensorDataset(tensor_x, tensor_y)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
-        dataloaders.append(dataloader)
-    return dataloaders
+    def __len__(self):
+        # Total windows are the total data points minus one full window size,
+        # adjusted to start at the first possible full window
+        return len(self.data) - (2 * self.window_size) + 1
 
+    def __getitem__(self, index):
+        # Slices the data to get the input window and the output window.
+        # The output window immediately follows the input window in time.
+        input_sequence = self.data.iloc[index:index+self.window_size].values.astype(np.float32)
+        target_sequence = self.data.iloc[index+self.window_size:index+(2*self.window_size)].values.astype(np.float32)
+        return torch.Tensor(input_sequence), torch.Tensor(target_sequence)
+
+def prepare_dataloaders(stock_data_with_sentiment, lagwindow, batch_size):
+    # Assuming 'stock_data_with_sentiment' is pre-processed to have the required columns only
+
+    # Initialize the OverlappingWindowDataset with the data and lagwindow
+    dataset = OverlappingWindowDataset(
+        data=stock_data_with_sentiment, 
+        lagwindow=lagwindow
+    )
+
+    # Prepare the DataLoader using the custom dataset
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+
+    return dataloader
 
 def process_data(batch_size):
     # Fetch the data from the DB
@@ -209,9 +216,10 @@ def process_data(batch_size):
 
     # Re-combine the data with sentiment
     final_combined_data = pd.concat([combined_data_jdst_with_sentiment, combined_data_nugt_with_sentiment])
-
-    # Process the final combined data in batches
-    dataloaders = prepare_dataloaders(final_combined_data, batch_size)
+    
+    # Instead of calling prepare_dataloaders directly, you iterate over the batches
+    for batch_data in process_in_batches(final_combined_data, batch_size):
+        dataloader = prepare_dataloaders(batch_data, lagwindow, batch_size)
 
     # The rest of the code remains the same...
     latest_data_snapshot = final_combined_data.tail(1)
