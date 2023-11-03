@@ -14,7 +14,7 @@ import pytz
 
 # Define the window and intervals outside of the function
 lagwindow = 30
-intervals = [1, 15, 60, 1440]
+defaultIntervals = [1, 15, 60, 1440]
 
 class SimpleLSTM(nn.Module):
     def __init__(self, input_size=1, hidden_layer_size=100, output_size=1):
@@ -39,7 +39,7 @@ def log_memory_usage():
     with open('memory_log.txt', 'a') as f:  # 'a' mode for append to the log file
         print(f"Memory Usage: {memory_usage_kb / 1024} MB", file=f)
 
-def create_lagged_features(stock_data):
+def create_lagged_features(stock_data, intervals = defaultIntervals):
     # 'intervals' could be a list of intervals like [1, 15, 60, 1440] representing minutes
     # 'window' could be a fixed size or you can adjust as needed, e.g., 30
     lagged_data = stock_data.copy()
