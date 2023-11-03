@@ -164,23 +164,23 @@ const DataService = {
         exec(
           `. env/bin/activate && env/bin/python src/python/train_LSTM.py`,
           (error, stdout, stderr) => {
-            // Attempt to read the memory log file whether the script succeeded or failed
-            const logData = fs.readFileSync('memory_log.txt', 'utf8');
-
             if (error) {
               console.error('Error:', error);
               console.error('Standard Output:', stdout);
               console.error('Standard Error:', stderr);
-              console.error('Memory Log:', logData); // Log the memory usage from the file
               reject(error);
               return;
             }
 
             // Parse the result from stdout
-            const result = JSON.parse(stdout);
-            console.log('Memory Log:', logData); // Log the memory usage from the file
-
-            resolve(result);
+            try {
+              const result = JSON.parse(stdout);
+              resolve(result);
+            } catch (parseError) {
+              console.error('Error parsing JSON from stdout:', parseError);
+              console.error('Received stdout:', stdout);
+              reject(parseError);
+            }
           }
         );
       });
