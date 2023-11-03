@@ -33,7 +33,6 @@ class SimpleLSTM(nn.Module):
         predictions = self.linear(lstm_out.view(len(input_seq), -1))
         return predictions[-1]
 
-
 def log_memory_usage():
     memory_usage_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     with open('memory_log.txt', 'a') as f:  # 'a' mode for append to the log file

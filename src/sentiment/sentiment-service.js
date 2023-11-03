@@ -330,7 +330,7 @@ const SentimentService = {
     average,
     low,
     high,
-    date = new Date().toISOString().split('T')[0]
+    date = new Date().toISOString()
   ) {
     console.log(
       'Inserting data into sentiment_analysis table',
@@ -385,17 +385,6 @@ const SentimentService = {
       return null;
     }
   },
-
-  // async updateSentimentAnalysis(db, tokenValues, sentimentAnalysisId) {
-  //   try {
-  //     await db('sentiment_analysis').where('id', sentimentAnalysisId).update({
-  //       token_values: tokenValues,
-  //     });
-  //     console.log('Sentiment analysis updated successfully.');
-  //   } catch (error) {
-  //     console.error('Error updating sentiment analysis:', error);
-  //   }
-  // },
 
   async updateSentimentAnalysis(db, tokenValues, sentimentAnalysisId) {
     try {
