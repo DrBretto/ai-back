@@ -157,33 +157,35 @@ const DataService = {
   // Inside your DataService object in DataService.js
 
   async trainLSTM() {
-    try {
-      console.log('Starting LSTM training...');
-  
-      return new Promise((resolve, reject) => {
-        exec(
-          `. env/bin/activate && env/bin/python src/python/train_LSTM.py`,
-          (error, stdout, stderr) => {
-            if (error) {
-              console.error('Error:', error);
-              console.error('Standard Output:', stdout);
-              console.error('Standard Error:', stderr);
-              reject(error);
-              return;
-            }
-  
-            // No parsing, just return the stdout directly.
-            console.log('Received stdout:', stdout);
-            resolve(stdout); // Resolving with raw stdout data.
+    console.log('Starting LSTM training...');
+
+    return new Promise((resolve, reject) => {
+      const process = exec(
+        `. env/bin/activate && env/bin/python src/python/train_LSTM.py`,
+        (error, stdout, stderr) => {
+          if (error) {
+            console.error('Error occurred:', error);
+            console.error('Error details:', stderr);
+            reject(error);
+            return;
           }
-        );
+
+          console.log('Training completed. Output:', stdout);
+          resolve(stdout); // Resolve with the raw stdout data directly.
+        }
+      );
+
+      // Optional: If you want to capture real-time stdout as it is being printed by the Python script
+      process.stdout.on('data', (data) => {
+        console.log('Real-time output:', data.toString());
       });
-    } catch (error) {
-      console.error('Error in trainLSTM:', error);
-      throw error;
-    }
+
+      // Optional: If you want to capture real-time stderr as it is being printed by the Python script
+      process.stderr.on('data', (data) => {
+        console.error('Real-time error:', data.toString());
+      });
+    });
   },
-  
 };
 
 module.exports = DataService;
