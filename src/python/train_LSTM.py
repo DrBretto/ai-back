@@ -252,7 +252,7 @@ def process_data(batch_size):
         latest_data_slice = batch_data.tail(10)
 
         # Prepare dataloaders here
-        dataloader = prepare_dataloaders(batch_data, lagwindow, batch_size)
+        dataloader = prepare_dataloaders(batch_data, _lagwindow, batch_size)
         # If no errors, break after the first successful batch processing
         break
 
