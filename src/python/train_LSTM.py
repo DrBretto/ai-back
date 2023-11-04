@@ -165,19 +165,19 @@ def process_data(batch_size):
                                                end=historical_data_jdst['date_time'].max(), 
                                                freq='T'), columns=['date_time'])
 
-    # Merge and interpolate JDST data
+    # Merge and fill missing JDST data
     historical_data_jdst = pd.merge(all_datetimes, historical_data_jdst, on='date_time', how='left')
-    historical_data_jdst.interpolate(method='linear', limit_area='inside', inplace=True)
-    historical_data_jdst.fillna(method='ffill', inplace=True)
-    historical_data_jdst.fillna(0, inplace=True)
+    historical_data_jdst.fillna(method='ffill', inplace=True)  # Forward fill
+    historical_data_jdst.fillna(method='bfill', inplace=True)  # Backward fill if any NA values are still left
+    historical_data_jdst.fillna(0, inplace=True)               # Fill remaining NA's with 0 if there are any
     # Normalize JDST data
     historical_data_jdst = normalize_data(historical_data_jdst)
 
-    # Merge and interpolate NUGT data
+    # Merge and fill missing NUGT data
     historical_data_nugt = pd.merge(all_datetimes, historical_data_nugt, on='date_time', how='left')
-    historical_data_nugt.interpolate(method='linear', limit_area='inside', inplace=True)
-    historical_data_nugt.fillna(method='ffill', inplace=True)
-    historical_data_nugt.fillna(0, inplace=True)
+    historical_data_nugt.fillna(method='ffill', inplace=True)  # Forward fill
+    historical_data_nugt.fillna(method='bfill', inplace=True)  # Backward fill if any NA values are still left
+    historical_data_nugt.fillna(0, inplace=True)               # Fill remaining NA's with 0 if there are any
     # Normalize NUGT data
     historical_data_nugt = normalize_data(historical_data_nugt)
 
