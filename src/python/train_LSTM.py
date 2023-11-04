@@ -16,11 +16,6 @@ import json
 lagwindow = 30
 defaultIntervals = [1, 15, 60, 1440]
 
-def log_memory_usage():
-    memory_usage_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-    with open('memory_log.txt', 'a') as f:  # 'a' mode for append to the log file
-        print(f"Memory Usage: {memory_usage_kb / 1024} MB", file=f)
-
 def create_future_price_points(stock_data, future_window=30, future_interval=1):
 
     new_frames = []
@@ -36,7 +31,6 @@ def create_future_price_points(stock_data, future_window=30, future_interval=1):
     future_data = future_data.dropna(subset=[f'{feature}_future_{future_window * future_interval}' for feature in ['closing_price', 'high_price', 'low_price', 'volume']])
     
     return future_data
-
 
 def create_lagged_features(stock_data, intervals=defaultIntervals):
     # ... (rest of your existing code for the function)
@@ -77,6 +71,9 @@ def process_sentiment_data(sentiment_data):
     sentiment_gold = processed_sentiment[processed_sentiment['subject_id'] == 1]
     sentiment_usd = processed_sentiment[processed_sentiment['subject_id'] == 2]
 
+    print(f"Processed sentiment_gold size: {sentiment_gold.shape}")
+    print(f"Processed sentiment_usd size: {sentiment_usd.shape}")
+
     return sentiment_gold, sentiment_usd
 
 def normalize_data_global_and_impute(stock_data, global_min, global_max):
@@ -104,6 +101,9 @@ def process_in_batches(df, batch_size, intervals=defaultIntervals, lagwindow=30,
         yield batch_with_future_price_points
 
 def get_data_from_db(chunksize=10000):
+    print(f"Fetched historical_data size: {historical_data.shape}")
+    print(f"Fetched sentiment_data size: {sentiment_data.shape}")
+
 
     # Obtain DB credentials from environment variables
     db_config = {
@@ -132,6 +132,10 @@ def get_data_from_db(chunksize=10000):
     # Split the historical data into two datasets based on 'stock_id'
     historical_data_jdst = historical_data[historical_data['stock_id'] == 1]
     historical_data_nugt = historical_data[historical_data['stock_id'] == 2]
+
+
+    print(f"historical_data_jdst size: {historical_data_jdst.shape}")
+    print(f"historical_data_nugt size: {historical_data_nugt.shape}")
 
     # At this point, you would also want to ensure that the historical data
     # has a column ready for merging with sentiment data, like a normalized date column
@@ -205,6 +209,10 @@ def process_data(batch_size):
     combined_data_jdst_with_sentiment = integrate_sentiment(combined_data_normalized_imputed[combined_data_normalized_imputed['stock_id'] == 1], sentiment_gold)
     combined_data_nugt_with_sentiment = integrate_sentiment(combined_data_normalized_imputed[combined_data_normalized_imputed['stock_id'] == 2], sentiment_usd)
     
+    print(f"combined_data_jdst_with_sentiment size: {combined_data_jdst_with_sentiment.shape}")
+    print(f"combined_data_nugt_with_sentiment size: {combined_data_nugt_with_sentiment.shape}")
+
+
     if combined_data_jdst_with_sentiment.empty or combined_data_nugt_with_sentiment.empty:
         sys.stderr.write("Error: Data with sentiment is empty after integration.\n")
         return pd.DataFrame()
@@ -214,30 +222,22 @@ def process_data(batch_size):
     if final_combined_data.empty:
         sys.stderr.write("Error: Final combined data is empty before batch processing.\n")
         return pd.DataFrame()
+    print(f"Final combined_data size before batching: {final_combined_data.shape}")
 
     # Initialize an empty DataFrame for the latest data slice
     latest_data_slice = pd.DataFrame()
 
     # Process the data in batches
     for batch_data in process_in_batches(final_combined_data, batch_size):
-        if batch_data.empty:
-            sys.stderr.write("Warning: Batch data is empty during batch processing. Skipping batch...\n")
-            continue
-        
+                
         # Log the tail of the batch_data here
         latest_data_slice = batch_data.tail(10)
-        if latest_data_slice.empty:
-            sys.stderr.write("Warning: The latest data slice is empty. Skipping batch...\n")
-            continue
-        
+
         # Prepare dataloaders here
         dataloader = prepare_dataloaders(batch_data, lagwindow, batch_size)
         # If no errors, break after the first successful batch processing
         break
 
-    if latest_data_slice.empty:
-        sys.stderr.write("Error: No successful data slice was created. The function will return an empty DataFrame.\n")
-    
     return latest_data_slice
 
 # Main execution
