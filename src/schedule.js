@@ -77,7 +77,7 @@ module.exports = (app) => {
           sentimentAnalysisId
         );
       } else {
-        console.log('No unprocessed entries found.');
+        //console.log('No unprocessed entries found.');
       }
     } catch (error) {
       console.error('Error processing unprocessed entry:', error);
