@@ -181,41 +181,72 @@ def prepare_dataloaders(stock_data_with_sentiment, lagwindow, batch_size):
 def process_data(batch_size):
     # Fetch the data from the DB
     historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
+    
+    if historical_data_jdst.empty or historical_data_nugt.empty:
+        sys.stderr.write("Error: One or more datasets from the database are empty.\n")
+        return pd.DataFrame()
 
     # Combine and normalize the datasets without duplicating sentiment data
     combined_data = pd.concat([historical_data_jdst, historical_data_nugt])
+    if combined_data.empty:
+        sys.stderr.write("Error: Combined data is empty after concatenation.\n")
+        return pd.DataFrame()
 
     # Obtain global min and max for normalization
     global_min, global_max = calculate_global_min_max(historical_data_jdst, historical_data_nugt)
-
+    
     # Normalize and impute the combined data
     combined_data_normalized_imputed = normalize_data_global_and_impute(combined_data, global_min, global_max)
+    if combined_data_normalized_imputed.empty:
+        sys.stderr.write("Error: Normalized and imputed data is empty after processing.\n")
+        return pd.DataFrame()
 
     # Integrate sentiment scores with each stock's normalized and imputed data separately
     combined_data_jdst_with_sentiment = integrate_sentiment(combined_data_normalized_imputed[combined_data_normalized_imputed['stock_id'] == 1], sentiment_gold)
     combined_data_nugt_with_sentiment = integrate_sentiment(combined_data_normalized_imputed[combined_data_normalized_imputed['stock_id'] == 2], sentiment_usd)
+    
+    if combined_data_jdst_with_sentiment.empty or combined_data_nugt_with_sentiment.empty:
+        sys.stderr.write("Error: Data with sentiment is empty after integration.\n")
+        return pd.DataFrame()
 
     # Re-combine the data with sentiment
     final_combined_data = pd.concat([combined_data_jdst_with_sentiment, combined_data_nugt_with_sentiment])
-    
-    # Instead of calling prepare_dataloaders directly, you iterate over the batches
+    if final_combined_data.empty:
+        sys.stderr.write("Error: Final combined data is empty before batch processing.\n")
+        return pd.DataFrame()
+
+    # Initialize an empty DataFrame for the latest data slice
+    latest_data_slice = pd.DataFrame()
+
+    # Process the data in batches
     for batch_data in process_in_batches(final_combined_data, batch_size):
+        if batch_data.empty:
+            sys.stderr.write("Warning: Batch data is empty during batch processing. Skipping batch...\n")
+            continue
+        
         # Log the tail of the batch_data here
-        latest_data_slice = batch_data.tail(1)
+        latest_data_slice = batch_data.tail(10)
+        if latest_data_slice.empty:
+            sys.stderr.write("Warning: The latest data slice is empty. Skipping batch...\n")
+            continue
+        
+        # Prepare dataloaders here
         dataloader = prepare_dataloaders(batch_data, lagwindow, batch_size)
+        # If no errors, break after the first successful batch processing
+        break
 
-    return latest_data_slice  # Returning the latest slice of the batched data.
+    if latest_data_slice.empty:
+        sys.stderr.write("Error: No successful data slice was created. The function will return an empty DataFrame.\n")
+    
+    return latest_data_slice
 
+# Main execution
 if __name__ == '__main__':
     batch_size = 256
     latest_data_slice = process_data(batch_size)
 
-    # Check if the DataFrame is empty
     if latest_data_slice.empty:
-        print("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.")
+        sys.stderr.write("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.\n")
     else:
-        # Convert to CSV for easier transfer
         csv_snapshot = latest_data_slice.to_csv(index=False)
-        
-        # Write the CSV to stdout
         sys.stdout.write(csv_snapshot)
