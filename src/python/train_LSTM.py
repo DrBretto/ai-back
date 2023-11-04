@@ -60,7 +60,10 @@ def calculate_min_max(historical_data):
     return min_value, max_value
 
 def process_sentiment_data(sentiment_data):
+    print("Initial sentiment_data size:", sentiment_data.shape)
     sentiment_data['token_values'] = sentiment_data['token_values'].apply(lambda x: list(set(x)))
+    print("After applying set to token_values:", sentiment_data['token_values'].head())
+
     processed_sentiment = sentiment_data.groupby(['date_published', 'subject_id'], as_index=False).agg({
         'high_score': 'mean',
         'low_score': 'mean',
@@ -68,13 +71,24 @@ def process_sentiment_data(sentiment_data):
         'token_values': lambda x: list(set().union(*x))
     })
 
+    print("Processed sentiment after groupby and aggregation:", processed_sentiment.head())
+
     sentiment_gold = processed_sentiment[processed_sentiment['subject_id'] == 1]
     sentiment_usd = processed_sentiment[processed_sentiment['subject_id'] == 2]
 
     print(f"Processed sentiment_gold size: {sentiment_gold.shape}")
+    print("Sentiment_gold head:", sentiment_gold.head())
     print(f"Processed sentiment_usd size: {sentiment_usd.shape}")
+    print("Sentiment_usd head:", sentiment_usd.head())
+
+    # If any of the expected columns are empty, log the columns
+    if sentiment_gold.isnull().any().any() or sentiment_usd.isnull().any().any():
+        print("Null values found in sentiment_gold or sentiment_usd")
+        print("Null columns in sentiment_gold:", sentiment_gold.columns[sentiment_gold.isnull().any()])
+        print("Null columns in sentiment_usd:", sentiment_usd.columns[sentiment_usd.isnull().any()])
 
     return sentiment_gold, sentiment_usd
+
 
 def normalize_data_in_batch(batch_data, min_values, max_values, columns_to_normalize):
     for column in columns_to_normalize:
