@@ -167,7 +167,8 @@ def process_data(batch_size):
 
     # Combine JDST and NUGT data
     combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
-    
+    combined_stocks.drop(['id_jdst', 'stock_id_jdst', 'id_nugt', 'stock_id_nugt'], axis=1, inplace=True)
+
     # Merge stock and sentiment data
     final_combined_data = pd.merge(combined_stocks, combined_sentiment, left_on='date_time', right_on='date_published', how='left')
     final_combined_data.drop(columns=['date_published'], inplace=True)  # Drop duplicate date column
