@@ -171,14 +171,16 @@ def process_data(batch_size):
     # Merge and interpolate JDST data
     historical_data_jdst = pd.merge(all_datetimes, historical_data_jdst, on='date_time', how='left')
     historical_data_jdst.interpolate(method='linear', inplace=True)
-    historical_data_jdst.fillna(method='ffill', inplace=True).fillna(0, inplace=True)
+    historical_data_jdst.fillna(method='ffill', inplace=True)
+    historical_data_jdst.fillna(0, inplace=True)
     # Normalize JDST data
     historical_data_jdst = normalize_data(historical_data_jdst, global_min, global_max)
 
     # Merge and interpolate NUGT data
     historical_data_nugt = pd.merge(all_datetimes, historical_data_nugt, on='date_time', how='left')
     historical_data_nugt.interpolate(method='linear', inplace=True)
-    historical_data_nugt.fillna(method='ffill', inplace=True).fillna(0, inplace=True)
+    historical_data_nugt.fillna(method='ffill', inplace=True)
+    historical_data_nugt.fillna(0, inplace=True)
     # Normalize NUGT data
     historical_data_nugt = normalize_data(historical_data_nugt, global_min, global_max)
 
