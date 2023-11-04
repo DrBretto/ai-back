@@ -15,6 +15,8 @@ import json
 # Define the window and intervals outside of the function
 lagwindow = 30
 defaultIntervals = [1, 15, 60, 1440]
+future_window = 96
+future_interval = 15
 
 def create_future_price_points(stock_data, future_window=96, future_interval=15):
 
@@ -87,7 +89,7 @@ def normalize_data_global_and_impute(stock_data, global_min, global_max):
     
     return imputed_data
 
-def process_in_batches(df, batch_size, lagwindow=30, future_window=96, future_interval=15):
+def process_in_batches(df, batch_size, intervals=defaultIntervals, lagwindow=lagwindow, future_window=future_window, future_interval=future_interval):
     for start in range(0, len(df), batch_size):
         # Ensure there's enough data at the end for future price points
         end = min(start + batch_size, len(df) - (future_window * future_interval))
@@ -97,35 +99,33 @@ def process_in_batches(df, batch_size, lagwindow=30, future_window=96, future_in
         batch = df.iloc[start:end]
 
         # Create lagged features here
-        # Assuming create_lagged_features function exists and is defined elsewhere
-        batch_with_lagged_features = create_lagged_features(batch, lagwindow)
+        batch_with_lagged_features = create_lagged_features(batch, intervals, lagwindow)
 
         # Create future closing price points
         future_column_name = f'closing_price_future_{future_window * future_interval}'
-        batch_with_future_closing_price = batch_with_lagged_features.copy()
-        batch_with_future_closing_price[future_column_name] = batch_with_lagged_features['closing_price'].shift(-(future_window * future_interval))
+        batch_with_features_and_future_price = batch_with_lagged_features.copy()
+        batch_with_features_and_future_price[future_column_name] = batch_with_lagged_features['closing_price'].shift(-(future_window * future_interval))
 
         # Drop rows from the batch that do not have the required future closing price data
-        batch_with_future_closing_price = batch_with_future_closing_price.dropna(subset=[future_column_name])
+        batch_with_features_and_future_price = batch_with_features_and_future_price.dropna(subset=[future_column_name])
 
-        if batch_with_future_closing_price.empty:
+        if batch_with_features_and_future_price.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
         else:
             # Log the details of the batch
             print(f"Batch processed from index {start} to {end}.")
-            print(f"Batch size with future price points: {batch_with_future_closing_price.shape}")
+            print(f"Batch size with features and future price: {batch_with_features_and_future_price.shape}")
             # Optionally log a small sample or specifics if needed
-            # print(batch_with_future_closing_price.head())  # Uncomment to log the head of the DataFrame
+            print(batch_with_features_and_future_price.head())  # Uncomment to log the head of the DataFrame
 
-            yield batch_with_future_closing_price
+            yield batch_with_features_and_future_price
+
 
 
 
 
 def get_data_from_db(chunksize=10000):
   
-
-
     # Obtain DB credentials from environment variables
     db_config = {
         'dbname': os.environ['DB_NAME'],
