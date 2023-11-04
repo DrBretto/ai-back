@@ -180,9 +180,11 @@ def process_data(batch_size):
 
     latest_data_slice = pd.DataFrame()
 
-    # Assume calculate_min_max is capable of handling batches and returning correct min/max for each batch
-    jdst_min, jdst_max = calculate_min_max(historical_data_jdst)  # These may need to be calculated inside process_in_batches if required per batch
-    nugt_min, nugt_max = calculate_min_max(historical_data_nugt)  # Same as above
+    jdst_columns = [col for col in final_combined_data.columns if '_jdst' in col]
+    nugt_columns = [col for col in final_combined_data.columns if '_nugt' in col]
+
+    jdst_min, jdst_max = calculate_min_max(final_combined_data[jdst_columns])
+    nugt_min, nugt_max = calculate_min_max(final_combined_data[nugt_columns])
 
     print(final_combined_data.columns)
 
