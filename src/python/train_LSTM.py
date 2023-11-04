@@ -34,7 +34,7 @@ def create_future_price_points(stock_data, future_window=96, future_interval=15)
     
     return future_data
 
-def create_lagged_features(stock_data, lagwindow, intervals):
+def create_lagged_features(stock_data, intervals, lagwindow):
     # ... (rest of your existing code for the function)
     new_frames = []
     for interval in intervals:
