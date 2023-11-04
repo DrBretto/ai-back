@@ -241,7 +241,7 @@ def process_data(batch_size):
     for batch_data in process_in_batches(final_combined_data, batch_size):
                 
         # Log the tail of the batch_data here
-        latest_data_slice = batch_data.tail(10)
+        latest_data_slice = batch_data.tail(1)
 
         # Prepare dataloaders here
         dataloader = prepare_dataloaders(batch_data, _lagwindow, batch_size)
