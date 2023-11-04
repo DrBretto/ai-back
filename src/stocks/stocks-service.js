@@ -55,12 +55,6 @@ const StocksService = {
         daily_percent_change: dailyPercentChange,
         previous_close: previousClose,
       });
-      console.log(
-        'Successfully inserted realtime data:',
-        stockId,
-        dateTime,
-        data.c
-      );
     } catch (error) {
       console.error('DB Insert Error:', error.code);
     }

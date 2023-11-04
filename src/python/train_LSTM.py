@@ -86,35 +86,47 @@ def normalize_data_global_and_impute(stock_data, global_min, global_max):
     return imputed_data
 
 def process_in_batches(df, batch_size, intervals=_defaultIntervals, lagwindow=_lagwindow, future_window=_future_window, future_interval=_future_interval):
-    offset = future_window * future_interval
-    max_index = len(df) - offset
-
-    for start in range(0, max_index, batch_size):
+    # Calculate the maximum lag by taking the highest interval multiplied by the lag window
+    max_lag = max(intervals) * lagwindow
+    
+    # Offset includes data needed for future price points
+    future_offset = future_window * future_interval
+    
+    # Start iterating from the first point where we have enough past data for lagging
+    start_index = max_lag
+    
+    # End iterating at the last point where we have enough future data for future price points
+    end_index = len(df) - future_offset
+    
+    for start in range(start_index, end_index, batch_size):
         end = start + batch_size
-        if end > max_index:
-            end = max_index  # Adjust the end index to avoid going out of bounds
+        if end > end_index:
+            end = end_index  # Ensure we do not go beyond the point where we have future data
 
-        batch = df.iloc[start:end + offset]  # Include data for future window
-
-        # Create lagged features here
+        # Extract the batch including additional rows for lagged and future data points calculation
+        batch = df.iloc[(start - max_lag):end + future_offset].copy()
+        
+        # Create lagged features for the batch
         batch_with_features = create_lagged_features(batch, intervals, lagwindow)
-
-        # Create future closing price points
+        
+        # Create future price points for the batch
         batch_with_features = create_future_price_points(batch_with_features, future_window, future_interval)
-
-        # Now, we slice the DataFrame to the original batch size to ensure consistency
-        batch_with_features = batch_with_features.iloc[:end - start]
-
+        
+        # Slice the DataFrame to the original batch size to ensure consistency
+        batch_with_features = batch_with_features.iloc[max_lag:(max_lag + batch_size)]
+        
+        # If the batch is empty, log a warning
         if batch_with_features.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
-        else:
-            # Log the details of the batch
-            print(f"Batch processed from index {start} to {end}.")
-            print(f"Batch size with features and future price: {batch_with_features.shape}")
-            # Optionally log a small sample or specifics if needed
-            print(batch_with_features.head())  # Uncomment to log the head of the DataFrame
+            continue  # Skip this batch
+        
+        # Log the details of the batch and yield it
+        print(f"Batch processed from index {start} to {end}.")
+        print(f"Batch size with features and future price: {batch_with_features.shape}")
+        
+        yield batch_with_features
 
-            yield batch_with_features
+
 
 def get_data_from_db(chunksize=10000):
   
