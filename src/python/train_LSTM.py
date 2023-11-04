@@ -89,16 +89,28 @@ def normalize_data_global_and_impute(stock_data, global_min, global_max):
 
 def process_in_batches(df, batch_size, intervals=defaultIntervals, lagwindow=30, future_window=96, future_interval=5):
     for start in range(0, len(df), batch_size):
-        end = min(start + batch_size + lagwindow, len(df))  
+        end = min(start + batch_size + lagwindow, len(df))
         batch = df[start:end]
         if end + lagwindow > len(df):
-            batch = df[start:]  
+            batch = df[start:]
+
+        # Printing one slice of the batch data
+        print(f"Batch slice from index {start} to {end}:\n{batch.head()}\n")
         
         batch_with_lagged_features = create_lagged_features(batch, intervals)
-        # Create future price points here
-        batch_with_future_price_points = create_future_price_points(batch_with_lagged_features, future_window, future_interval)
+        # Print a slice of the data after adding lagged features
+        print(f"Batch with lagged features slice:\n{batch_with_lagged_features.head()}\n")
         
-        yield batch_with_future_price_points
+        batch_with_future_price_points = create_future_price_points(batch_with_lagged_features, future_window, future_interval)
+        # Print a slice of the data after adding future price points
+        print(f"Batch with future price points slice:\n{batch_with_future_price_points.head()}\n")
+        
+        if batch_with_future_price_points.empty:
+            sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
+        else:
+            yield batch_with_future_price_points
+
+
 
 def get_data_from_db(chunksize=10000):
   
@@ -115,9 +127,6 @@ def get_data_from_db(chunksize=10000):
     # Initialize empty DataFrames
     historical_data = pd.DataFrame()
     sentiment_data = pd.DataFrame()
-
-    print(f"Fetched historical_data size: {historical_data.shape}")
-    print(f"Fetched sentiment_data size: {sentiment_data.shape}")
     
     with psycopg2.connect(**db_config) as conn:
         # Fetch all historical data in chunks
@@ -127,6 +136,10 @@ def get_data_from_db(chunksize=10000):
         # Fetch all sentiment data in chunks
         for chunk in pd.read_sql('SELECT * FROM sentiment_analysis', conn, parse_dates=['date_published'], chunksize=chunksize):
             sentiment_data = pd.concat([sentiment_data, chunk])
+
+    print(f"Fetched historical_data size: {historical_data.shape}")
+    print(f"Fetched sentiment_data size: {sentiment_data.shape}")
+
 
     # Process the sentiment data
     sentiment_gold, sentiment_usd = process_sentiment_data(sentiment_data)
