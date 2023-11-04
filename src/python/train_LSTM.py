@@ -16,7 +16,7 @@ import json
 lagwindow = 30
 defaultIntervals = [1, 15, 60, 1440]
 
-def create_future_price_points(stock_data, future_window=30, future_interval=1):
+def create_future_price_points(stock_data, future_window=96, future_interval=15):
 
     new_frames = []
     for lead in range(future_interval, future_window * future_interval + 1, future_interval):
@@ -87,28 +87,38 @@ def normalize_data_global_and_impute(stock_data, global_min, global_max):
     
     return imputed_data
 
-def process_in_batches(df, batch_size, intervals=defaultIntervals, lagwindow=30, future_window=96, future_interval=5):
+def process_in_batches(df, batch_size, lagwindow=30, future_window=96, future_interval=15):
     for start in range(0, len(df), batch_size):
-        end = min(start + batch_size + lagwindow, len(df))
-        batch = df[start:end]
-        if end + lagwindow > len(df):
-            batch = df[start:]
+        # Ensure there's enough data at the end for future price points
+        end = min(start + batch_size, len(df) - (future_window * future_interval))
+        if start >= end:
+            break  # No more batches can be created if there isn't enough data
 
-        # Printing one slice of the batch data
-        print(f"Batch slice from index {start} to {end}:\n{batch.head()}\n")
-        
-        batch_with_lagged_features = create_lagged_features(batch, intervals)
-        # Print a slice of the data after adding lagged features
-        print(f"Batch with lagged features slice:\n{batch_with_lagged_features.head()}\n")
-        
-        batch_with_future_price_points = create_future_price_points(batch_with_lagged_features, future_window, future_interval)
-        # Print a slice of the data after adding future price points
-        print(f"Batch with future price points slice:\n{batch_with_future_price_points.head()}\n")
-        
-        if batch_with_future_price_points.empty:
+        batch = df.iloc[start:end]
+
+        # Create lagged features here
+        # Assuming create_lagged_features function exists and is defined elsewhere
+        batch_with_lagged_features = create_lagged_features(batch, lagwindow)
+
+        # Create future closing price points
+        future_column_name = f'closing_price_future_{future_window * future_interval}'
+        batch_with_future_closing_price = batch_with_lagged_features.copy()
+        batch_with_future_closing_price[future_column_name] = batch_with_lagged_features['closing_price'].shift(-(future_window * future_interval))
+
+        # Drop rows from the batch that do not have the required future closing price data
+        batch_with_future_closing_price = batch_with_future_closing_price.dropna(subset=[future_column_name])
+
+        if batch_with_future_closing_price.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
         else:
-            yield batch_with_future_price_points
+            # Log the details of the batch
+            print(f"Batch processed from index {start} to {end}.")
+            print(f"Batch size with future price points: {batch_with_future_closing_price.shape}")
+            # Optionally log a small sample or specifics if needed
+            # print(batch_with_future_closing_price.head())  # Uncomment to log the head of the DataFrame
+
+            yield batch_with_future_closing_price
+
 
 
 
@@ -137,9 +147,6 @@ def get_data_from_db(chunksize=10000):
         for chunk in pd.read_sql('SELECT * FROM sentiment_analysis', conn, parse_dates=['date_published'], chunksize=chunksize):
             sentiment_data = pd.concat([sentiment_data, chunk])
 
-    print(f"Fetched historical_data size: {historical_data.shape}")
-    print(f"Fetched sentiment_data size: {sentiment_data.shape}")
-
 
     # Process the sentiment data
     sentiment_gold, sentiment_usd = process_sentiment_data(sentiment_data)
@@ -147,10 +154,6 @@ def get_data_from_db(chunksize=10000):
     # Split the historical data into two datasets based on 'stock_id'
     historical_data_jdst = historical_data[historical_data['stock_id'] == 1]
     historical_data_nugt = historical_data[historical_data['stock_id'] == 2]
-
-
-    print(f"historical_data_jdst size: {historical_data_jdst.shape}")
-    print(f"historical_data_nugt size: {historical_data_nugt.shape}")
 
     # At this point, you would also want to ensure that the historical data
     # has a column ready for merging with sentiment data, like a normalized date column
