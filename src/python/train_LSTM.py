@@ -40,7 +40,6 @@ def create_future_price_points(stock_data, future_window=96, future_interval=15)
             future_feature_frame = future_feature.to_frame(name=future_column_name)
             new_frames.append(future_feature_frame)
     future_data = pd.concat([stock_data] + new_frames, axis=1)
-    future_data.fillna(method='ffill', inplace=True)
     return future_data
 
 def create_lagged_features(stock_data, intervals, lagwindow):
@@ -53,7 +52,6 @@ def create_lagged_features(stock_data, intervals, lagwindow):
                 lagged_feature_frame = lagged_feature.to_frame(name=lagged_column_name)
                 new_frames.append(lagged_feature_frame)
     lagged_data = pd.concat([stock_data] + new_frames, axis=1)
-    lagged_data.fillna(method='ffill', inplace=True)
     return lagged_data
 
 def calculate_global_min_max(historical_data_jdst, historical_data_nugt):
@@ -79,13 +77,13 @@ def process_sentiment_data(sentiment_data):
 
     return sentiment_gold, sentiment_usd
 
-def normalize_data_global_and_impute(stock_data, global_min, global_max):
-
-    for column in ['closing_price', 'high_price', 'low_price', 'volume']:
-        stock_data[column] = (stock_data[column] - global_min[column]) / (global_max[column] - global_min[column])
-
-    imputed_data = stock_data.ffill().bfill()
-    return imputed_data
+def normalize_data(stock_data):
+    columns_to_normalize = ['closing_price', 'high_price', 'low_price', 'volume']
+    min_values = stock_data[columns_to_normalize].min()
+    max_values = stock_data[columns_to_normalize].max()
+    for column in columns_to_normalize:
+        stock_data[column] = (stock_data[column] - min_values[column]) / (max_values[column] - min_values[column])
+    return stock_data
 
 def process_in_batches(df, batch_size, intervals=_defaultIntervals, lagwindow=_lagwindow, future_window=_future_window, future_interval=_future_interval):
     max_lag = max(intervals) * lagwindow
@@ -163,20 +161,35 @@ def process_data(batch_size):
         sys.stderr.write("Error: One or more stock datasets from the database are empty.\n")
         return pd.DataFrame()
 
+    # Calculate global min and max for normalization
+    global_min, global_max = calculate_global_min_max(historical_data_jdst, historical_data_nugt)
+
     all_datetimes = pd.DataFrame(pd.date_range(start=historical_data_jdst['date_time'].min(), 
                                                end=historical_data_jdst['date_time'].max(), 
                                                freq='T'), columns=['date_time'])
 
+    # Merge and interpolate JDST data
     historical_data_jdst = pd.merge(all_datetimes, historical_data_jdst, on='date_time', how='left')
-    historical_data_nugt = pd.merge(all_datetimes, historical_data_nugt, on='date_time', how='left')
     historical_data_jdst.interpolate(method='linear', inplace=True)
+    historical_data_jdst.fillna(method='ffill', inplace=True).fillna(0, inplace=True)
+    # Normalize JDST data
+    historical_data_jdst = normalize_data(historical_data_jdst, global_min, global_max)
+
+    # Merge and interpolate NUGT data
+    historical_data_nugt = pd.merge(all_datetimes, historical_data_nugt, on='date_time', how='left')
     historical_data_nugt.interpolate(method='linear', inplace=True)
     historical_data_nugt.fillna(method='ffill', inplace=True).fillna(0, inplace=True)
-    historical_data_jdst.fillna(method='ffill', inplace=True).fillna(0, inplace=True)
-    combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_time', how='outer', suffixes=('_gold', '_usd'))
+    # Normalize NUGT data
+    historical_data_nugt = normalize_data(historical_data_nugt, global_min, global_max)
+
+    # Merge sentiment data
+    combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
     combined_sentiment.fillna(method='ffill', inplace=True)
+
+    # Combine stock and sentiment data
     combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
-    final_combined_data = pd.merge(combined_stocks, combined_sentiment, on='date_time', how='left')
+    final_combined_data = pd.merge(combined_stocks, combined_sentiment, left_on='date_time', right_on='date_published', how='left')
+    final_combined_data.drop(columns=['date_published'], inplace=True)  # Drop duplicate date column if needed
 
     if final_combined_data.empty:
         sys.stderr.write("Error: Final combined data is empty.\n")
@@ -186,12 +199,15 @@ def process_data(batch_size):
 
     latest_data_slice = pd.DataFrame()
 
+    # Process the data in batches
     for batch_data in process_in_batches(final_combined_data, batch_size):
         latest_data_slice = batch_data.tail(1)
         dataloader = prepare_dataloaders(batch_data, _lagwindow, batch_size)
         break
 
     return latest_data_slice
+
+
 
 
 if __name__ == '__main__':
