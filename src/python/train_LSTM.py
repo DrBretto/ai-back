@@ -207,60 +207,54 @@ def prepare_dataloaders(stock_data_with_sentiment, lagwindow, batch_size):
 def process_data(batch_size):
     # Fetch the data from the DB
     historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
-    
+
+    # Ensure that the datasets are not empty
     if historical_data_jdst.empty or historical_data_nugt.empty:
-        sys.stderr.write("Error: One or more datasets from the database are empty.\n")
+        sys.stderr.write("Error: One or more stock datasets from the database are empty.\n")
         return pd.DataFrame()
 
-    # Combine and normalize the datasets without duplicating sentiment data
-    combined_data = pd.concat([historical_data_jdst, historical_data_nugt])
-    if combined_data.empty:
-        sys.stderr.write("Error: Combined data is empty after concatenation.\n")
-        return pd.DataFrame()
+    # We need to align the data on the same one-minute intervals.
+    # Assuming 'date_time' is already rounded to the nearest minute.
+    all_datetimes = pd.DataFrame(pd.date_range(start=historical_data_jdst['date_time'].min(), 
+                                               end=historical_data_jdst['date_time'].max(), 
+                                               freq='T'), columns=['date_time'])
 
-    # Obtain global min and max for normalization
-    global_min, global_max = calculate_global_min_max(historical_data_jdst, historical_data_nugt)
-    
-    # Normalize and impute the combined data
-    combined_data_normalized_imputed = normalize_data_global_and_impute(combined_data, global_min, global_max)
-    if combined_data_normalized_imputed.empty:
-        sys.stderr.write("Error: Normalized and imputed data is empty after processing.\n")
-        return pd.DataFrame()
+    # Merge stock data with the datetime frame to ensure all minutes are accounted for
+    historical_data_jdst = pd.merge(all_datetimes, historical_data_jdst, on='date_time', how='left')
+    historical_data_nugt = pd.merge(all_datetimes, historical_data_nugt, on='date_time', how='left')
 
-    # Integrate sentiment scores with each stock's normalized and imputed data separately
-    combined_data_jdst_with_sentiment = integrate_sentiment(combined_data_normalized_imputed[combined_data_normalized_imputed['stock_id'] == 1], sentiment_gold)
-    combined_data_nugt_with_sentiment = integrate_sentiment(combined_data_normalized_imputed[combined_data_normalized_imputed['stock_id'] == 2], sentiment_usd)
-    
-    print(f"combined_data_jdst_with_sentiment size: {combined_data_jdst_with_sentiment.shape}")
-    print(f"combined_data_nugt_with_sentiment size: {combined_data_nugt_with_sentiment.shape}")
+    # Apply the lagging here as needed, ensuring the lags align with the one-minute intervals
 
+    # Now we integrate the sentiment data for both subjects
+    # This assumes that the sentiment data is already resampled/aggregated to one-minute intervals
+    combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_time', how='outer', suffixes=('_gold', '_usd'))
 
-    if combined_data_jdst_with_sentiment.empty or combined_data_nugt_with_sentiment.empty:
-        sys.stderr.write("Error: Data with sentiment is empty after integration.\n")
-        return pd.DataFrame()
+    # Combine the JDST and NUGT data
+    combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
 
-    # Re-combine the data with sentiment
-    final_combined_data = pd.concat([combined_data_jdst_with_sentiment, combined_data_nugt_with_sentiment])
+    # Finally, merge the combined stock data with the combined sentiment data
+    final_combined_data = pd.merge(combined_stocks, combined_sentiment, on='date_time', how='left')
+
     if final_combined_data.empty:
-        sys.stderr.write("Error: Final combined data is empty before batch processing.\n")
+        sys.stderr.write("Error: Final combined data is empty.\n")
         return pd.DataFrame()
-    print(f"Final combined_data size before batching: {final_combined_data.shape}")
+
+    print(f"Final combined_data size: {final_combined_data.shape}")
 
     # Initialize an empty DataFrame for the latest data slice
     latest_data_slice = pd.DataFrame()
 
     # Process the data in batches
     for batch_data in process_in_batches(final_combined_data, batch_size):
-                
         # Log the tail of the batch_data here
         latest_data_slice = batch_data.tail(1)
-
         # Prepare dataloaders here
         dataloader = prepare_dataloaders(batch_data, _lagwindow, batch_size)
         # If no errors, break after the first successful batch processing
         break
 
     return latest_data_slice
+
 
 # Main execution
 if __name__ == '__main__':
