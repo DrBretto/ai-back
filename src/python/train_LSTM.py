@@ -34,7 +34,7 @@ class OverlappingWindowDataset(Dataset):
 def create_future_price_points(stock_data, future_window=96, future_interval=15):
     new_frames = []
     for lead in range(future_interval, future_window * future_interval + 1, future_interval):
-        for feature in ['closing_price', 'high_price', 'low_price', 'volume']:
+        for feature in ['closing_price_nugt', 'closing_price_jdst',]:
             future_column_name = f'{feature}_future_{lead}'
             future_feature = stock_data[feature].shift(-lead)
             future_feature_frame = future_feature.to_frame(name=future_column_name)
@@ -45,7 +45,7 @@ def create_future_price_points(stock_data, future_window=96, future_interval=15)
 def create_lagged_features(stock_data, intervals, lagwindow):
     new_frames = []
     for interval in intervals:
-        for feature in ['closing_price', 'high_price', 'low_price', 'volume']:
+        for feature in ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt','closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst']:
             for lag in range(1, lagwindow + 1):
                 lagged_column_name = f'{feature}_lag_{interval * lag}'
                 lagged_feature = stock_data[feature].shift(lag * interval)
@@ -194,6 +194,7 @@ def process_data(batch_size):
     for batch_data in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
         latest_data_slice = batch_data.tail(1)
         dataloader = prepare_dataloaders(batch_data, _lagwindow, batch_size)
+        break
 
     return latest_data_slice
 
