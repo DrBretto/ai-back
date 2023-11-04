@@ -95,8 +95,8 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
             end = end_index  
 
         batch = df.iloc[(start - max_lag):end + future_offset].copy()
-        batch = normalize_data_in_batch(batch_with_features, jdst_min, jdst_max, columns_to_normalize_jdst)
-        batch = normalize_data_in_batch(batch_with_features, nugt_min, nugt_max, columns_to_normalize_nugt)
+        batch = normalize_data_in_batch(batch, jdst_min, jdst_max, columns_to_normalize_jdst)
+        batch = normalize_data_in_batch(batch, nugt_min, nugt_max, columns_to_normalize_nugt)
         batch_with_features = create_lagged_features(batch, intervals, lagwindow)
         batch_with_features = create_future_price_points(batch_with_features, future_window, future_interval)
 
