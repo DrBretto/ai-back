@@ -159,7 +159,7 @@ const DataService = {
   async trainLSTM() {
     try {
       console.log('Starting LSTM training...');
-
+  
       return new Promise((resolve, reject) => {
         exec(
           `. env/bin/activate && env/bin/python src/python/train_LSTM.py`,
@@ -171,16 +171,10 @@ const DataService = {
               reject(error);
               return;
             }
-
-            // Parse the result from stdout
-            try {
-              const result = JSON.parse(stdout);
-              resolve(result);
-            } catch (parseError) {
-              console.error('Error parsing JSON from stdout:', parseError);
-              console.error('Received stdout:', stdout);
-              reject(parseError);
-            }
+  
+            // No parsing, just return the stdout directly.
+            console.log('Received stdout:', stdout);
+            resolve(stdout); // Resolving with raw stdout data.
           }
         );
       });
@@ -189,6 +183,7 @@ const DataService = {
       throw error;
     }
   },
+  
 };
 
 module.exports = DataService;
