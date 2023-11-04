@@ -78,7 +78,7 @@ def process_sentiment_data(sentiment_data):
 
 def normalize_data_in_batch(batch_data, min_values, max_values, columns_to_normalize):
     for column in columns_to_normalize:
-        print(column)
+        print(batch_data, column)
         batch_data[column] = (batch_data[column] - min_values[column]) / (max_values[column] - min_values[column])
     return batch_data
 
