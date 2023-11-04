@@ -54,11 +54,10 @@ def create_lagged_features(stock_data, intervals, lagwindow):
     lagged_data = pd.concat([stock_data] + new_frames, axis=1)
     return lagged_data
 
-def calculate_global_min_max(historical_data_jdst, historical_data_nugt):
-    combined_stock_data = pd.concat([historical_data_jdst, historical_data_nugt])
-    global_min = combined_stock_data[['closing_price', 'high_price', 'low_price', 'volume']].min()
-    global_max = combined_stock_data[['closing_price', 'high_price', 'low_price', 'volume']].max()
-    return global_min, global_max
+def calculate_min_max(historical_data):
+    min_value = historical_data.min()
+    max_value = historical_data.max()
+    return min_value, max_value
 
 def process_sentiment_data(sentiment_data):
     sentiment_data['token_values'] = sentiment_data['token_values'].apply(lambda x: list(set(x)))
@@ -77,31 +76,41 @@ def process_sentiment_data(sentiment_data):
 
     return sentiment_gold, sentiment_usd
 
-def normalize_data(stock_data):
-    columns_to_normalize = ['closing_price', 'high_price', 'low_price', 'volume']
-    min_values = stock_data[columns_to_normalize].min()
-    max_values = stock_data[columns_to_normalize].max()
+def normalize_data_in_batch(batch_data, min_values, max_values, columns_to_normalize=['closing_price', 'high_price', 'low_price', 'volume']):
     for column in columns_to_normalize:
-        stock_data[column] = (stock_data[column] - min_values[column]) / (max_values[column] - min_values[column])
-    return stock_data
+        batch_data[column] = (batch_data[column] - min_values[column]) / (max_values[column] - min_values[column])
+    return batch_data
 
-def process_in_batches(df, batch_size, intervals=_defaultIntervals, lagwindow=_lagwindow, future_window=_future_window, future_interval=_future_interval):
+def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, intervals=_defaultIntervals, lagwindow=_lagwindow, future_window=_future_window, future_interval=_future_interval):
     max_lag = max(intervals) * lagwindow
     future_offset = future_window * future_interval
     start_index = max_lag
     end_index = len(df) - future_offset
- 
+    columns_to_normalize_jdst = ['closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst']
+    columns_to_normalize_nugt = ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt']
+    
     for start in range(start_index, end_index, batch_size):
         end = start + batch_size
-
         if end > end_index:
             end = end_index  
 
         batch = df.iloc[(start - max_lag):end + future_offset].copy()
         batch_with_features = create_lagged_features(batch, intervals, lagwindow)
         batch_with_features = create_future_price_points(batch_with_features, future_window, future_interval)
-        batch_with_features = batch_with_features.iloc[max_lag:(max_lag + batch_size)]
+        
+        # Normalize JDST data within the batch
+        batch_with_features_jdst = batch_with_features.filter(regex='_jdst$')
+        batch_with_features_jdst = normalize_data_in_batch(batch_with_features_jdst, jdst_min, jdst_max, columns_to_normalize_jdst)
+        
+        # Normalize NUGT data within the batch
+        batch_with_features_nugt = batch_with_features.filter(regex='_nugt$')
+        batch_with_features_nugt = normalize_data_in_batch(batch_with_features_nugt, nugt_min, nugt_max, columns_to_normalize_nugt)
+        
+        # Combine normalized JDST and NUGT data back into the batch
+        batch_with_features.update(batch_with_features_jdst)
+        batch_with_features.update(batch_with_features_nugt)
 
+        batch_with_features = batch_with_features.iloc[max_lag:(max_lag + batch_size)]
         if batch_with_features.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
             continue 
@@ -170,16 +179,16 @@ def process_data(batch_size):
     historical_data_jdst.fillna(method='ffill', inplace=True)  # Forward fill
     historical_data_jdst.fillna(method='bfill', inplace=True)  # Backward fill if any NA values are still left
     historical_data_jdst.fillna(0, inplace=True)               # Fill remaining NA's with 0 if there are any
-    # Normalize JDST data
-    historical_data_jdst = normalize_data(historical_data_jdst)
 
     # Merge and fill missing NUGT data
     historical_data_nugt = pd.merge(all_datetimes, historical_data_nugt, on='date_time', how='left')
     historical_data_nugt.fillna(method='ffill', inplace=True)  # Forward fill
     historical_data_nugt.fillna(method='bfill', inplace=True)  # Backward fill if any NA values are still left
     historical_data_nugt.fillna(0, inplace=True)               # Fill remaining NA's with 0 if there are any
-    # Normalize NUGT data
-    historical_data_nugt = normalize_data(historical_data_nugt)
+
+    # Calculate global min and max values for normalization
+    jdst_min, jdst_max = calculate_min_max(historical_data_jdst)
+    nugt_min, nugt_max = calculate_min_max(historical_data_nugt)
 
     # Merge sentiment data
     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
@@ -188,7 +197,7 @@ def process_data(batch_size):
     # Combine stock and sentiment data
     combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
     final_combined_data = pd.merge(combined_stocks, combined_sentiment, left_on='date_time', right_on='date_published', how='left')
-    final_combined_data.drop(columns=['date_published'], inplace=True)  # Drop duplicate date column if needed
+    final_combined_data.drop(columns=['date_published'], inplace=True)  # Drop duplicate date column
 
     if final_combined_data.empty:
         sys.stderr.write("Error: Final combined data is empty.\n")
@@ -198,15 +207,13 @@ def process_data(batch_size):
 
     latest_data_slice = pd.DataFrame()
 
-    # Process the data in batches
-    for batch_data in process_in_batches(final_combined_data, batch_size):
+    # Process the data in batches, passing min and max values for normalization
+    for batch_data in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
         latest_data_slice = batch_data.tail(1)
         dataloader = prepare_dataloaders(batch_data, _lagwindow, batch_size)
         break
 
     return latest_data_slice
-
-
 
 
 if __name__ == '__main__':
