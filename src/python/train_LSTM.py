@@ -99,17 +99,13 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         batch_with_features = create_future_price_points(batch_with_features, future_window, future_interval)
         
         # Normalize JDST data within the batch
-        batch_with_features_jdst = batch_with_features.filter(regex='_jdst$')
-        batch_with_features_jdst = normalize_data_in_batch(batch_with_features_jdst, jdst_min, jdst_max, columns_to_normalize_jdst)
+        for column in columns_to_normalize_jdst:
+            batch_with_features[column] = (batch_with_features[column] - jdst_min[column]) / (jdst_max[column] - jdst_min[column])
         
         # Normalize NUGT data within the batch
-        batch_with_features_nugt = batch_with_features.filter(regex='_nugt$')
-        batch_with_features_nugt = normalize_data_in_batch(batch_with_features_nugt, nugt_min, nugt_max, columns_to_normalize_nugt)
+        for column in columns_to_normalize_nugt:
+            batch_with_features[column] = (batch_with_features[column] - nugt_min[column]) / (nugt_max[column] - nugt_min[column])
         
-        # Combine normalized JDST and NUGT data back into the batch
-        batch_with_features.update(batch_with_features_jdst)
-        batch_with_features.update(batch_with_features_nugt)
-
         batch_with_features = batch_with_features.iloc[max_lag:(max_lag + batch_size)]
         if batch_with_features.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
@@ -118,6 +114,7 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         print(f"Batch processed from index {start} to {end}.")
         print(f"Batch size with features and future price: {batch_with_features.shape}")
         yield batch_with_features
+
 
 def get_data_from_db(chunksize=10000):
  
@@ -170,32 +167,14 @@ def process_data(batch_size):
         sys.stderr.write("Error: One or more stock datasets from the database are empty.\n")
         return pd.DataFrame()
 
-    all_datetimes = pd.DataFrame(pd.date_range(start=historical_data_jdst['date_time'].min(), 
-                                               end=historical_data_jdst['date_time'].max(), 
-                                               freq='T'), columns=['date_time'])
-
-    # Merge and fill missing JDST data
-    historical_data_jdst = pd.merge(all_datetimes, historical_data_jdst, on='date_time', how='left')
-    historical_data_jdst.fillna(method='ffill', inplace=True)  # Forward fill
-    historical_data_jdst.fillna(method='bfill', inplace=True)  # Backward fill if any NA values are still left
-    historical_data_jdst.fillna(0, inplace=True)               # Fill remaining NA's with 0 if there are any
-
-    # Merge and fill missing NUGT data
-    historical_data_nugt = pd.merge(all_datetimes, historical_data_nugt, on='date_time', how='left')
-    historical_data_nugt.fillna(method='ffill', inplace=True)  # Forward fill
-    historical_data_nugt.fillna(method='bfill', inplace=True)  # Backward fill if any NA values are still left
-    historical_data_nugt.fillna(0, inplace=True)               # Fill remaining NA's with 0 if there are any
-
-    # Calculate global min and max values for normalization
-    jdst_min, jdst_max = calculate_min_max(historical_data_jdst)
-    nugt_min, nugt_max = calculate_min_max(historical_data_nugt)
-
     # Merge sentiment data
     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
     combined_sentiment.fillna(method='ffill', inplace=True)
 
-    # Combine stock and sentiment data
+    # Combine JDST and NUGT data
     combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
+    
+    # Merge stock and sentiment data
     final_combined_data = pd.merge(combined_stocks, combined_sentiment, left_on='date_time', right_on='date_published', how='left')
     final_combined_data.drop(columns=['date_published'], inplace=True)  # Drop duplicate date column
 
@@ -207,13 +186,17 @@ def process_data(batch_size):
 
     latest_data_slice = pd.DataFrame()
 
+    # Assume calculate_min_max is capable of handling batches and returning correct min/max for each batch
+    jdst_min, jdst_max = calculate_min_max(historical_data_jdst)  # These may need to be calculated inside process_in_batches if required per batch
+    nugt_min, nugt_max = calculate_min_max(historical_data_nugt)  # Same as above
+
     # Process the data in batches, passing min and max values for normalization
     for batch_data in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
         latest_data_slice = batch_data.tail(1)
         dataloader = prepare_dataloaders(batch_data, _lagwindow, batch_size)
-        break
 
     return latest_data_slice
+
 
 
 if __name__ == '__main__':
