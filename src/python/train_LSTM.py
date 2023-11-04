@@ -45,7 +45,7 @@ def create_future_price_points(stock_data, future_window=96, future_interval=15)
 def create_lagged_features(stock_data, intervals, lagwindow):
     new_frames = []
     for interval in intervals:
-        for feature in ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt','closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst']:
+        for feature in ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt', 'closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst']:
             for lag in range(1, lagwindow + 1):
                 lagged_column_name = f'{feature}_lag_{interval * lag}'
                 lagged_feature = stock_data[feature].shift(lag * interval)
@@ -76,7 +76,7 @@ def process_sentiment_data(sentiment_data):
 
     return sentiment_gold, sentiment_usd
 
-def normalize_data_in_batch(batch_data, min_values, max_values, columns_to_normalize=['closing_price', 'high_price', 'low_price', 'volume']):
+def normalize_data_in_batch(batch_data, min_values, max_values, columns_to_normalize):
     for column in columns_to_normalize:
         batch_data[column] = (batch_data[column] - min_values[column]) / (max_values[column] - min_values[column])
     return batch_data
@@ -95,17 +95,11 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
             end = end_index  
 
         batch = df.iloc[(start - max_lag):end + future_offset].copy()
+        batch = normalize_data_in_batch(batch_with_features, jdst_min, jdst_max, columns_to_normalize_jdst)
+        batch = normalize_data_in_batch(batch_with_features, nugt_min, nugt_max, columns_to_normalize_nugt)
         batch_with_features = create_lagged_features(batch, intervals, lagwindow)
         batch_with_features = create_future_price_points(batch_with_features, future_window, future_interval)
-        
-        # Normalize JDST data within the batch
-        for column in columns_to_normalize_jdst:
-            batch_with_features[column] = (batch_with_features[column] - jdst_min[column]) / (jdst_max[column] - jdst_min[column])
-        
-        # Normalize NUGT data within the batch
-        for column in columns_to_normalize_nugt:
-            batch_with_features[column] = (batch_with_features[column] - nugt_min[column]) / (nugt_max[column] - nugt_min[column])
-        
+
         batch_with_features = batch_with_features.iloc[max_lag:(max_lag + batch_size)]
         if batch_with_features.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
@@ -114,7 +108,6 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         print(f"Batch processed from index {start} to {end}.")
         print(f"Batch size with features and future price: {batch_with_features.shape}")
         yield batch_with_features
-
 
 def get_data_from_db(chunksize=10000):
  
