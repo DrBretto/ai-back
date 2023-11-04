@@ -161,28 +161,25 @@ def process_data(batch_size):
         sys.stderr.write("Error: One or more stock datasets from the database are empty.\n")
         return pd.DataFrame()
 
-    # Calculate global min and max for normalization
-    global_min, global_max = calculate_global_min_max(historical_data_jdst, historical_data_nugt)
-
     all_datetimes = pd.DataFrame(pd.date_range(start=historical_data_jdst['date_time'].min(), 
                                                end=historical_data_jdst['date_time'].max(), 
                                                freq='T'), columns=['date_time'])
 
     # Merge and interpolate JDST data
     historical_data_jdst = pd.merge(all_datetimes, historical_data_jdst, on='date_time', how='left')
-    historical_data_jdst.interpolate(method='linear', inplace=True)
+    historical_data_jdst.interpolate(method='linear', limit_area='inside', inplace=True)
     historical_data_jdst.fillna(method='ffill', inplace=True)
     historical_data_jdst.fillna(0, inplace=True)
     # Normalize JDST data
-    historical_data_jdst = normalize_data(historical_data_jdst, global_min, global_max)
+    historical_data_jdst = normalize_data(historical_data_jdst)
 
     # Merge and interpolate NUGT data
     historical_data_nugt = pd.merge(all_datetimes, historical_data_nugt, on='date_time', how='left')
-    historical_data_nugt.interpolate(method='linear', inplace=True)
+    historical_data_nugt.interpolate(method='linear', limit_area='inside', inplace=True)
     historical_data_nugt.fillna(method='ffill', inplace=True)
     historical_data_nugt.fillna(0, inplace=True)
     # Normalize NUGT data
-    historical_data_nugt = normalize_data(historical_data_nugt, global_min, global_max)
+    historical_data_nugt = normalize_data(historical_data_nugt)
 
     # Merge sentiment data
     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
