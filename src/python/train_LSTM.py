@@ -13,10 +13,10 @@ import sys
 import json
 
 # Define the window and intervals outside of the function
-lagwindow = 30
-defaultIntervals = [1, 15, 60, 1440]
-future_window = 96
-future_interval = 15
+_lagwindow = 30
+_defaultIntervals = [1, 15, 60, 1440]
+_future_window = 96
+_future_interval = 15
 
 def create_future_price_points(stock_data, future_window=96, future_interval=15):
 
@@ -34,7 +34,7 @@ def create_future_price_points(stock_data, future_window=96, future_interval=15)
     
     return future_data
 
-def create_lagged_features(stock_data, intervals=defaultIntervals):
+def create_lagged_features(stock_data, lagwindow, intervals):
     # ... (rest of your existing code for the function)
     new_frames = []
     for interval in intervals:
@@ -89,7 +89,7 @@ def normalize_data_global_and_impute(stock_data, global_min, global_max):
     
     return imputed_data
 
-def process_in_batches(df, batch_size, intervals=defaultIntervals, lagwindow=lagwindow, future_window=future_window, future_interval=future_interval):
+def process_in_batches(df, batch_size, intervals=_defaultIntervals, lagwindow=_lagwindow, future_window=_future_window, future_interval=_future_interval):
     for start in range(0, len(df), batch_size):
         # Ensure there's enough data at the end for future price points
         end = min(start + batch_size, len(df) - (future_window * future_interval))
