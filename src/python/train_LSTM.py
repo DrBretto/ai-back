@@ -101,8 +101,7 @@ def process_in_batches(df, batch_size, intervals=defaultIntervals, lagwindow=30,
         yield batch_with_future_price_points
 
 def get_data_from_db(chunksize=10000):
-    print(f"Fetched historical_data size: {historical_data.shape}")
-    print(f"Fetched sentiment_data size: {sentiment_data.shape}")
+  
 
 
     # Obtain DB credentials from environment variables
@@ -116,6 +115,9 @@ def get_data_from_db(chunksize=10000):
     # Initialize empty DataFrames
     historical_data = pd.DataFrame()
     sentiment_data = pd.DataFrame()
+
+    print(f"Fetched historical_data size: {historical_data.shape}")
+    print(f"Fetched sentiment_data size: {sentiment_data.shape}")
     
     with psycopg2.connect(**db_config) as conn:
         # Fetch all historical data in chunks
