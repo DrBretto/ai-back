@@ -190,6 +190,8 @@ def process_data(batch_size):
     jdst_min, jdst_max = calculate_min_max(historical_data_jdst)  # These may need to be calculated inside process_in_batches if required per batch
     nugt_min, nugt_max = calculate_min_max(historical_data_nugt)  # Same as above
 
+    print(final_combined_data.columns)
+
     # Process the data in batches, passing min and max values for normalization
     for batch_data in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
         latest_data_slice = batch_data.tail(1)
