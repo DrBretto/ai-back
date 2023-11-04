@@ -19,7 +19,6 @@ _future_window = 96
 _future_interval = 15
 
 def create_future_price_points(stock_data, future_window=96, future_interval=15):
-
     new_frames = []
     for lead in range(future_interval, future_window * future_interval + 1, future_interval):
         for feature in ['closing_price', 'high_price', 'low_price', 'volume']:
@@ -27,15 +26,11 @@ def create_future_price_points(stock_data, future_window=96, future_interval=15)
             future_feature = stock_data[feature].shift(-lead)
             future_feature_frame = future_feature.to_frame(name=future_column_name)
             new_frames.append(future_feature_frame)
-
     future_data = pd.concat([stock_data] + new_frames, axis=1)
-    # Drop the rows at the end that do not have a full set of future data points
-    future_data = future_data.dropna(subset=[f'{feature}_future_{future_window * future_interval}' for feature in ['closing_price', 'high_price', 'low_price', 'volume']])
-    
+    future_data.fillna(method='ffill', inplace=True)
     return future_data
 
 def create_lagged_features(stock_data, intervals, lagwindow):
-    # ... (rest of your existing code for the function)
     new_frames = []
     for interval in intervals:
         for feature in ['closing_price', 'high_price', 'low_price', 'volume']:
@@ -45,6 +40,7 @@ def create_lagged_features(stock_data, intervals, lagwindow):
                 lagged_feature_frame = lagged_feature.to_frame(name=lagged_column_name)
                 new_frames.append(lagged_feature_frame)
     lagged_data = pd.concat([stock_data] + new_frames, axis=1)
+    lagged_data.fillna(method='ffill', inplace=True)
     return lagged_data
 
 def calculate_global_min_max(historical_data_jdst, historical_data_nugt):
@@ -90,39 +86,35 @@ def normalize_data_global_and_impute(stock_data, global_min, global_max):
     return imputed_data
 
 def process_in_batches(df, batch_size, intervals=_defaultIntervals, lagwindow=_lagwindow, future_window=_future_window, future_interval=_future_interval):
-    for start in range(0, len(df), batch_size):
-        # Ensure there's enough data at the end for future price points
-        end = min(start + batch_size, len(df) - (future_window * future_interval))
-        if start >= end:
-            break  # No more batches can be created if there isn't enough data
+    offset = future_window * future_interval
+    max_index = len(df) - offset
 
-        batch = df.iloc[start:end]
+    for start in range(0, max_index, batch_size):
+        end = start + batch_size
+        if end > max_index:
+            end = max_index  # Adjust the end index to avoid going out of bounds
+
+        batch = df.iloc[start:end + offset]  # Include data for future window
 
         # Create lagged features here
-        batch_with_lagged_features = create_lagged_features(batch, intervals, lagwindow)
+        batch_with_features = create_lagged_features(batch, intervals, lagwindow)
 
         # Create future closing price points
-        future_column_name = f'closing_price_future_{future_window * future_interval}'
-        batch_with_features_and_future_price = batch_with_lagged_features.copy()
-        batch_with_features_and_future_price[future_column_name] = batch_with_lagged_features['closing_price'].shift(-(future_window * future_interval))
+        batch_with_features = create_future_price_points(batch_with_features, future_window, future_interval)
 
-        # Drop rows from the batch that do not have the required future closing price data
-        batch_with_features_and_future_price = batch_with_features_and_future_price.dropna(subset=[future_column_name])
+        # Now, we slice the DataFrame to the original batch size to ensure consistency
+        batch_with_features = batch_with_features.iloc[:end - start]
 
-        if batch_with_features_and_future_price.empty:
+        if batch_with_features.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
         else:
             # Log the details of the batch
             print(f"Batch processed from index {start} to {end}.")
-            print(f"Batch size with features and future price: {batch_with_features_and_future_price.shape}")
+            print(f"Batch size with features and future price: {batch_with_features.shape}")
             # Optionally log a small sample or specifics if needed
-            print(batch_with_features_and_future_price.head())  # Uncomment to log the head of the DataFrame
+            print(batch_with_features.head())  # Uncomment to log the head of the DataFrame
 
-            yield batch_with_features_and_future_price
-
-
-
-
+            yield batch_with_features
 
 def get_data_from_db(chunksize=10000):
   
