@@ -82,7 +82,6 @@ def process_sentiment_data(sentiment_data):
 
 def normalize_data_in_batch(batch_data, min_values, max_values, columns_to_normalize):
     for column in columns_to_normalize:
-        print(batch_data, column)
         batch_data[column] = (batch_data[column] - min_values[column]) / (max_values[column] - min_values[column])
     return batch_data
 
@@ -167,37 +166,52 @@ def process_data(batch_size):
         return pd.DataFrame()
 
     # Merge sentiment data
-    print("Sentiment Gold Shape:", sentiment_gold.shape)
-    print("Sentiment USD Shape:", sentiment_usd.shape)
-    print("Sentiment Gold Columns:", sentiment_gold.columns)
-    print("Sentiment USD Columns:", sentiment_usd.columns)
     max_length_gold = max(sentiment_gold['token_values'].apply(len))
     sentiment_gold['token_values'] = sentiment_gold['token_values'].apply(lambda x: x + [-1]*(max_length_gold - len(x)))
     max_length_usd = max(sentiment_usd['token_values'].apply(len))
     sentiment_usd['token_values'] = sentiment_usd['token_values'].apply(lambda x: x + [-1]*(max_length_usd - len(x)))
 
+    print("Tail of sentiment_gold after padding token_values:")
+    print(sentiment_gold.tail())
+    print("Tail of sentiment_usd after padding token_values:")
+    print(sentiment_usd.tail())
+
     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
     combined_sentiment['token_values_gold'] = combined_sentiment['token_values_gold'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length_gold)
     combined_sentiment['token_values_usd'] = combined_sentiment['token_values_usd'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length_usd)
 
-    print("Combined Sentiment Shape after merge:", combined_sentiment.shape)
-    print("Combined Sentiment Head after merge:\n", combined_sentiment.head())
+
+    print("Tail of combined_sentiment before fillna:")
+    print(combined_sentiment.tail())
+
     combined_sentiment.fillna(method='ffill', inplace=True)
     combined_sentiment.fillna(method='bfill', inplace=True)
-    print("NaN Counts after forward-fill:", combined_sentiment.isnull().sum())
-    print("Duplicate Dates in Combined Sentiment:", combined_sentiment.duplicated(subset=['date_published']).sum())
-    print("Sentiment Gold date_published Dtype:", sentiment_gold['date_published'].dtype)
-    print("Sentiment USD date_published Dtype:", sentiment_usd['date_published'].dtype)
-    print(f"Token Values Gold example: {combined_sentiment['token_values_gold'].iloc[0]}")
-    print(f"Token Values USD example: {combined_sentiment['token_values_usd'].iloc[0]}")
+
+    print("Tail of combined_sentiment after fillna:")
+    print(combined_sentiment.tail())
+
 
     # Combine JDST and NUGT data
     combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
     combined_stocks.drop(['id_jdst', 'stock_id_jdst', 'id_nugt', 'stock_id_nugt'], axis=1, inplace=True)
 
+    print("Shape of combined_stocks:")
+    print(combined_stocks.shape)
+    print("Tail of combined_stocks:")
+    print(combined_stocks.tail())
+
+
     # Merge stock and sentiment data
     final_combined_data = pd.merge(combined_stocks, combined_sentiment, left_on='date_time', right_on='date_published', how='left')
     final_combined_data.drop(columns=['date_published'], inplace=True)  # Drop duplicate date column
+
+    print("Shape of final_combined_data after merge:")
+    print(final_combined_data.shape)
+    print("Tail of final_combined_data after merge:")
+    print(final_combined_data.tail())
+
+    print("NaN counts in final_combined_data after merge:")
+    print(final_combined_data.isna().sum())
 
     if final_combined_data.empty:
         sys.stderr.write("Error: Final combined data is empty.\n")
