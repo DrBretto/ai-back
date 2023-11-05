@@ -201,8 +201,18 @@ def process_data(batch_size):
     print(combined_stocks.tail())
 
 
-    # Merge stock and sentiment data
-    final_combined_data = pd.merge(combined_stocks, combined_sentiment, left_on='date_time', right_on='date_published', how='left')
+    combined_stocks.sort_values('date_time', inplace=True)
+    combined_sentiment.sort_values('date_published', inplace=True)
+
+    # Merge using merge_asof
+    final_combined_data = pd.merge_asof(
+    combined_stocks,
+    combined_sentiment,
+    left_on='date_time',
+    right_on='date_published',
+    direction='nearest'  # You can choose 'backward' or 'forward' as well, depending on your requirement
+)
+    
     final_combined_data.drop(columns=['date_published'], inplace=True)  # Drop duplicate date column
 
     print("Shape of final_combined_data after merge:")
