@@ -171,38 +171,23 @@ def process_data(batch_size):
     max_length_usd = max(sentiment_usd['token_values'].apply(len))
     sentiment_usd['token_values'] = sentiment_usd['token_values'].apply(lambda x: x + [-1]*(max_length_usd - len(x)))
 
-    print("Tail of sentiment_gold after padding token_values:")
-    print(sentiment_gold.tail())
-    print("Tail of sentiment_usd after padding token_values:")
-    print(sentiment_usd.tail())
-
     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
     combined_sentiment['token_values_gold'] = combined_sentiment['token_values_gold'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length_gold)
     combined_sentiment['token_values_usd'] = combined_sentiment['token_values_usd'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length_usd)
 
-
-    print("Tail of combined_sentiment before fillna:")
-    print(combined_sentiment.tail())
-
     combined_sentiment.fillna(method='ffill', inplace=True)
     combined_sentiment.fillna(method='bfill', inplace=True)
-
-    print("Tail of combined_sentiment after fillna:")
-    print(combined_sentiment.tail())
-
 
     # Combine JDST and NUGT data
     combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
     combined_stocks.drop(['id_jdst', 'stock_id_jdst', 'id_nugt', 'stock_id_nugt'], axis=1, inplace=True)
 
-    print("Shape of combined_stocks:")
-    print(combined_stocks.shape)
-    print("Tail of combined_stocks:")
-    print(combined_stocks.tail())
-
-
     combined_stocks.sort_values('date_time', inplace=True)
     combined_sentiment.sort_values('date_published', inplace=True)
+
+    # Before merging, check the data types and first few rows
+    print(combined_stocks['date_time'].dtype, combined_sentiment['date_published'].dtype)
+    print(combined_stocks.head(), combined_sentiment.head())
 
     # Merge using merge_asof
     final_combined_data = pd.merge_asof(
@@ -210,24 +195,18 @@ def process_data(batch_size):
     combined_sentiment,
     left_on='date_time',
     right_on='date_published',
-    direction='nearest'  # You can choose 'backward' or 'forward' as well, depending on your requirement
-)
-    
+    direction='nearest'
+    )   
+
+    # Check the first few rows after merging
+    print(final_combined_data.head())
+
     final_combined_data.drop(columns=['date_published'], inplace=True)  # Drop duplicate date column
-
-    print("Shape of final_combined_data after merge:")
-    print(final_combined_data.shape)
-    print("Tail of final_combined_data after merge:")
-    print(final_combined_data.tail())
-
-    print("NaN counts in final_combined_data after merge:")
-    print(final_combined_data.isna().sum())
 
     if final_combined_data.empty:
         sys.stderr.write("Error: Final combined data is empty.\n")
         return pd.DataFrame()
 
-    print(f"Final combined_data size: {final_combined_data.shape}")
 
     latest_data_slice = pd.DataFrame()
 
