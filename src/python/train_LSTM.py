@@ -173,10 +173,13 @@ def process_data(batch_size):
     print("Sentiment USD Columns:", sentiment_usd.columns)
 
     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
-    combined_sentiment.fillna(method='ffill', inplace=True)
-
     print("Combined Sentiment Shape after merge:", combined_sentiment.shape)
     print("Combined Sentiment Head after merge:\n", combined_sentiment.head())
+    combined_sentiment.fillna(method='ffill', inplace=True)
+    print("NaN Counts after forward-fill:", combined_sentiment.isnull().sum())
+    print("Duplicate Dates in Combined Sentiment:", combined_sentiment.duplicated(subset=['date_published']).sum())
+    print("Sentiment Gold date_published Dtype:", sentiment_gold['date_published'].dtype)
+    print("Sentiment USD date_published Dtype:", sentiment_usd['date_published'].dtype)
 
     # Combine JDST and NUGT data
     combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
