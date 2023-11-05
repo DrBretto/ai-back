@@ -228,7 +228,6 @@ def process_data(batch_size):
 
 
 
-# In your main block
 if __name__ == '__main__':
     batch_size = 256
     latest_data_slice = process_data(batch_size)
@@ -236,6 +235,5 @@ if __name__ == '__main__':
     if latest_data_slice.empty:
         sys.stderr.write("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.\n")
     else:
-        # Convert the latest data slice to JSON for easier readability
-        json_snapshot = latest_data_slice.to_json(orient='records', indent=4)
-        sys.stdout.write(json_snapshot)
+        csv_snapshot = latest_data_slice.to_csv(index=False)
+        sys.stdout.write(csv_snapshot)
