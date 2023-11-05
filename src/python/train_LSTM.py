@@ -224,14 +224,12 @@ def process_data(batch_size):
         latest_data_slice = batch_data.tail(1)
         dataloader = prepare_dataloaders(batch_data, _lagwindow, batch_size)
 
-        json_snapshot = latest_data_slice.to_json(orient='records', indent=4)
-        print(json_snapshot)
         break
 
     return latest_data_slice
 
 
-
+# In your main block
 if __name__ == '__main__':
     batch_size = 256
     latest_data_slice = process_data(batch_size)
@@ -239,5 +237,14 @@ if __name__ == '__main__':
     if latest_data_slice.empty:
         sys.stderr.write("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.\n")
     else:
-        csv_snapshot = latest_data_slice.to_csv(index=False)
-        #sys.stdout.write(csv_snapshot)
+        # Check for non-unique columns and handle them
+        if latest_data_slice.columns.duplicated().any():
+            sys.stderr.write("Error: DataFrame contains non-unique column names.\n")
+            non_unique_columns = latest_data_slice.columns[latest_data_slice.columns.duplicated()]
+            sys.stderr.write(f"Non-unique columns: {non_unique_columns.tolist()}\n")
+            # Handle non-unique columns here (e.g., by renaming or dropping)
+            # latest_data_slice = latest_data_slice.loc[:,~latest_data_slice.columns.duplicated()]
+
+        # Convert the latest data slice to JSON for easier readability
+        json_snapshot = latest_data_slice.to_json(orient='records', indent=4)
+        sys.stdout.write(json_snapshot)
