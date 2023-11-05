@@ -175,12 +175,13 @@ def process_data(batch_size):
     combined_sentiment['token_values_gold'] = combined_sentiment['token_values_gold'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length_gold)
     combined_sentiment['token_values_usd'] = combined_sentiment['token_values_usd'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length_usd)
 
+    combined_sentiment.drop(['subject_id_gold', 'subject_id_usd'], axis=1, inplace=True)
     combined_sentiment.fillna(method='ffill', inplace=True)
     combined_sentiment.fillna(method='bfill', inplace=True)
 
     # Combine JDST and NUGT data
     combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
-    combined_stocks.drop(['id_jdst', 'stock_id_jdst', 'id_nugt', 'stock_id_nugt', 'subject_id_gold', 'subject_id_usd'], axis=1, inplace=True)
+    combined_stocks.drop(['id_jdst', 'stock_id_jdst', 'id_nugt', 'stock_id_nugt'], axis=1, inplace=True)
 
     combined_stocks.sort_values('date_time', inplace=True)
     combined_sentiment.sort_values('date_published', inplace=True)
