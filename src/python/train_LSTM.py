@@ -171,15 +171,25 @@ def process_data(batch_size):
     print("Sentiment USD Shape:", sentiment_usd.shape)
     print("Sentiment Gold Columns:", sentiment_gold.columns)
     print("Sentiment USD Columns:", sentiment_usd.columns)
+    max_length_gold = max(sentiment_gold['token_values'].apply(len))
+    sentiment_gold['token_values'] = sentiment_gold['token_values'].apply(lambda x: x + [-1]*(max_length_gold - len(x)))
+    max_length_usd = max(sentiment_usd['token_values'].apply(len))
+    sentiment_usd['token_values'] = sentiment_usd['token_values'].apply(lambda x: x + [-1]*(max_length_usd - len(x)))
 
     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
+    combined_sentiment['token_values_gold'] = combined_sentiment['token_values_gold'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length)
+    combined_sentiment['token_values_usd'] = combined_sentiment['token_values_usd'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length)
+
     print("Combined Sentiment Shape after merge:", combined_sentiment.shape)
     print("Combined Sentiment Head after merge:\n", combined_sentiment.head())
     combined_sentiment.fillna(method='ffill', inplace=True)
+    combined_sentiment.fillna(method='bfill', inplace=True)
     print("NaN Counts after forward-fill:", combined_sentiment.isnull().sum())
     print("Duplicate Dates in Combined Sentiment:", combined_sentiment.duplicated(subset=['date_published']).sum())
     print("Sentiment Gold date_published Dtype:", sentiment_gold['date_published'].dtype)
     print("Sentiment USD date_published Dtype:", sentiment_usd['date_published'].dtype)
+    print(f"Token Values Gold example: {combined_sentiment['token_values_gold'].iloc[0]}")
+    print(f"Token Values USD example: {combined_sentiment['token_values_usd'].iloc[0]}")
 
     # Combine JDST and NUGT data
     combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
@@ -223,4 +233,4 @@ if __name__ == '__main__':
         sys.stderr.write("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.\n")
     else:
         csv_snapshot = latest_data_slice.to_csv(index=False)
-        sys.stdout.write(csv_snapshot)
+        #sys.stdout.write(csv_snapshot)
