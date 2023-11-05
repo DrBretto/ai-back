@@ -60,10 +60,7 @@ def calculate_min_max(historical_data):
     return min_value, max_value
 
 def process_sentiment_data(sentiment_data):
-    print("Initial sentiment_data size:", sentiment_data.shape)
     sentiment_data['token_values'] = sentiment_data['token_values'].apply(lambda x: list(set(x)))
-    print("After applying set to token_values:", sentiment_data['token_values'].head())
-
     processed_sentiment = sentiment_data.groupby(['date_published', 'subject_id'], as_index=False).agg({
         'high_score': 'mean',
         'low_score': 'mean',
@@ -71,15 +68,8 @@ def process_sentiment_data(sentiment_data):
         'token_values': lambda x: list(set().union(*x))
     })
 
-    print("Processed sentiment after groupby and aggregation:", processed_sentiment.head())
-
     sentiment_gold = processed_sentiment[processed_sentiment['subject_id'] == 1]
     sentiment_usd = processed_sentiment[processed_sentiment['subject_id'] == 2]
-
-    print(f"Processed sentiment_gold size: {sentiment_gold.shape}")
-    print("Sentiment_gold head:", sentiment_gold.head())
-    print(f"Processed sentiment_usd size: {sentiment_usd.shape}")
-    print("Sentiment_usd head:", sentiment_usd.head())
 
     # If any of the expected columns are empty, log the columns
     if sentiment_gold.isnull().any().any() or sentiment_usd.isnull().any().any():
@@ -141,6 +131,7 @@ def get_data_from_db(chunksize=10000):
             historical_data = pd.concat([historical_data, chunk])
         for chunk in pd.read_sql('SELECT * FROM sentiment_analysis', conn, parse_dates=['date_published'], chunksize=chunksize):
             sentiment_data = pd.concat([sentiment_data, chunk])
+ 
     sentiment_gold, sentiment_usd = process_sentiment_data(sentiment_data)
     historical_data_jdst = historical_data[historical_data['stock_id'] == 1]
     historical_data_nugt = historical_data[historical_data['stock_id'] == 2]
@@ -176,8 +167,16 @@ def process_data(batch_size):
         return pd.DataFrame()
 
     # Merge sentiment data
+    print("Sentiment Gold Shape:", sentiment_gold.shape)
+    print("Sentiment USD Shape:", sentiment_usd.shape)
+    print("Sentiment Gold Columns:", sentiment_gold.columns)
+    print("Sentiment USD Columns:", sentiment_usd.columns)
+
     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
     combined_sentiment.fillna(method='ffill', inplace=True)
+
+    print("Combined Sentiment Shape after merge:", combined_sentiment.shape)
+    print("Combined Sentiment Head after merge:\n", combined_sentiment.head())
 
     # Combine JDST and NUGT data
     combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
