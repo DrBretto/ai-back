@@ -257,4 +257,4 @@ if __name__ == '__main__':
         sys.stderr.write("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.\n")
     else:
         csv_snapshot = latest_data_slice.to_csv(index=False)
-        #sys.stdout.write(csv_snapshot)
+        sys.stdout.write(csv_snapshot)
