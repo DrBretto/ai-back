@@ -177,8 +177,8 @@ def process_data(batch_size):
     sentiment_usd['token_values'] = sentiment_usd['token_values'].apply(lambda x: x + [-1]*(max_length_usd - len(x)))
 
     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
-    combined_sentiment['token_values_gold'] = combined_sentiment['token_values_gold'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length)
-    combined_sentiment['token_values_usd'] = combined_sentiment['token_values_usd'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length)
+    combined_sentiment['token_values_gold'] = combined_sentiment['token_values_gold'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length_gold)
+    combined_sentiment['token_values_usd'] = combined_sentiment['token_values_usd'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length_usd)
 
     print("Combined Sentiment Shape after merge:", combined_sentiment.shape)
     print("Combined Sentiment Head after merge:\n", combined_sentiment.head())
