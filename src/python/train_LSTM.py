@@ -236,15 +236,18 @@ if __name__ == '__main__':
 
     if latest_data_slice.empty:
         sys.stderr.write("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.\n")
+    elif latest_data_slice.columns.duplicated().any():
+        sys.stderr.write("Error: DataFrame contains non-unique column names.\n")
+        non_unique_columns = latest_data_slice.columns[latest_data_slice.columns.duplicated()]
+        sys.stderr.write(f"Non-unique columns: {non_unique_columns.tolist()}\n")
+        # Optionally, handle non-unique columns here (e.g., by renaming or dropping)
     else:
-        # Check for non-unique columns and handle them
-        if latest_data_slice.columns.duplicated().any():
-            sys.stderr.write("Error: DataFrame contains non-unique column names.\n")
-            non_unique_columns = latest_data_slice.columns[latest_data_slice.columns.duplicated()]
-            sys.stderr.write(f"Non-unique columns: {non_unique_columns.tolist()}\n")
-            # Handle non-unique columns here (e.g., by renaming or dropping)
-            # latest_data_slice = latest_data_slice.loc[:,~latest_data_slice.columns.duplicated()]
+        # Attempt to print out column names for verification
+        print("Column names:", latest_data_slice.columns.tolist())
 
         # Convert the latest data slice to JSON for easier readability
-        json_snapshot = latest_data_slice.to_json(orient='records', indent=4)
-        sys.stdout.write(json_snapshot)
+        try:
+            json_snapshot = latest_data_slice.to_json(orient='records', indent=4)
+            sys.stdout.write(json_snapshot)
+        except Exception as e:
+            sys.stderr.write(f"An error occurred while converting to JSON: {e}\n")
