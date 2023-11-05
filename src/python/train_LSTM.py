@@ -180,7 +180,7 @@ def process_data(batch_size):
 
     # Combine JDST and NUGT data
     combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
-    combined_stocks.drop(['id_jdst', 'stock_id_jdst', 'id_nugt', 'stock_id_nugt'], axis=1, inplace=True)
+    combined_stocks.drop(['id_jdst', 'stock_id_jdst', 'id_nugt', 'stock_id_nugt', 'subject_id_gold', 'subject_id_usd'], axis=1, inplace=True)
 
     combined_stocks.sort_values('date_time', inplace=True)
     combined_sentiment.sort_values('date_published', inplace=True)
@@ -222,6 +222,9 @@ def process_data(batch_size):
     for batch_data in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
         latest_data_slice = batch_data.tail(1)
         dataloader = prepare_dataloaders(batch_data, _lagwindow, batch_size)
+
+        json_snapshot = latest_data_slice.to_json(orient='records', indent=4)
+        print(json_snapshot)
         break
 
     return latest_data_slice
@@ -236,4 +239,4 @@ if __name__ == '__main__':
         sys.stderr.write("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.\n")
     else:
         csv_snapshot = latest_data_slice.to_csv(index=False)
-        sys.stdout.write(csv_snapshot)
+        #sys.stdout.write(csv_snapshot)
