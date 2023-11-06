@@ -128,32 +128,12 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
             end = end_index  
 
         batch = df.iloc[(start - max_lag):end + future_offset].copy()
-
-        # Log column names after slicing the batch and before normalization
-        columns_before_normalization = batch.columns.tolist()
-        sys.stderr.write(f"Column names before normalization: {columns_before_normalization}\n")
-        
         batch = normalize_data_in_batch(batch, jdst_min, jdst_max, columns_to_normalize_jdst)
         batch = normalize_data_in_batch(batch, nugt_min, nugt_max, columns_to_normalize_nugt)
-
-        # Log column names after normalization and before creating lagged features
-        columns_after_normalization = batch.columns.tolist()
-        sys.stderr.write(f"Column names after normalization: {columns_after_normalization}\n")
-        
         batch_with_features = create_lagged_features(batch, intervals, lagwindow)
-        
-                # Log column names after creating lagged features
-        columns_after_lagged_features = batch_with_features.columns.tolist()
-        sys.stderr.write(f"Column names after lagged features: {columns_after_lagged_features}\n")
-        
-        
         batch_with_features = create_future_price_points(batch_with_features, future_window, future_interval)
-
-        columns_after_future_price_points = batch_with_features.columns.tolist()
-        sys.stderr.write(f"Column names after future price points: {columns_after_future_price_points}\n")
-        
-
         batch_with_features = batch_with_features.iloc[max_lag:(max_lag + batch_size)]
+        
         if batch_with_features.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
             continue 
