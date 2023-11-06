@@ -129,9 +129,7 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         if batch_with_features.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
             continue 
- 
-        print(f"Batch processed from index {start} to {end}.")
-        print(f"Batch size with features and future price: {batch_with_features.shape}")
+
         yield batch_with_features
 
 def get_data_from_db(chunksize=10000):
