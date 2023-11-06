@@ -59,7 +59,6 @@ def create_lagged_features(stock_data, intervals, lagwindow):
 
     for interval in intervals:
         for feature in ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt', 'closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst']:
-            last_valid_value = stock_data[feature].iloc[0]
             for lag in range(1, lagwindow + 1):
                 lagged_column_name = f'{feature}_lag_{interval * lag}'
                 
@@ -69,12 +68,14 @@ def create_lagged_features(stock_data, intervals, lagwindow):
 
                 column_names.add(lagged_column_name)  # Track the new column name
 
-                lagged_feature = stock_data[feature].shift(lag * interval)
+                # Create lagged feature and fill NaN values with forward fill and then backward fill as a fallback
+                lagged_feature = stock_data[feature].shift(lag * interval).ffill().bfill()
                 lagged_feature_frame = lagged_feature.to_frame(name=lagged_column_name)
                 new_frames.append(lagged_feature_frame)
                 
     lagged_data = pd.concat([stock_data] + new_frames, axis=1)
     return lagged_data
+
 
 
 
