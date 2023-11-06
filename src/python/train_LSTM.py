@@ -133,7 +133,7 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         batch_with_features = create_lagged_features(batch, intervals, lagwindow)
         batch_with_features = create_future_price_points(batch_with_features, future_window, future_interval)
         batch_with_features = batch_with_features.iloc[max_lag:(max_lag + batch_size)]
-        
+
         if batch_with_features.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
             continue 
@@ -250,7 +250,6 @@ def process_data(batch_size):
         latest_data_slice = batch_data.tail(1)
         dataloader = prepare_dataloaders(batch_data, _lagwindow, batch_size)
 
-        break
 
     return latest_data_slice
 
