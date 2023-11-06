@@ -90,16 +90,8 @@ def process_sentiment_data(sentiment_data):
         'token_values': lambda x: list(set().union(*x))
     })
 
-    print("Before aggregation,gold token values:", sentiment_data[sentiment_data['subject_id'] == 1]['token_values'])
-    print("Before aggregation, USD token values:", sentiment_data[sentiment_data['subject_id'] == 2]['token_values'])
-
-
     sentiment_gold = processed_sentiment[processed_sentiment['subject_id'] == 1]
     sentiment_usd = processed_sentiment[processed_sentiment['subject_id'] == 2]
-
-    print("Aggregated gold token values:", processed_sentiment[processed_sentiment['subject_id'] == 1]['token_values'])
-    print("Aggregated USD token values:", processed_sentiment[processed_sentiment['subject_id'] == 2]['token_values'])
-
 
     # If any of the expected columns are empty, log the columns
     if sentiment_gold.isnull().any().any() or sentiment_usd.isnull().any().any():
@@ -137,10 +129,6 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         if batch_with_features.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
             continue 
-
-        # Log column names after final slicing
-        final_columns = batch_with_features.columns.tolist()
-        sys.stderr.write(f"Final column names: {final_columns}\n")
  
         print(f"Batch processed from index {start} to {end}.")
         print(f"Batch size with features and future price: {batch_with_features.shape}")
@@ -263,7 +251,6 @@ if __name__ == '__main__':
     if latest_data_slice.empty:
         sys.stderr.write("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.\n")
     else:
-        # Print out the full DataFrame to manually scan for NaNs
         for index, row in latest_data_slice.iterrows():
             formatted_row = f"Index {index}:\n" + "\n".join(
                 f"{col}: {row[col]}" for col in latest_data_slice.columns
