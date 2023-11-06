@@ -231,12 +231,7 @@ def process_data(batch_size):
 # In your main block
 if __name__ == '__main__':
     batch_size = 256
-    # Assuming process_data is a generator, use next to get the first batch
-    try:
-        latest_data_slice = next(process_data(batch_size))
-    except StopIteration:
-        sys.stderr.write("No data to process. The process_data generator is empty.\n")
-        sys.exit(1)  # Exit if there is no data to process
+    latest_data_slice = process_data(batch_size)
 
     if latest_data_slice.empty:
         sys.stderr.write("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.\n")
