@@ -57,7 +57,7 @@ def create_lagged_features(stock_data, intervals, lagwindow):
     new_frames = []
     for interval in intervals:
         for feature in ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt', 'closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst']:
-            last_valid_value = None  # Initialize the last valid value tracker
+            last_valid_value = stock_data[feature].iloc[0]  
             for lag in range(1, lagwindow + 1):
                 lagged_column_name = f'{feature}_lag_{interval * lag}'
                 lagged_feature = stock_data[feature].shift(lag * interval)
