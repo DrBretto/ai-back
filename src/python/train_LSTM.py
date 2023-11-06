@@ -196,10 +196,6 @@ def process_data(batch_size):
     combined_stocks.sort_values('date_time', inplace=True)
     combined_sentiment.sort_values('date_published', inplace=True)
 
-    # Before merging, check the data types and first few rows
-    print(combined_stocks['date_time'].dtype, combined_sentiment['date_published'].dtype)
-    print(combined_stocks.head(), combined_sentiment.head())
-
     # Merge using merge_asof
     final_combined_data = pd.merge_asof(
     combined_stocks,
@@ -208,9 +204,6 @@ def process_data(batch_size):
     right_on='date_published',
     direction='nearest'
     )   
-
-    # Check the first few rows after merging
-    print(final_combined_data.head())
 
     final_combined_data.drop(columns=['date_published'], inplace=True)  # Drop duplicate date column
 
