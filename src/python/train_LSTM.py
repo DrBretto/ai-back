@@ -42,6 +42,17 @@ def create_future_price_points(stock_data, future_window=96, future_interval=15)
     future_data = pd.concat([stock_data] + new_frames, axis=1)
     return future_data
 
+def create_future_price_points(stock_data, future_window=96, future_interval=15):
+    new_frames = []
+    for lead in range(future_interval, future_window * future_interval + 1, future_interval):
+        for feature in ['closing_price_nugt', 'closing_price_jdst']:
+            future_column_name = f'{feature}_future_{lead}'
+            future_feature = stock_data[feature].shift(-lead).fillna(method='ffill')
+            future_feature_frame = future_feature.to_frame(name=future_column_name)
+            new_frames.append(future_feature_frame)
+    future_data = pd.concat([stock_data] + new_frames, axis=1)
+    return future_data
+
 def create_lagged_features(stock_data, intervals, lagwindow):
     new_frames = []
     for interval in intervals:
