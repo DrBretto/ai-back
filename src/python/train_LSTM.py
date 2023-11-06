@@ -76,10 +76,6 @@ def create_lagged_features(stock_data, intervals, lagwindow):
     lagged_data = pd.concat([stock_data] + new_frames, axis=1)
     return lagged_data
 
-
-
-
-
 def calculate_min_max(historical_data):
     min_value = historical_data.min()
     max_value = historical_data.max()
@@ -94,8 +90,16 @@ def process_sentiment_data(sentiment_data):
         'token_values': lambda x: list(set().union(*x))
     })
 
+    print("Before aggregation,gold token values:", sentiment_data[sentiment_data['subject_id'] == 1]['token_values'])
+    print("Before aggregation, USD token values:", sentiment_data[sentiment_data['subject_id'] == 2]['token_values'])
+
+
     sentiment_gold = processed_sentiment[processed_sentiment['subject_id'] == 1]
     sentiment_usd = processed_sentiment[processed_sentiment['subject_id'] == 2]
+
+    print("Aggregated gold token values:", processed_sentiment[processed_sentiment['subject_id'] == 1]['token_values'])
+    print("Aggregated USD token values:", processed_sentiment[processed_sentiment['subject_id'] == 2]['token_values'])
+
 
     # If any of the expected columns are empty, log the columns
     if sentiment_gold.isnull().any().any() or sentiment_usd.isnull().any().any():
