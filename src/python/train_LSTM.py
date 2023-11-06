@@ -34,9 +34,9 @@ class OverlappingWindowDataset(Dataset):
 def create_future_price_points(stock_data, future_window=96, future_interval=15):
     new_frames = []
     for lead in range(future_interval, future_window * future_interval + 1, future_interval):
-        for feature in ['closing_price_nugt', 'closing_price_jdst',]:
+        for feature in ['closing_price_nugt', 'closing_price_jdst']:
             future_column_name = f'{feature}_future_{lead}'
-            future_feature = stock_data[feature].shift(-lead)
+            future_feature = stock_data[feature].shift(-lead).fillna(method='ffill')
             future_feature_frame = future_feature.to_frame(name=future_column_name)
             new_frames.append(future_feature_frame)
     future_data = pd.concat([stock_data] + new_frames, axis=1)
@@ -48,7 +48,7 @@ def create_lagged_features(stock_data, intervals, lagwindow):
         for feature in ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt', 'closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst']:
             for lag in range(1, lagwindow + 1):
                 lagged_column_name = f'{feature}_lag_{interval * lag}'
-                lagged_feature = stock_data[feature].shift(lag * interval)
+                lagged_feature = stock_data[feature].shift(lag * interval).fillna(method='ffill')
                 lagged_feature_frame = lagged_feature.to_frame(name=lagged_column_name)
                 new_frames.append(lagged_feature_frame)
     lagged_data = pd.concat([stock_data] + new_frames, axis=1)
@@ -78,7 +78,6 @@ def process_sentiment_data(sentiment_data):
         print("Null columns in sentiment_usd:", sentiment_usd.columns[sentiment_usd.isnull().any()])
 
     return sentiment_gold, sentiment_usd
-
 
 def normalize_data_in_batch(batch_data, min_values, max_values, columns_to_normalize):
     for column in columns_to_normalize:
@@ -237,10 +236,15 @@ if __name__ == '__main__':
     if latest_data_slice.empty:
         sys.stderr.write("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.\n")
     else:
-        # Format each row with its respective column name
+        # Iterate over the DataFrame and print out the index and column name for NaN values
+        for index, row in latest_data_slice.iterrows():
+            for col in latest_data_slice.columns:
+                if pd.isna(row[col]):
+                    sys.stdout.write(f"NaN found at index {index}, column {col}\n")
+        
+        # After checking for NaN values, if you still want the formatted output
         formatted_output = "\n".join(
             f"{column}: {value}" 
-            for column, value in latest_data_slice.iloc[-1].items()
+            for column, value in latest_data_slice.iloc[-1].items() if pd.notna(value)
         )
         sys.stdout.write(formatted_output + "\n")
-
