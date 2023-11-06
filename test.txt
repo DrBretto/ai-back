@@ -1,4 +1,4 @@
-Batch processed from index 43200 to 43456.
+"Batch processed from index 43200 to 43456.
 Batch size with features and future price: (256, 1169)
 Index 43455:
 date_time: 2017-04-10 11:40:00+00:00
@@ -253,8 +253,7 @@ low_price_jdst_lag_26: 0.24403702520221965
 low_price_jdst_lag_27: 0.2442087294202411
 low_price_jdst_lag_28: 0.2436147956488523
 low_price_jdst_lag_29: 0.2443804336382625
-low_price_jdst_lag_30: 
-low_price_jdst_lag_30    0.243351
+low_price_jdst_lag_30: low_price_jdst_lag_30    0.243351
 low_price_jdst_lag_30    0.243351
 Name: 43455, dtype: object
 volume_jdst_lag_1: 0.0004812043298619041
@@ -1492,3 +1491,4 @@ closing_price_jdst_future_1425: 0.22069787728990983
 closing_price_nugt_future_1440: 0.7568132716364512
 closing_price_jdst_future_1440: 0.224081128234952
 
+"

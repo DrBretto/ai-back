@@ -242,6 +242,7 @@ def process_data(batch_size):
     return latest_data_slice
 
 
+
 # In your main block
 if __name__ == '__main__':
     batch_size = 256
@@ -256,3 +257,4 @@ if __name__ == '__main__':
                 f"{col}: {row[col]}" for col in latest_data_slice.columns
             )
             sys.stdout.write(formatted_row + "\n\n")
+
