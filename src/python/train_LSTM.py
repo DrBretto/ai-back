@@ -231,20 +231,19 @@ def process_data(batch_size):
 # In your main block
 if __name__ == '__main__':
     batch_size = 256
-    latest_data_slice = process_data(batch_size)
+    # Assuming process_data is a generator, use next to get the first batch
+    try:
+        latest_data_slice = next(process_data(batch_size))
+    except StopIteration:
+        sys.stderr.write("No data to process. The process_data generator is empty.\n")
+        sys.exit(1)  # Exit if there is no data to process
 
     if latest_data_slice.empty:
         sys.stderr.write("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.\n")
     else:
-        # Iterate over the DataFrame and print out the index and column name for NaN values
+        # Print out the full DataFrame to manually scan for NaNs
         for index, row in latest_data_slice.iterrows():
-            for col in latest_data_slice.columns:
-                if pd.isna(row[col]):
-                    sys.stdout.write(f"NaN found at index {index}, column {col}\n")
-        
-        # After checking for NaN values, if you still want the formatted output
-        formatted_output = "\n".join(
-            f"{column}: {value}" 
-            for column, value in latest_data_slice.iloc[-1].items() if pd.notna(value)
-        )
-        sys.stdout.write(formatted_output + "\n")
+            formatted_row = f"Index {index}:\n" + "\n".join(
+                f"{col}: {row[col]}" for col in latest_data_slice.columns
+            )
+            sys.stdout.write(formatted_row + "\n\n")
