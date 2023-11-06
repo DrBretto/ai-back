@@ -237,8 +237,10 @@ if __name__ == '__main__':
     if latest_data_slice.empty:
         sys.stderr.write("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.\n")
     else:
-        # Print the latest data slice in a string format including the header
-        readable_output = latest_data_slice.to_string(index=False)
-        sys.stdout.write(readable_output + "\n")
-
+        # Format each row with its respective column name
+        formatted_output = "\n".join(
+            f"{column}: {value}" 
+            for column, value in latest_data_slice.iloc[-1].items()
+        )
+        sys.stdout.write(formatted_output + "\n")
 
