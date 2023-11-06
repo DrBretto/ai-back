@@ -68,13 +68,14 @@ def create_lagged_features(stock_data, intervals, lagwindow):
 
                 column_names.add(lagged_column_name)  # Track the new column name
 
-                # Create lagged feature and fill NaN values with forward fill and then backward fill as a fallback
-                lagged_feature = stock_data[feature].shift(lag * interval).ffill().bfill()
+                # Create lagged feature, fill NaN values with forward fill, backward fill, and then fill any remaining NaNs with 0
+                lagged_feature = stock_data[feature].shift(lag * interval).ffill().bfill().fillna(0)
                 lagged_feature_frame = lagged_feature.to_frame(name=lagged_column_name)
                 new_frames.append(lagged_feature_frame)
                 
     lagged_data = pd.concat([stock_data] + new_frames, axis=1)
     return lagged_data
+
 
 
 
