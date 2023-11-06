@@ -116,15 +116,39 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
             end = end_index  
 
         batch = df.iloc[(start - max_lag):end + future_offset].copy()
+
+        # Log column names after slicing the batch and before normalization
+        columns_before_normalization = batch.columns.tolist()
+        sys.stderr.write(f"Column names before normalization: {columns_before_normalization}\n")
+        
         batch = normalize_data_in_batch(batch, jdst_min, jdst_max, columns_to_normalize_jdst)
         batch = normalize_data_in_batch(batch, nugt_min, nugt_max, columns_to_normalize_nugt)
+
+        # Log column names after normalization and before creating lagged features
+        columns_after_normalization = batch.columns.tolist()
+        sys.stderr.write(f"Column names after normalization: {columns_after_normalization}\n")
+        
         batch_with_features = create_lagged_features(batch, intervals, lagwindow)
+        
+                # Log column names after creating lagged features
+        columns_after_lagged_features = batch_with_features.columns.tolist()
+        sys.stderr.write(f"Column names after lagged features: {columns_after_lagged_features}\n")
+        
+        
         batch_with_features = create_future_price_points(batch_with_features, future_window, future_interval)
+
+        columns_after_future_price_points = batch_with_features.columns.tolist()
+        sys.stderr.write(f"Column names after future price points: {columns_after_future_price_points}\n")
+        
 
         batch_with_features = batch_with_features.iloc[max_lag:(max_lag + batch_size)]
         if batch_with_features.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
             continue 
+        
+        # Log column names after final slicing
+        final_columns = batch_with_features.columns.tolist()
+        sys.stderr.write(f"Final column names: {final_columns}\n")
  
         print(f"Batch processed from index {start} to {end}.")
         print(f"Batch size with features and future price: {batch_with_features.shape}")
@@ -227,6 +251,7 @@ def process_data(batch_size):
     jdst_min, jdst_max = calculate_min_max(final_combined_data[jdst_columns])
     nugt_min, nugt_max = calculate_min_max(final_combined_data[nugt_columns])
 
+    print("final_combined_data shape:", final_combined_data.shape)
 
     # Process the data in batches, passing min and max values for normalization
     for batch_data in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):

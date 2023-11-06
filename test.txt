@@ -1,6 +1,3 @@
-"Batch processed from index 43200 to 43456.
-Batch size with features and future price: (256, 1169)
-Index 43455:
 date_time: 2017-04-10 11:40:00+00:00
 closing_price_jdst: 0.23862859842977607
 high_price_jdst: 0.2382235368429754
@@ -307,7 +304,7 @@ closing_price_nugt_lag_120: closing_price_nugt_lag_120    0.665358
 closing_price_nugt_lag_120    0.665358
 Name: 43455, dtype: object
 closing_price_nugt_lag_135: 0.6828872833904424
-closing_price_nugt_lag_150: 0.6797057826532654
+closing_price_nugt_lag_150: 0.7754081020040595
 closing_price_nugt_lag_165: 0.6733468652620143
 closing_price_nugt_lag_180: closing_price_nugt_lag_180    0.67255
 closing_price_nugt_lag_180    0.67255
@@ -318,8 +315,8 @@ closing_price_nugt_lag_225: 0.6860687841276194
 closing_price_nugt_lag_240: closing_price_nugt_lag_240    0.683684
 closing_price_nugt_lag_240    0.683684
 Name: 43455, dtype: object
-closing_price_nugt_lag_255: 0.6916313053138005
-closing_price_nugt_lag_270: 0.6924277015188703
+closing_price_nugt_lag_255: 0.7846462979828713
+closing_price_nugt_lag_270: 0.7854386101048383
 closing_price_nugt_lag_285: 0.6916313053138005
 closing_price_nugt_lag_300: closing_price_nugt_lag_300    0.691631
 closing_price_nugt_lag_300    0.691631
@@ -327,11 +324,11 @@ Name: 43455, dtype: object
 closing_price_nugt_lag_315: 0.6916313053138005
 closing_price_nugt_lag_330: 0.6932200136408375
 closing_price_nugt_lag_345: 0.6932200136408375
-closing_price_nugt_lag_360: closing_price_nugt_lag_360    0.69322
-closing_price_nugt_lag_360    0.69322
+closing_price_nugt_lag_360: closing_price_nugt_lag_360    0.789417
+closing_price_nugt_lag_360    0.781465
 Name: 43455, dtype: object
 closing_price_nugt_lag_375: 0.6932200136408375
-closing_price_nugt_lag_390: 0.6932200136408375
+closing_price_nugt_lag_390: 0.7910052153741223
 closing_price_nugt_lag_405: 0.6948128060509774
 closing_price_nugt_lag_420: closing_price_nugt_lag_420    0.694016
 closing_price_nugt_lag_420    0.694016
@@ -355,7 +352,7 @@ high_price_nugt_lag_120: high_price_nugt_lag_120    0.670628
 high_price_nugt_lag_120    0.670628
 Name: 43455, dtype: object
 high_price_nugt_lag_135: 0.6817407534190751
-high_price_nugt_lag_150: 0.6785661890556997
+high_price_nugt_lag_150: 0.7745977798425352
 high_price_nugt_lag_165: 0.6722170603289486
 high_price_nugt_lag_180: high_price_nugt_lag_180    0.671422
 high_price_nugt_lag_180    0.671422
@@ -366,8 +363,8 @@ high_price_nugt_lag_225: 0.6849153177824507
 high_price_nugt_lag_240: high_price_nugt_lag_240    0.682531
 high_price_nugt_lag_240    0.682531
 Name: 43455, dtype: object
-high_price_nugt_lag_255: 0.6904697866236328
-high_price_nugt_lag_270: 0.6912644465092018
+high_price_nugt_lag_255: 0.7833268130470928
+high_price_nugt_lag_270: 0.7841214729326619
 high_price_nugt_lag_285: 0.6904697866236328
 high_price_nugt_lag_300: high_price_nugt_lag_300    0.69047
 high_price_nugt_lag_300    0.69047
@@ -375,11 +372,11 @@ Name: 43455, dtype: object
 high_price_nugt_lag_315: 0.6904697866236328
 high_price_nugt_lag_330: 0.6920550312158704
 high_price_nugt_lag_345: 0.6920550312158704
-high_price_nugt_lag_360: high_price_nugt_lag_360    0.692055
-high_price_nugt_lag_360    0.692055
+high_price_nugt_lag_360: high_price_nugt_lag_360    0.788091
+high_price_nugt_lag_360    0.780152
 Name: 43455, dtype: object
 high_price_nugt_lag_375: 0.6920550312158704
-high_price_nugt_lag_390: 0.6920550312158704
+high_price_nugt_lag_390: 0.789675941773844
 high_price_nugt_lag_405: 0.6936443509870084
 high_price_nugt_lag_420: high_price_nugt_lag_420    0.69285
 high_price_nugt_lag_420    0.69285
@@ -403,7 +400,7 @@ low_price_nugt_lag_120: low_price_nugt_lag_120    0.666142
 low_price_nugt_lag_120    0.666142
 Name: 43455, dtype: object
 low_price_nugt_lag_135: 0.6836720059334292
-low_price_nugt_lag_150: 0.6804840170299252
+low_price_nugt_lag_150: 0.7745051036506162
 low_price_nugt_lag_165: 0.6749070852848497
 low_price_nugt_lag_180: low_price_nugt_lag_180    0.673313
 low_price_nugt_lag_180    0.673313
@@ -414,8 +411,8 @@ low_price_nugt_lag_225: 0.6876549432267528
 low_price_nugt_lag_240: low_price_nugt_lag_240    0.684467
 low_price_nugt_lag_240    0.684467
 Name: 43455, dtype: object
-low_price_nugt_lag_255: 0.6932318749718286
-low_price_nugt_lag_270: 0.6940309210337607
+low_price_nugt_lag_255: 0.7856589671407673
+low_price_nugt_lag_270: 0.7864580132026996
 low_price_nugt_lag_285: 0.6932318749718286
 low_price_nugt_lag_300: low_price_nugt_lag_300    0.693232
 low_price_nugt_lag_300    0.693232
@@ -423,11 +420,11 @@ Name: 43455, dtype: object
 low_price_nugt_lag_315: 0.6932318749718286
 low_price_nugt_lag_330: 0.6948258694235804
 low_price_nugt_lag_345: 0.6948258694235804
-low_price_nugt_lag_360: low_price_nugt_lag_360    0.694826
-low_price_nugt_lag_360    0.694826
+low_price_nugt_lag_360: low_price_nugt_lag_360    0.79124
+low_price_nugt_lag_360    0.78327
 Name: 43455, dtype: object
 low_price_nugt_lag_375: 0.6948258694235804
-low_price_nugt_lag_390: 0.6948258694235804
+low_price_nugt_lag_390: 0.7928339910097073
 low_price_nugt_lag_405: 0.6956249154855128
 low_price_nugt_lag_420: low_price_nugt_lag_420    0.695625
 low_price_nugt_lag_420    0.695625
@@ -451,7 +448,7 @@ volume_nugt_lag_120: volume_nugt_lag_120    0.017313
 volume_nugt_lag_120    0.017313
 Name: 43455, dtype: object
 volume_nugt_lag_135: 0.00024359557108093652
-volume_nugt_lag_150: 0.0007157189459594526
+volume_nugt_lag_150: 0.012690826994407347
 volume_nugt_lag_165: 6.152671640704067e-05
 volume_nugt_lag_180: volume_nugt_lag_180    0.000375
 volume_nugt_lag_180    0.000375
@@ -462,8 +459,8 @@ volume_nugt_lag_225: 5.022589094452299e-06
 volume_nugt_lag_240: volume_nugt_lag_240    0.000175
 volume_nugt_lag_240    0.000175
 Name: 43455, dtype: object
-volume_nugt_lag_255: 1.7579061830583048e-05
-volume_nugt_lag_270: 3.641377093477917e-05
+volume_nugt_lag_255: 7.408318914317141e-05
+volume_nugt_lag_270: 5.1481538218136065e-05
 volume_nugt_lag_285: 0.0002825206365629418
 volume_nugt_lag_300: volume_nugt_lag_300    0.000024
 volume_nugt_lag_300    0.000024
@@ -471,11 +468,11 @@ Name: 43455, dtype: object
 volume_nugt_lag_315: 5.399283276536222e-05
 volume_nugt_lag_330: 0.00023731733471287113
 volume_nugt_lag_345: 0.00018709144376834815
-volume_nugt_lag_360: volume_nugt_lag_360    0.000063
-volume_nugt_lag_360    0.000063
+volume_nugt_lag_360: volume_nugt_lag_360    0.000005
+volume_nugt_lag_360    0.000005
 Name: 43455, dtype: object
 volume_nugt_lag_375: 6.278236368065374e-06
-volume_nugt_lag_390: 6.152671640704067e-05
+volume_nugt_lag_390: 5.1481538218136065e-05
 volume_nugt_lag_405: 2.0090356377809196e-05
 volume_nugt_lag_420: volume_nugt_lag_420    0.000024
 volume_nugt_lag_420    0.000024
@@ -506,23 +503,23 @@ closing_price_jdst_lag_180    0.243365
 Name: 43455, dtype: object
 closing_price_jdst_lag_195: 0.244041690898517
 closing_price_jdst_lag_210: 0.24268846321605114
-closing_price_jdst_lag_225: 0.24167345158476297
+closing_price_jdst_lag_225: 0.2190064335562663
 closing_price_jdst_lag_240: closing_price_jdst_lag_240    0.242688
 closing_price_jdst_lag_240    0.242688
 Name: 43455, dtype: object
 closing_price_jdst_lag_255: 0.24133505379470774
 closing_price_jdst_lag_270: 0.23795198458854316
-closing_price_jdst_lag_285: 0.23862859842977607
-closing_price_jdst_lag_300: closing_price_jdst_lag_300    0.238121
-closing_price_jdst_lag_300    0.238121
+closing_price_jdst_lag_285: 0.2190064335562663
+closing_price_jdst_lag_300: closing_price_jdst_lag_300    0.220698
+closing_price_jdst_lag_300    0.218499
 Name: 43455, dtype: object
-closing_price_jdst_lag_315: 0.2376135867984879
+closing_price_jdst_lag_315: 0.22069787728990983
 closing_price_jdst_lag_330: 0.2376135867984879
 closing_price_jdst_lag_345: 0.23795198458854316
 closing_price_jdst_lag_360: closing_price_jdst_lag_360    0.238121
 closing_price_jdst_lag_360    0.238121
 Name: 43455, dtype: object
-closing_price_jdst_lag_375: 0.23845939953474843
+closing_price_jdst_lag_375: 0.21816062082000579
 closing_price_jdst_lag_390: 0.2376135867984879
 closing_price_jdst_lag_405: 0.23812118348357078
 closing_price_jdst_lag_420: closing_price_jdst_lag_420    0.237614
@@ -554,23 +551,23 @@ high_price_jdst_lag_180    0.242608
 Name: 43455, dtype: object
 high_price_jdst_lag_195: 0.24328233088010007
 high_price_jdst_lag_210: 0.2419333071567263
-high_price_jdst_lag_225: 0.2409215842897229
+high_price_jdst_lag_225: 0.21832548184873934
 high_price_jdst_lag_240: high_price_jdst_lag_240    0.241933
 high_price_jdst_lag_240    0.241933
 Name: 43455, dtype: object
 high_price_jdst_lag_255: 0.24058428343335253
 high_price_jdst_lag_270: 0.23721181397597202
-high_price_jdst_lag_285: 0.23788623598660502
-high_price_jdst_lag_300: high_price_jdst_lag_300    0.23738
-high_price_jdst_lag_300    0.23738
+high_price_jdst_lag_285: 0.21832548184873934
+high_price_jdst_lag_300: high_price_jdst_lag_300    0.220012
+high_price_jdst_lag_300     0.21841
 Name: 43455, dtype: object
-high_price_jdst_lag_315: 0.23687451311960164
+high_price_jdst_lag_315: 0.2200118064284835
 high_price_jdst_lag_330: 0.23687451311960164
 high_price_jdst_lag_345: 0.23721181397597202
 high_price_jdst_lag_360: high_price_jdst_lag_360    0.23738
 high_price_jdst_lag_360    0.23738
 Name: 43455, dtype: object
-high_price_jdst_lag_375: 0.23771767540947372
+high_price_jdst_lag_375: 0.21748231955886727
 high_price_jdst_lag_390: 0.23687451311960164
 high_price_jdst_lag_405: 0.23738037455310332
 high_price_jdst_lag_420: high_price_jdst_lag_420    0.236875
@@ -602,23 +599,23 @@ low_price_jdst_lag_180    0.24644
 Name: 43455, dtype: object
 low_price_jdst_lag_195: 0.24764188865018466
 low_price_jdst_lag_210: 0.2462686249582072
-low_price_jdst_lag_225: 0.24523876970227268
+low_price_jdst_lag_225: 0.22223706542689314
 low_price_jdst_lag_240: low_price_jdst_lag_240    0.246097
 low_price_jdst_lag_240    0.246097
 Name: 43455, dtype: object
 low_price_jdst_lag_255: 0.24489536126622982
 low_price_jdst_lag_270: 0.2414623870623832
-low_price_jdst_lag_285: 0.24214883388227493
-low_price_jdst_lag_300: low_price_jdst_lag_300    0.241634
-low_price_jdst_lag_300    0.241634
+low_price_jdst_lag_285: 0.22189384201694728
+low_price_jdst_lag_300: low_price_jdst_lag_300    0.223954
+low_price_jdst_lag_300    0.221722
 Name: 43455, dtype: object
-low_price_jdst_lag_315: 0.24111897862634035
+low_price_jdst_lag_315: 0.2239535525288164
 low_price_jdst_lag_330: 0.24111897862634035
 low_price_jdst_lag_345: 0.24111897862634035
 low_price_jdst_lag_360: low_price_jdst_lag_360    0.241634
 low_price_jdst_lag_360    0.241634
 Name: 43455, dtype: object
-low_price_jdst_lag_375: 0.2419773146903505
+low_price_jdst_lag_375: 0.22137872936288297
 low_price_jdst_lag_390: 0.24111897862634035
 low_price_jdst_lag_405: 0.2416339062543076
 low_price_jdst_lag_420: low_price_jdst_lag_420    0.241119
@@ -650,23 +647,23 @@ volume_jdst_lag_180    0.000054
 Name: 43455, dtype: object
 volume_jdst_lag_195: 3.6639923593546e-06
 volume_jdst_lag_210: 2.4426615729030665e-05
-volume_jdst_lag_225: 0.0
+volume_jdst_lag_225: 1.9541292583224533e-05
 volume_jdst_lag_240: volume_jdst_lag_240    0.000057
 volume_jdst_lag_240    0.000057
 Name: 43455, dtype: object
 volume_jdst_lag_255: 2.3205284942579134e-05
 volume_jdst_lag_270: 3.541859280709447e-05
-volume_jdst_lag_285: 0.0
-volume_jdst_lag_300: volume_jdst_lag_300    0.000011
-volume_jdst_lag_300    0.000011
+volume_jdst_lag_285: 4.03039159529006e-05
+volume_jdst_lag_300: volume_jdst_lag_300    0.000001
+volume_jdst_lag_300    0.000056
 Name: 43455, dtype: object
-volume_jdst_lag_315: 0.0
+volume_jdst_lag_315: 1.2213307864515333e-06
 volume_jdst_lag_330: 7.3279847187092e-06
 volume_jdst_lag_345: 3.6639923593546e-06
 volume_jdst_lag_360: volume_jdst_lag_360    0.000001
 volume_jdst_lag_360    0.000001
 Name: 43455, dtype: object
-volume_jdst_lag_375: 3.6639923593546e-06
+volume_jdst_lag_375: 2.56479465154822e-05
 volume_jdst_lag_390: 8.549315505160733e-06
 volume_jdst_lag_405: 0.0
 volume_jdst_lag_420: volume_jdst_lag_420    0.0001
@@ -689,8 +686,8 @@ Name: 43455, dtype: object
 closing_price_nugt_lag_300: closing_price_nugt_lag_300    0.691631
 closing_price_nugt_lag_300    0.691631
 Name: 43455, dtype: object
-closing_price_nugt_lag_360: closing_price_nugt_lag_360    0.69322
-closing_price_nugt_lag_360    0.69322
+closing_price_nugt_lag_360: closing_price_nugt_lag_360    0.789417
+closing_price_nugt_lag_360    0.781465
 Name: 43455, dtype: object
 closing_price_nugt_lag_420: closing_price_nugt_lag_420    0.694016
 closing_price_nugt_lag_420    0.694016
@@ -705,7 +702,7 @@ closing_price_nugt_lag_840: 0.7329703944815869
 closing_price_nugt_lag_900: 0.7282001854173729
 closing_price_nugt_lag_960: 0.7297929778275127
 closing_price_nugt_lag_1020: 0.7361518952187639
-closing_price_nugt_lag_1080: 0.6924277015188703
+closing_price_nugt_lag_1080: 0.7234299763531588
 closing_price_nugt_lag_1140: 0.6908349091087305
 closing_price_nugt_lag_1200: 0.6956051181729446
 closing_price_nugt_lag_1260: 0.6979902227050516
@@ -735,8 +732,8 @@ Name: 43455, dtype: object
 high_price_nugt_lag_300: high_price_nugt_lag_300    0.69047
 high_price_nugt_lag_300    0.69047
 Name: 43455, dtype: object
-high_price_nugt_lag_360: high_price_nugt_lag_360    0.692055
-high_price_nugt_lag_360    0.692055
+high_price_nugt_lag_360: high_price_nugt_lag_360    0.788091
+high_price_nugt_lag_360    0.780152
 Name: 43455, dtype: object
 high_price_nugt_lag_420: high_price_nugt_lag_420    0.69285
 high_price_nugt_lag_420    0.69285
@@ -751,7 +748,7 @@ high_price_nugt_lag_840: 0.733328443118653
 high_price_nugt_lag_900: 0.7277698990985706
 high_price_nugt_lag_960: 0.7285645589841395
 high_price_nugt_lag_1020: 0.7349136877108906
-high_price_nugt_lag_1080: 0.6912644465092018
+high_price_nugt_lag_1080: 0.7222154302573884
 high_price_nugt_lag_1140: 0.6896751267380639
 high_price_nugt_lag_1200: 0.6948343032259117
 high_price_nugt_lag_1260: 0.6984041599426215
@@ -781,8 +778,8 @@ Name: 43455, dtype: object
 low_price_nugt_lag_300: low_price_nugt_lag_300    0.693232
 low_price_nugt_lag_300    0.693232
 Name: 43455, dtype: object
-low_price_nugt_lag_360: low_price_nugt_lag_360    0.694826
-low_price_nugt_lag_360    0.694826
+low_price_nugt_lag_360: low_price_nugt_lag_360    0.79124
+low_price_nugt_lag_360    0.78327
 Name: 43455, dtype: object
 low_price_nugt_lag_420: low_price_nugt_lag_420    0.695625
 low_price_nugt_lag_420    0.695625
@@ -797,7 +794,7 @@ low_price_nugt_lag_840: 0.7338684893112223
 low_price_nugt_lag_900: 0.7290865059559665
 low_price_nugt_lag_960: 0.7306805004077183
 low_price_nugt_lag_1020: 0.7370564782147263
-low_price_nugt_lag_1080: 0.6932318749718286
+low_price_nugt_lag_1080: 0.7251035686626427
 low_price_nugt_lag_1140: 0.6924369265820088
 low_price_nugt_lag_1200: 0.6960223896804226
 low_price_nugt_lag_1260: 0.6984113325219942
@@ -827,8 +824,8 @@ Name: 43455, dtype: object
 volume_nugt_lag_300: volume_nugt_lag_300    0.000024
 volume_nugt_lag_300    0.000024
 Name: 43455, dtype: object
-volume_nugt_lag_360: volume_nugt_lag_360    0.000063
-volume_nugt_lag_360    0.000063
+volume_nugt_lag_360: volume_nugt_lag_360    0.000005
+volume_nugt_lag_360    0.000005
 Name: 43455, dtype: object
 volume_nugt_lag_420: volume_nugt_lag_420    0.000024
 volume_nugt_lag_420    0.000024
@@ -843,7 +840,7 @@ volume_nugt_lag_840: 0.0004834242003410338
 volume_nugt_lag_900: 0.0017365601794068824
 volume_nugt_lag_960: 0.00013686555282382514
 volume_nugt_lag_1020: 1.7579061830583048e-05
-volume_nugt_lag_1080: 6.780495277510603e-05
+volume_nugt_lag_1080: 2.385729819864842e-05
 volume_nugt_lag_1140: 0.00012682037463492056
 volume_nugt_lag_1200: 0.004229020017528836
 volume_nugt_lag_1260: 0.00548843423296275
@@ -870,8 +867,8 @@ Name: 43455, dtype: object
 closing_price_jdst_lag_240: closing_price_jdst_lag_240    0.242688
 closing_price_jdst_lag_240    0.242688
 Name: 43455, dtype: object
-closing_price_jdst_lag_300: closing_price_jdst_lag_300    0.238121
-closing_price_jdst_lag_300    0.238121
+closing_price_jdst_lag_300: closing_price_jdst_lag_300    0.220698
+closing_price_jdst_lag_300    0.218499
 Name: 43455, dtype: object
 closing_price_jdst_lag_360: closing_price_jdst_lag_360    0.238121
 closing_price_jdst_lag_360    0.238121
@@ -888,9 +885,9 @@ closing_price_jdst_lag_780: 0.22273971357952893
 closing_price_jdst_lag_840: 0.22323531549869144
 closing_price_jdst_lag_900: 0.2247577420761849
 closing_price_jdst_lag_960: 0.22374273044489676
-closing_price_jdst_lag_1020: 0.22069787728990983
+closing_price_jdst_lag_1020: 0.22915582291363765
 closing_price_jdst_lag_1080: 0.236936972957255
-closing_price_jdst_lag_1140: 0.23592214306484438
+closing_price_jdst_lag_1140: 0.22915582291363765
 closing_price_jdst_lag_1200: 0.23469576911892986
 closing_price_jdst_lag_1260: 0.2345689153823786
 closing_price_jdst_lag_1320: 0.23744456964233784
@@ -903,7 +900,7 @@ closing_price_jdst_lag_1560: 0.23372310264611804
 closing_price_jdst_lag_1620: 0.23338470485606277
 closing_price_jdst_lag_1680: 0.23524552922361147
 closing_price_jdst_lag_1740: 0.22847920907240474
-closing_price_jdst_lag_1800: 0.2311856644373364
+closing_price_jdst_lag_1800: 0.24268846321605114
 high_price_jdst_lag_60: high_price_jdst_lag_60    0.240753
 high_price_jdst_lag_60    0.240753
 Name: 43455, dtype: object
@@ -916,8 +913,8 @@ Name: 43455, dtype: object
 high_price_jdst_lag_240: high_price_jdst_lag_240    0.241933
 high_price_jdst_lag_240    0.241933
 Name: 43455, dtype: object
-high_price_jdst_lag_300: high_price_jdst_lag_300    0.23738
-high_price_jdst_lag_300    0.23738
+high_price_jdst_lag_300: high_price_jdst_lag_300    0.220012
+high_price_jdst_lag_300     0.21841
 Name: 43455, dtype: object
 high_price_jdst_lag_360: high_price_jdst_lag_360    0.23738
 high_price_jdst_lag_360    0.23738
@@ -934,9 +931,9 @@ high_price_jdst_lag_780: 0.22206903615875964
 high_price_jdst_lag_840: 0.22254111359599194
 high_price_jdst_lag_900: 0.2240588775986048
 high_price_jdst_lag_960: 0.2230469750294936
-high_price_jdst_lag_1020: 0.2200118064284835
+high_price_jdst_lag_1020: 0.22894893135649033
 high_price_jdst_lag_1080: 0.23620009110896867
-high_price_jdst_lag_1140: 0.23518818853985748
+high_price_jdst_lag_1140: 0.22894893135649033
 high_price_jdst_lag_1200: 0.23434502624998538
 high_price_jdst_lag_1260: 0.2344715365338878
 high_price_jdst_lag_1320: 0.23670595254247037
@@ -949,7 +946,7 @@ high_price_jdst_lag_1560: 0.23316474280585073
 high_price_jdst_lag_1620: 0.23265888137234905
 high_price_jdst_lag_1680: 0.2345137665292245
 high_price_jdst_lag_1740: 0.22827450934585738
-high_price_jdst_lag_1800: 0.23046669535910322
+high_price_jdst_lag_1800: 0.2419333071567263
 low_price_jdst_lag_60: low_price_jdst_lag_60    0.244895
 low_price_jdst_lag_60    0.244895
 Name: 43455, dtype: object
@@ -962,8 +959,8 @@ Name: 43455, dtype: object
 low_price_jdst_lag_240: low_price_jdst_lag_240    0.246097
 low_price_jdst_lag_240    0.246097
 Name: 43455, dtype: object
-low_price_jdst_lag_300: low_price_jdst_lag_300    0.241634
-low_price_jdst_lag_300    0.241634
+low_price_jdst_lag_300: low_price_jdst_lag_300    0.223954
+low_price_jdst_lag_300    0.221722
 Name: 43455, dtype: object
 low_price_jdst_lag_360: low_price_jdst_lag_360    0.241634
 low_price_jdst_lag_360    0.241634
@@ -980,9 +977,9 @@ low_price_jdst_lag_780: 0.2256702246568367
 low_price_jdst_lag_840: 0.22584174384876116
 low_price_jdst_lag_900: 0.22807334360474874
 low_price_jdst_lag_960: 0.22687178413079273
-low_price_jdst_lag_1020: 0.2239535525288164
+low_price_jdst_lag_1020: 0.2325363580906269
 low_price_jdst_lag_1080: 0.24043234678035164
-low_price_jdst_lag_1140: 0.23940249152441706
+low_price_jdst_lag_1140: 0.2325363580906269
 low_price_jdst_lag_1200: 0.2381580059959557
 low_price_jdst_lag_1260: 0.23768600442249377
 low_price_jdst_lag_1320: 0.2407757552163945
@@ -995,7 +992,7 @@ low_price_jdst_lag_1560: 0.23579781310254905
 low_price_jdst_lag_1620: 0.23682766835848362
 low_price_jdst_lag_1680: 0.23871585967842834
 low_price_jdst_lag_1740: 0.23116309439864946
-low_price_jdst_lag_1800: 0.23459606860249602
+low_price_jdst_lag_1800: 0.2460969207401858
 volume_jdst_lag_60: volume_jdst_lag_60    0.000029
 volume_jdst_lag_60    0.000029
 Name: 43455, dtype: object
@@ -1008,8 +1005,8 @@ Name: 43455, dtype: object
 volume_jdst_lag_240: volume_jdst_lag_240    0.000057
 volume_jdst_lag_240    0.000057
 Name: 43455, dtype: object
-volume_jdst_lag_300: volume_jdst_lag_300    0.000011
-volume_jdst_lag_300    0.000011
+volume_jdst_lag_300: volume_jdst_lag_300    0.000001
+volume_jdst_lag_300    0.000056
 Name: 43455, dtype: object
 volume_jdst_lag_360: volume_jdst_lag_360    0.000001
 volume_jdst_lag_360    0.000001
@@ -1026,9 +1023,9 @@ volume_jdst_lag_780: 0.00029067672717546494
 volume_jdst_lag_840: 7.938650111934967e-05
 volume_jdst_lag_900: 1.7098631010321466e-05
 volume_jdst_lag_960: 6.350920089547973e-05
-volume_jdst_lag_1020: 3.6639923593546e-06
+volume_jdst_lag_1020: 0.00012946106336386254
 volume_jdst_lag_1080: 4.885323145806133e-06
-volume_jdst_lag_1140: 0.0
+volume_jdst_lag_1140: 0.00012946106336386254
 volume_jdst_lag_1200: 0.0001722076408896662
 volume_jdst_lag_1260: 0.00038594052851868453
 volume_jdst_lag_1320: 2.56479465154822e-05
@@ -1041,7 +1038,7 @@ volume_jdst_lag_1560: 0.0005019669532315802
 volume_jdst_lag_1620: 3.6639923593546e-06
 volume_jdst_lag_1680: 3.6639923593546e-06
 volume_jdst_lag_1740: 1.2213307864515332e-05
-volume_jdst_lag_1800: 1.2213307864515333e-06
+volume_jdst_lag_1800: 5.7402546963222067e-05
 closing_price_nugt_lag_1440: closing_price_nugt_lag_1440    0.678117
 closing_price_nugt_lag_1440    0.678117
 Name: 43455, dtype: object
@@ -1053,7 +1050,7 @@ closing_price_nugt_lag_8640: 0.8832156436719173
 closing_price_nugt_lag_10080: 0.9007118556848395
 closing_price_nugt_lag_11520: 0.9030969602169464
 closing_price_nugt_lag_12960: 0.8864012284921973
-closing_price_nugt_lag_14400: 0.973849615891984
+closing_price_nugt_lag_14400: 0.9030969602169464
 closing_price_nugt_lag_15840: 0.9023005640118764
 closing_price_nugt_lag_17280: 0.8387032219331598
 closing_price_nugt_lag_18720: 0.5509101379194864
@@ -1085,7 +1082,7 @@ high_price_nugt_lag_8640: 0.8825370433762043
 high_price_nugt_lag_10080: 0.899204525078651
 high_price_nugt_lag_11520: 0.9023790894420266
 high_price_nugt_lag_12960: 0.8849169478540109
-high_price_nugt_lag_14400: 0.9722195054362889
+high_price_nugt_lag_14400: 0.9023790894420266
 high_price_nugt_lag_15840: 0.9015844295564576
 high_price_nugt_lag_17280: 0.8388837269956152
 high_price_nugt_lag_18720: 0.5507848794562082
@@ -1117,7 +1114,7 @@ low_price_nugt_lag_8640: 0.8844620371167141
 low_price_nugt_lag_10080: 0.9027909244758052
 low_price_nugt_lag_11520: 0.9051798673173771
 low_price_nugt_lag_12960: 0.8868550776303981
-low_price_nugt_lag_14400: 0.9760941808958331
+low_price_nugt_lag_14400: 0.9051798673173771
 low_price_nugt_lag_15840: 0.9043849189275572
 low_price_nugt_lag_17280: 0.8398424854839966
 low_price_nugt_lag_18720: 0.5498092533631643
@@ -1149,7 +1146,7 @@ volume_nugt_lag_8640: 0.005506013294793333
 volume_nugt_lag_10080: 6.027106913342759e-05
 volume_nugt_lag_11520: 0.0004093410111978624
 volume_nugt_lag_12960: 4.897024367090992e-05
-volume_nugt_lag_14400: 3.641377093477917e-05
+volume_nugt_lag_14400: 0.0004093410111978624
 volume_nugt_lag_15840: 9.919613461543291e-05
 volume_nugt_lag_17280: 0.003572316493429198
 volume_nugt_lag_18720: 0.006261912953508404
@@ -1178,7 +1175,7 @@ closing_price_jdst_lag_4320: 0.2773655132305902
 closing_price_jdst_lag_5760: 0.2335539037510904
 closing_price_jdst_lag_7200: 0.23017083454492582
 closing_price_jdst_lag_8640: 0.22188208781622562
-closing_price_jdst_lag_10080: 0.2183298197150334
+closing_price_jdst_lag_10080: 0.23017083454492582
 closing_price_jdst_lag_11520: 0.22272790055248617
 closing_price_jdst_lag_12960: 0.2349071314335562
 closing_price_jdst_lag_14400: 0.20631960599011337
@@ -1187,14 +1184,14 @@ closing_price_jdst_lag_17280: 0.28093486478627505
 closing_price_jdst_lag_18720: 0.5623955001453911
 closing_price_jdst_lag_20160: 0.7127593413783077
 closing_price_jdst_lag_21600: 0.8925903242221576
-closing_price_jdst_lag_23040: 0.8939435519046234
-closing_price_jdst_lag_24480: 0.9022322986333235
-closing_price_jdst_lag_25920: 0.7822997237569059
+closing_price_jdst_lag_23040: 0.7127593413783077
+closing_price_jdst_lag_24480: 0.8925903242221576
+closing_price_jdst_lag_25920: 0.8925903242221576
 closing_price_jdst_lag_27360: 0.6269965833091015
-closing_price_jdst_lag_28800: 0.5623955001453911
-closing_price_jdst_lag_30240: 0.5776195841814481
-closing_price_jdst_lag_31680: 0.5742365149752835
-closing_price_jdst_lag_33120: 0.45498073567897646
+closing_price_jdst_lag_28800: 0.8925903242221576
+closing_price_jdst_lag_30240: 0.6269965833091015
+closing_price_jdst_lag_31680: 0.6269965833091015
+closing_price_jdst_lag_33120: 0.6269965833091015
 closing_price_jdst_lag_34560: 0.4450003634777551
 closing_price_jdst_lag_36000: 0.4358658040127944
 closing_price_jdst_lag_37440: 0.44567697731898803
@@ -1210,7 +1207,7 @@ high_price_jdst_lag_4320: 0.27650206253094245
 high_price_jdst_lag_5760: 0.23282744194948035
 high_price_jdst_lag_7200: 0.23012939450273284
 high_price_jdst_lag_8640: 0.22119208987261815
-high_price_jdst_lag_10080: 0.21765088013599856
+high_price_jdst_lag_10080: 0.23012939450273284
 high_price_jdst_lag_11520: 0.22203525216249023
 high_price_jdst_lag_12960: 0.23417646567285413
 high_price_jdst_lag_14400: 0.20584696748200507
@@ -1219,14 +1216,14 @@ high_price_jdst_lag_17280: 0.2802995274733075
 high_price_jdst_lag_18720: 0.5610211751978745
 high_price_jdst_lag_20160: 0.7121723918260701
 high_price_jdst_lag_21600: 0.8941017275662135
-high_price_jdst_lag_23040: 0.8911506595516613
-high_price_jdst_lag_24480: 0.899413362469035
-high_price_jdst_lag_25920: 0.7798562922243797
+high_price_jdst_lag_23040: 0.7121723918260701
+high_price_jdst_lag_24480: 0.8941017275662135
+high_price_jdst_lag_25920: 0.8941017275662135
 high_price_jdst_lag_27360: 0.6291029360628886
-high_price_jdst_lag_28800: 0.5606400270271971
-high_price_jdst_lag_30240: 0.5758165888406789
-high_price_jdst_lag_31680: 0.5724439396811906
-high_price_jdst_lag_33120: 0.45356129144716806
+high_price_jdst_lag_28800: 0.8941017275662135
+high_price_jdst_lag_30240: 0.6291029360628886
+high_price_jdst_lag_31680: 0.6291029360628886
+high_price_jdst_lag_33120: 0.6291029360628886
 high_price_jdst_lag_34560: 0.44361226395005005
 high_price_jdst_lag_36000: 0.4350122601763058
 high_price_jdst_lag_37440: 0.4461417508196663
@@ -1242,7 +1239,7 @@ low_price_jdst_lag_4320: 0.2804277729352337
 low_price_jdst_lag_5760: 0.23622688862150562
 low_price_jdst_lag_7200: 0.2335662133465615
 low_price_jdst_lag_8640: 0.2248977407018373
-low_price_jdst_lag_10080: 0.22155043358090443
+low_price_jdst_lag_10080: 0.2335662133465615
 low_price_jdst_lag_11520: 0.22601344806678256
 low_price_jdst_lag_12960: 0.23837245124238549
 low_price_jdst_lag_14400: 0.20936313462332293
@@ -1251,14 +1248,14 @@ low_price_jdst_lag_17280: 0.28403245135710165
 low_price_jdst_lag_18720: 0.5689776364507332
 low_price_jdst_lag_20160: 0.7217494291482343
 low_price_jdst_lag_21600: 0.9057621382207853
-low_price_jdst_lag_23040: 0.9071354019127629
-low_price_jdst_lag_24480: 0.9155463182304548
-low_price_jdst_lag_25920: 0.7938439227160795
+low_price_jdst_lag_23040: 0.7217494291482343
+low_price_jdst_lag_24480: 0.9057621382207853
+low_price_jdst_lag_25920: 0.9057621382207853
 low_price_jdst_lag_27360: 0.6352358518407228
-low_price_jdst_lag_28800: 0.5706941235526565
-low_price_jdst_lag_30240: 0.5861428775221601
-low_price_jdst_lag_31680: 0.5827099033183135
-low_price_jdst_lag_33120: 0.46169395462382995
+low_price_jdst_lag_28800: 0.9057621382207853
+low_price_jdst_lag_30240: 0.6352358518407228
+low_price_jdst_lag_31680: 0.6352358518407228
+low_price_jdst_lag_33120: 0.6352358518407228
 low_price_jdst_lag_34560: 0.4515663661781176
 low_price_jdst_lag_36000: 0.4419538903864696
 low_price_jdst_lag_37440: 0.45225299802410635
@@ -1274,7 +1271,7 @@ volume_jdst_lag_4320: 0.00030289003503998024
 volume_jdst_lag_5760: 0.0005007456224451287
 volume_jdst_lag_7200: 0.0006008947469341544
 volume_jdst_lag_8640: 0.0005911241006425421
-volume_jdst_lag_10080: 1.2213307864515333e-06
+volume_jdst_lag_10080: 0.0006008947469341544
 volume_jdst_lag_11520: 0.0
 volume_jdst_lag_12960: 1.2213307864515333e-06
 volume_jdst_lag_14400: 9.770646291612266e-06
@@ -1283,14 +1280,14 @@ volume_jdst_lag_17280: 0.000730355810298017
 volume_jdst_lag_18720: 8.915714741096194e-05
 volume_jdst_lag_20160: 0.0001941915950457938
 volume_jdst_lag_21600: 3.6639923593546e-05
-volume_jdst_lag_23040: 2.56479465154822e-05
-volume_jdst_lag_24480: 0.0
-volume_jdst_lag_25920: 1.2213307864515333e-06
+volume_jdst_lag_23040: 0.0001941915950457938
+volume_jdst_lag_24480: 3.6639923593546e-05
+volume_jdst_lag_25920: 3.6639923593546e-05
 volume_jdst_lag_27360: 0.0004555563833464219
-volume_jdst_lag_28800: 1.2213307864515333e-06
-volume_jdst_lag_30240: 0.0
-volume_jdst_lag_31680: 1.2213307864515333e-06
-volume_jdst_lag_33120: 9.770646291612266e-06
+volume_jdst_lag_28800: 3.6639923593546e-05
+volume_jdst_lag_30240: 0.0004555563833464219
+volume_jdst_lag_31680: 0.0004555563833464219
+volume_jdst_lag_33120: 0.0004555563833464219
 volume_jdst_lag_34560: 6.106653932257666e-06
 volume_jdst_lag_36000: 7.3279847187092e-06
 volume_jdst_lag_37440: 9.770646291612266e-06
