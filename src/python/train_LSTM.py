@@ -36,10 +36,13 @@ def create_future_price_points(stock_data, future_window=96, future_interval=15)
     for lead in range(future_interval, future_window * future_interval + 1, future_interval):
         for feature in ['closing_price_nugt', 'closing_price_jdst']:
             future_column_name = f'{feature}_future_{lead}'
-            future_feature = stock_data[feature].shift(-lead).fillna(method='ffill')
+            future_feature = stock_data[feature].shift(-lead)
             future_feature_frame = future_feature.to_frame(name=future_column_name)
             new_frames.append(future_feature_frame)
     future_data = pd.concat([stock_data] + new_frames, axis=1)
+    # Use forward fill to fill NaNs, then backfill if there are still NaNs at the start
+    future_data.fillna(method='ffill', inplace=True)
+    future_data.fillna(method='bfill', inplace=True)
     return future_data
 
 def create_lagged_features(stock_data, intervals, lagwindow):
@@ -48,10 +51,13 @@ def create_lagged_features(stock_data, intervals, lagwindow):
         for feature in ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt', 'closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst']:
             for lag in range(1, lagwindow + 1):
                 lagged_column_name = f'{feature}_lag_{interval * lag}'
-                lagged_feature = stock_data[feature].shift(lag * interval).fillna(method='ffill')
+                lagged_feature = stock_data[feature].shift(lag * interval)
                 lagged_feature_frame = lagged_feature.to_frame(name=lagged_column_name)
                 new_frames.append(lagged_feature_frame)
     lagged_data = pd.concat([stock_data] + new_frames, axis=1)
+    # Use forward fill to fill NaNs, then backfill if there are still NaNs at the start
+    lagged_data.fillna(method='ffill', inplace=True)
+    lagged_data.fillna(method='bfill', inplace=True)
     return lagged_data
 
 def calculate_min_max(historical_data):
@@ -215,8 +221,6 @@ def process_data(batch_size):
 
     jdst_min, jdst_max = calculate_min_max(final_combined_data[jdst_columns])
     nugt_min, nugt_max = calculate_min_max(final_combined_data[nugt_columns])
-
-    print(final_combined_data.columns)
 
     # Process the data in batches, passing min and max values for normalization
     for batch_data in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
