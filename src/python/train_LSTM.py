@@ -237,17 +237,8 @@ if __name__ == '__main__':
     if latest_data_slice.empty:
         sys.stderr.write("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.\n")
     else:
-        # Strip whitespace from column names
-        latest_data_slice.columns = latest_data_slice.columns.str.strip()
-        
-        # Reset index
-        latest_data_slice.reset_index(drop=True, inplace=True)
+        # Print the latest data slice in a string format including the header
+        readable_output = latest_data_slice.to_string(index=False)
+        sys.stdout.write(readable_output + "\n")
 
-        try:
-            # Convert to dictionary and then to JSON
-            records = latest_data_slice.to_dict(orient='records')
-            json_snapshot = json.dumps(records, indent=4)
-            sys.stdout.write(json_snapshot)
-        except Exception as e:
-            sys.stderr.write(f"An error occurred while converting to JSON: {e}\n")
 
