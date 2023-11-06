@@ -55,21 +55,27 @@ def create_future_price_points(stock_data, future_window=96, future_interval=15)
 
 def create_lagged_features(stock_data, intervals, lagwindow):
     new_frames = []
+    column_names = set()  # Use a set to track existing column names for uniqueness
+
     for interval in intervals:
         for feature in ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt', 'closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst']:
             last_valid_value = stock_data[feature].iloc[0]
             for lag in range(1, lagwindow + 1):
                 lagged_column_name = f'{feature}_lag_{interval * lag}'
-                lagged_feature = stock_data[feature].shift(lag * interval)
-                lagged_feature.fillna(last_valid_value, inplace=True)
                 
-                last_valid_value = lagged_feature.dropna().iloc[-1]
+                # Skip if this column name already exists
+                if lagged_column_name in column_names:
+                    continue
 
+                column_names.add(lagged_column_name)  # Track the new column name
+
+                lagged_feature = stock_data[feature].shift(lag * interval)
                 lagged_feature_frame = lagged_feature.to_frame(name=lagged_column_name)
                 new_frames.append(lagged_feature_frame)
                 
     lagged_data = pd.concat([stock_data] + new_frames, axis=1)
     return lagged_data
+
 
 
 def calculate_min_max(historical_data):
@@ -145,7 +151,7 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         if batch_with_features.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
             continue 
-        
+
         # Log column names after final slicing
         final_columns = batch_with_features.columns.tolist()
         sys.stderr.write(f"Final column names: {final_columns}\n")
