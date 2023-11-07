@@ -581,6 +581,7 @@ const SentimentService = {
         }
       }
 
+      console.log('Combined content length:', combinedContent);
       // Get the summary first
       const summary = await this.getSentimentFromGPT(
         combinedContent,
@@ -637,15 +638,7 @@ const SentimentService = {
 
       const { average, low, high } = scores;
 
-      this.insertData(
-        db,
-        sourceID,
-        subjectID,
-        summary,
-        average,
-        low,
-        high
-      );
+      this.insertData(db, sourceID, subjectID, summary, average, low, high);
 
       return analyzedArticle;
     } catch (error) {
