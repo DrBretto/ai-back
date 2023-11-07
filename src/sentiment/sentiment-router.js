@@ -48,7 +48,9 @@ sentimentRouter.get('/historical-news', async (req, res, next) => {
   }
 });
 
-sentimentRouter.post('/trigger-sentiment-analysis', async (req, res, next) => {
+// Assuming sentimentRouter is an Express Router instance
+
+sentimentRouter.get('/trigger-sentiment-analysis', async (req, res, next) => {
   const db = req.app.get('db');
   console.log('Manual trigger for sentiment analysis at:', new Date());
 
@@ -70,6 +72,7 @@ sentimentRouter.post('/trigger-sentiment-analysis', async (req, res, next) => {
     next(error);
   }
 });
+
 
 sentimentRouter.get('/compare-terms/:id', async (req, res, next) => {
   const { id } = req.params;
