@@ -308,7 +308,7 @@ const SentimentService = {
     db,
     sourceId,
     subjectId,
-    tokenizedSentiment,
+    summary,
     average,
     low,
     high,
@@ -327,7 +327,7 @@ const SentimentService = {
       await db('sentiment_analysis').insert({
         subject_id: subjectId,
         source_id: sourceId,
-        tokenized_sentiment: tokenizedSentiment,
+        tokenized_sentiment: summary,
         average_score: average,
         low_score: low,
         high_score: high,
@@ -563,7 +563,9 @@ const SentimentService = {
         }
       }
 
-      console.log('Combined content length:', combinedContent);
+      console.log('Combined content length:', combinedContent.length);
+
+
       // Get the summary first
       const summary = await this.getSentimentFromGPT(
         combinedContent,
@@ -575,13 +577,6 @@ const SentimentService = {
       const sentimentWords = await this.getSentimentFromGPT(
         summary,
         'sentimentWords',
-        sentimentSubject
-      );
-
-      //strip noise form sentiment analysis
-      const tokenizedSentiment = await this.getSentimentFromGPT(
-        sentimentWords,
-        'tokenizeSentiment',
         sentimentSubject
       );
 
@@ -614,7 +609,6 @@ const SentimentService = {
       const analyzedArticle = {
         summary: summary,
         sentimentWords: sentimentWords,
-        tokenizedSentiment: tokenizedSentiment,
         sentimentScores: scores,
       };
 

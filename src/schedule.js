@@ -23,7 +23,7 @@ module.exports = (app) => {
     await StocksService.fetchTodaysData(db, 'NUGT');
   });
 
-  cron.schedule('50 6 * * *', () => {
+  cron.schedule('0 */3 * * *', () => {
     //Daily Sentiment Scheduler
     console.log(
       'Running sentiment analysis for gold and dollar at:',
