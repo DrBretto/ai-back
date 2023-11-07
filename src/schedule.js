@@ -30,7 +30,6 @@ module.exports = (app) => {
       new Date()
     );
 
-
     SentimentService.performSentimentAnalysis(db, 'gold', 'tradingview')
       .then((result) => {
         console.log('Successfully analyzed sentiment for gold:', result);
@@ -50,20 +49,17 @@ module.exports = (app) => {
 
   cron.schedule('*/1 * * * *', async () => {
     const db = app.get('db');
-    console.log('Processing unprocessed entry at:', new Date());
-
     try {
-      // Fetch the first entry with token_values as null, ordered by id
-      // const entry = await db('sentiment_analysis')
-      //   .whereNull('token_values')
-      //   .orderBy('id', 'asc') // Ensure entries are processed in order of their id
-      //   .first();
-
       const entry = await db('sentiment_analysis')
-        .whereRaw('array_length(token_values, 1) <= 5')
         .whereNull('token_values')
-        .orderBy('id', 'asc')
+        .orderBy('id', 'asc') // Ensure entries are processed in order of their id
         .first();
+
+      // const entry = await db('sentiment_analysis')
+      //   .whereRaw('array_length(token_values, 1) <= 5')
+      //   .whereNull('token_values')
+      //   .orderBy('id', 'asc')
+      //   .first();
 
       if (entry) {
         // If an unprocessed entry is found, trigger your sentiment analysis functions
