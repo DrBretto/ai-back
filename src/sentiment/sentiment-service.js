@@ -370,15 +370,9 @@ const SentimentService = {
 
   async updateSentimentAnalysis(db, tokenValues, sentimentAnalysisId) {
     try {
-      await db.raw(
-        `UPDATE sentiment_analysis 
-        SET token_values = ARRAY(
-          SELECT DISTINCT unnest
-          FROM unnest(token_values || ?)
-        ) 
-        WHERE id = ?`,
-        [tokenValues, sentimentAnalysisId]
-      );
+      await db('sentiment_analysis').where('id', sentimentAnalysisId).update({
+        token_values: tokenValues,
+      });
       console.log('Sentiment analysis updated successfully.');
     } catch (error) {
       console.error('Error updating sentiment analysis:', error);
@@ -564,7 +558,6 @@ const SentimentService = {
       }
 
       console.log('Combined content length:', combinedContent.length);
-
 
       // Get the summary first
       const summary = await this.getSentimentFromGPT(
