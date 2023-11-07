@@ -23,6 +23,7 @@
     "dotenv": "^8.6.0",
     "express": "^4.17.3",
     "helmet": "^4.0.0",
+    "hollidays": "^1.3.3",
     "jsonwebtoken": "^9.0.2",
     "knex": "^2.5.1",
     "moment": "^2.29.4",

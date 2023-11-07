@@ -11,12 +11,43 @@ from datetime import time
 from torch.nn.utils.rnn import pad_sequence
 import sys
 import json
+import holidays
+import torch
+import torch.nn as nn
 
 # Define the window and intervals outside of the function
 _lagwindow = 30
 _defaultIntervals = [1, 15, 60, 1440]
 _future_window = 96
 _future_interval = 15
+
+us_holidays = holidays.US()
+
+
+class FinancialLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, output_size):
+        super(FinancialLSTM, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        
+        # LSTM layer
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        
+        # Fully connected layer
+        self.fc = nn.Linear(hidden_size, output_size)
+    
+    def forward(self, x):
+        # Initialize hidden state with zeros
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        # Initialize cell state
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        
+        # Forward propagate LSTM
+        out, _ = self.lstm(x, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size)
+        
+        # Decode the hidden state of the last time step
+        out = self.fc(out[:, -1, :])
+        return out
 
 class OverlappingWindowDataset(Dataset):
     def __init__(self, data, lagwindow):
@@ -111,15 +142,31 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
     future_offset = future_window * future_interval
     start_index = max_lag
     end_index = len(df) - future_offset
+    
     columns_to_normalize_jdst = ['closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst']
     columns_to_normalize_nugt = ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt']
+
+    df['date_time'] = pd.to_datetime(df['date_time'])  
+
+    input_columns = [col for col in df.columns if 'lag_' in col]
+    label_columns = [col for col in df.columns if 'future_' in col]
+
+    # Add explicitly named input columns
+    additional_input_columns = ['year', 'month', 'day', 'hour', 'minute']
+    input_columns.extend(additional_input_columns)
+
+    # Add explicitly named label columns
+    additional_label_columns = ['closing_price_nugt', 'closing_price_jdst']
+    label_columns.extend(additional_label_columns)
     
+
     for start in range(start_index, end_index, batch_size):
         end = start + batch_size
         if end > end_index:
             end = end_index  
 
         batch = df.iloc[(start - max_lag):end + future_offset].copy()
+        batch = add_time_features(batch)  
         batch = normalize_data_in_batch(batch, jdst_min, jdst_max, columns_to_normalize_jdst)
         batch = normalize_data_in_batch(batch, nugt_min, nugt_max, columns_to_normalize_nugt)
         batch_with_features = create_lagged_features(batch, intervals, lagwindow)
@@ -130,7 +177,27 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
             continue 
 
-        yield batch_with_features
+        input_data = batch_with_features[input_columns]
+        label_data = batch_with_features[label_columns]
+
+        yield (input_data, label_data)
+
+def add_time_features(df):
+    # Add basic time features
+    df['year'] = df['date_time'].dt.year
+    df['month'] = df['date_time'].dt.month
+    df['day'] = df['date_time'].dt.day
+    df['day_of_week'] = df['date_time'].dt.dayofweek
+    df['hour'] = df['date_time'].dt.hour
+    df['minute'] = df['date_time'].dt.minute
+
+    # Identify weekends
+    df['is_weekend'] = df['day_of_week'].apply(lambda x: 1 if x >= 5 else 0)
+
+    # Identify holidays
+    df['is_holiday'] = df['date_time'].apply(lambda x: 1 if x in us_holidays else 0)
+    
+    return df
 
 def get_data_from_db(chunksize=10000):
  
@@ -184,10 +251,9 @@ def process_data(batch_size):
         sys.stderr.write("Error: One or more stock datasets from the database are empty.\n")
         return pd.DataFrame()
 
-    # Merge sentiment data
-    max_length_gold = max(sentiment_gold['token_values'].apply(len))
+    max_length_gold = 30
+    max_length_usd = 30
     sentiment_gold['token_values'] = sentiment_gold['token_values'].apply(lambda x: x + [-1]*(max_length_gold - len(x)))
-    max_length_usd = max(sentiment_usd['token_values'].apply(len))
     sentiment_usd['token_values'] = sentiment_usd['token_values'].apply(lambda x: x + [-1]*(max_length_usd - len(x)))
 
     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
@@ -231,27 +297,52 @@ def process_data(batch_size):
 
     print("final_combined_data shape:", final_combined_data.shape)
 
-    # Process the data in batches, passing min and max values for normalization
-    for batch_data in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
-        latest_data_slice = batch_data.tail(1)
-        dataloader = prepare_dataloaders(batch_data, _lagwindow, batch_size)
+    for input_data, label_data in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
 
+        input_dataloader = DataLoader(input_data, batch_size=batch_size, shuffle=False)
+        label_dataloader = DataLoader(label_data, batch_size=batch_size, shuffle=False)
 
-    return latest_data_slice
+        # You could train your model on each batch here, or validate, etc.
+        # model.train(input_dataloader, label_dataloader)
 
+        # If you want to keep the last slice of data for something else
+        latest_feature_slice = input_data.tail(1)  # or label_data.tail(1) depending on your need
+        latest_label_slice = input_data.tail(1)  # or label_data.tail(1) depending on your need
 
+        break
+
+    # Return the latest slice if needed, or any other information relevant after processing all batches
+    return latest_feature_slice, latest_label_slice
+
+def train_model(dataloader, model, criterion, optimizer, num_epochs):
+    for epoch in range(num_epochs):
+        for input_batch, label_batch in dataloader:
+            # Forward pass: Compute predicted y by passing x to the model
+            output_batch = model(input_batch)
+            
+            # Compute loss
+            loss = criterion(output_batch, label_batch)
+            
+            # Zero gradients, perform a backward pass, and update the weights.
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            
+        print(f'Epoch {epoch}, Loss: {loss.item()}')
 
 # In your main block
 if __name__ == '__main__':
     batch_size = 256
-    latest_data_slice = process_data(batch_size)
+    latest_feature_slice, latest_label_slice = process_data(batch_size)
+    
+    for index, row in latest_feature_slice.iterrows():
+        formatted_row = f"Index {index}:\n" + "\n".join(
+            f"{col}: {row[col]}" for col in latest_feature_slice.columns
+        )
+        sys.stdout.write(formatted_row + "\n\n")
 
-    if latest_data_slice.empty:
-        sys.stderr.write("The DataFrame is empty. Check the process_data function and ensure it's populating the DataFrame correctly.\n")
-    else:
-        for index, row in latest_data_slice.iterrows():
-            formatted_row = f"Index {index}:\n" + "\n".join(
-                f"{col}: {row[col]}" for col in latest_data_slice.columns
-            )
-            sys.stdout.write(formatted_row + "\n\n")
-
+    for index, row in latest_label_slice.iterrows():
+        formatted_row = f"Index {index}:\n" + "\n".join(
+            f"{col}: {row[col]}" for col in latest_label_slice.columns
+        )
+        sys.stdout.write(formatted_row + "\n\n")
