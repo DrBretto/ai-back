@@ -115,11 +115,6 @@ const SentimentService = {
         'sentimentWords',
         subject
       );
-      const tokenizedArticle = await this.getSentimentFromGPT(
-        sentimentWords,
-        'tokenizeSentiment',
-        subject
-      );
 
       const sentimentScoreString = await this.getSentimentFromGPT(
         sentimentWords,
@@ -128,17 +123,11 @@ const SentimentService = {
       );
       const sentimentScore = sh.validateSentimentScore(sentimentScoreString);
 
-      processedData.tokenizedSentiment += tokenizedArticle;
       if (!isNaN(sentimentScore)) {
         processedData.scores.push(sentimentScore);
       }
     }
 
-    processedData.tokenizedSentiment = await this.getSentimentFromGPT(
-      processedData.tokenizedSentiment,
-      'reduceSentiment',
-      subject
-    );
     // Calculating high, low and average scores
     const { scores } = processedData;
     const high = Math.max(...scores);
@@ -225,21 +214,14 @@ const SentimentService = {
 
     switch (analysisType) {
       case 'summarize':
-        userPrompt = `Please provide a concise summary of anything related to ${subject} in the following block of news articles:\n\n${content}`;
+        userPrompt = `Please provide a concise summary of anything related to ${subject} in the following block of text:\n\n${content}`;
         break;
       case 'sentimentWords':
-        userPrompt = `Give a detailed sentiment analysis, describing the strength of ${subject}, based on the following news articles:\n\n${content}`;
+        userPrompt = `Give a detailed sentiment analysis, describing the strength of ${subject}, based on the following summary:\n\n${content}`;
         break;
       case 'sentimentScore':
-        userPrompt = `Please quantize this sentiment analysis. The score should be a float between -1 and 1 where 1 is extremely positive 
+        userPrompt = `Please quantize this sentiment analysis in relation to the stength of ${subject}. The score should be a float between -1 and 1 where 1 is extremely positive 
         and -1 is extremly negative and 0 is neutral:\n\n${content}`;
-        break;
-      case 'tokenizeSentiment':
-        userPrompt = `Please list individual key phrases or entities from the following sentiment analysis that are indicative of the 
-        strength of ${subject}. Only the most important terms for prediction of ${subject} prices. Each term should be isolated for easy tokenization and be as concise as possible. Format your response with a comma separated list\n\n${content}`;
-        break;
-      case 'reduceSentiment':
-        userPrompt = `Please reduce this list of key phrases or entities from the following sentiment analysis that are indicative of the strength of ${subject}. remove repeated sentiments and Each term should be isolated for easy tokenization and be as concise as possible.\n\n${content}`;
         break;
       default:
         console.error('Invalid analysis type');
