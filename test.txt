@@ -1,3 +1,9 @@
+high_price_jdst, low_price_jdst, volume_jdst,nclosing_price_nugt, high_price_nugt, low_price_nugt, volume_nugt, high_score_gold, low_score_gold, average_score_gold, token_values_gold, high_score_usd, low_score_usd, average_score_usd, token_values_usd
+
+
+
+
+
 date_time: 2023-10-30 11:44:00+00:00
 closing_price_jdst: 0.0004105481244547834
 high_price_jdst: 0.00040486884890916336

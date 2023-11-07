@@ -142,23 +142,11 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
     future_offset = future_window * future_interval
     start_index = max_lag
     end_index = len(df) - future_offset
-    
+
     columns_to_normalize_jdst = ['closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst']
     columns_to_normalize_nugt = ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt']
 
     df['date_time'] = pd.to_datetime(df['date_time'])  
-
-    input_columns = [col for col in df.columns if 'lag_' in col]
-    label_columns = [col for col in df.columns if 'future_' in col]
-
-    # Add explicitly named input columns
-    additional_input_columns = ['year', 'month', 'day', 'hour', 'minute']
-    input_columns.extend(additional_input_columns)
-
-    # Add explicitly named label columns
-    additional_label_columns = ['closing_price_nugt', 'closing_price_jdst']
-    label_columns.extend(additional_label_columns)
-    
 
     for start in range(start_index, end_index, batch_size):
         end = start + batch_size
@@ -177,6 +165,11 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
             continue 
 
+        # Dynamically determine label columns and use the rest as features
+        label_columns = [col for col in batch_with_features.columns if 'future_' in col]
+        input_columns = [col for col in batch_with_features.columns if col not in label_columns]
+
+        # Now split the batch into input and label data
         input_data = batch_with_features[input_columns]
         label_data = batch_with_features[label_columns]
 
@@ -287,7 +280,8 @@ def process_data(batch_size):
         return pd.DataFrame()
 
 
-    latest_data_slice = pd.DataFrame()
+    latest_feature_slice = pd.DataFrame()
+    latest_label_slice = pd.DataFrame()
 
     jdst_columns = [col for col in final_combined_data.columns if '_jdst' in col]
     nugt_columns = [col for col in final_combined_data.columns if '_nugt' in col]
