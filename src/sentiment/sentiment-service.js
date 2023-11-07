@@ -535,7 +535,7 @@ const SentimentService = {
     return foundDate;
   },
 
-  async performSentimentAnalysis(db, subject, source) {
+  async performSentimentAnalysis(db, subject, source = 'tradingview') {
     totalTokensUsed = 0;
 
     try {
@@ -641,7 +641,7 @@ const SentimentService = {
         db,
         sourceID,
         subjectID,
-        tokenizedSentiment,
+        summary,
         average,
         low,
         high

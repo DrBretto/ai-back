@@ -48,6 +48,29 @@ sentimentRouter.get('/historical-news', async (req, res, next) => {
   }
 });
 
+sentimentRouter.post('/trigger-sentiment-analysis', async (req, res, next) => {
+  const db = req.app.get('db');
+  console.log('Manual trigger for sentiment analysis at:', new Date());
+
+  try {
+    const goldResult = await SentimentService.performSentimentAnalysis(db, 'gold', 'tradingview');
+    console.log('Successfully analyzed sentiment for gold:', goldResult);
+
+    const dollarResult = await SentimentService.performSentimentAnalysis(db, 'dollar', 'tradingview');
+    console.log('Successfully analyzed sentiment for dollar:', dollarResult);
+
+    res.status(200).send({
+      message: 'Sentiment analysis triggered successfully',
+      gold: goldResult,
+      dollar: dollarResult
+    });
+  } catch (error) {
+    console.error('Error triggering sentiment analysis:', error);
+    res.status(500).send('Error triggering sentiment analysis');
+    next(error);
+  }
+});
+
 sentimentRouter.get('/compare-terms/:id', async (req, res, next) => {
   const { id } = req.params;
   const db = req.app.get('db');
