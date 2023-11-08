@@ -49,8 +49,6 @@ class FinancialLSTM(nn.Module):
         # Decode the hidden state of the last time step
         out = self.fc(out[:, -1, :])
         return out
-
-
 class OverlappingWindowDataset(Dataset):
     def __init__(self, data, lagwindow):
         self.data = data
@@ -175,7 +173,10 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         input_data = batch_with_features[input_columns]
         label_data = batch_with_features[label_columns]
 
-        yield (input_data, label_data)
+        input_data_tensor = torch.tensor(input_data.values.astype(np.float32))
+        label_data_tensor = torch.tensor(label_data.values.astype(np.float32))
+
+        yield (input_data_tensor, label_data_tensor)
 
 def add_time_features(df):
     # Add basic time features
@@ -352,6 +353,7 @@ def process_data(batch_size):
     )   
 
     final_combined_data.drop(columns=['date_published'], inplace=True)  # Drop duplicate date column
+    final_combined_data.reset_index(drop=True, inplace=True)
 
     if final_combined_data.empty:
         sys.stderr.write("Error: Final combined data is empty.\n")
@@ -376,12 +378,15 @@ def process_data(batch_size):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     # Train in batches using DataLoader
-    for input_data, label_data in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
+    for input_tensor, label_tensor in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
         
-        input_dataloader = DataLoader(input_data, batch_size=batch_size, shuffle=False)
-        label_dataloader = DataLoader(label_data, batch_size=batch_size, shuffle=False)
+        input_dataset = TensorDataset(input_tensor)
+        label_dataset = TensorDataset(label_tensor)
             
-        train_model(model, input_dataloader, label_dataloader, criterion, optimizer, num_epochs=100)
+        input_dataloader = DataLoader(input_dataset, batch_size=batch_size, shuffle=False)
+        label_dataloader = DataLoader(label_dataset, batch_size=batch_size, shuffle=False)
+        
+        train_model(model, input_dataloader, label_dataloader, criterion, optimizer, num_epochs=10)
 
     return model
 
