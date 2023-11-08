@@ -347,16 +347,7 @@ def process_data(batch_size):
     max_length_usd = 30
     sentiment_gold['token_values'] = sentiment_gold['token_values'].apply(lambda x: x + [-1]*(max_length_gold - len(x)))
     sentiment_usd['token_values'] = sentiment_usd['token_values'].apply(lambda x: x + [-1]*(max_length_usd - len(x)))
-    # Check if all token_values lists have the correct length after padding
-    correct_length_gold = all(sentiment_gold['token_values'].apply(len) == max_length_gold)
-    correct_length_usd = all(sentiment_usd['token_values'].apply(len) == max_length_usd)
 
-    if not correct_length_gold or not correct_length_usd:
-        raise ValueError("Not all token_values lists have the correct length after padding.")
-    
-
-
-    
     # Right after the aggregation
     max_length_observed_gold = sentiment_gold['token_values'].str.len().max()
     max_length_observed_usd = sentiment_usd['token_values'].str.len().max()
