@@ -55,12 +55,6 @@ module.exports = (app) => {
         .orderBy('id', 'asc') // Ensure entries are processed in order of their id
         .first();
 
-      // const entry = await db('sentiment_analysis')
-      //   .whereRaw('array_length(token_values, 1) <= 5')
-      //   .whereNull('token_values')
-      //   .orderBy('id', 'asc')
-      //   .first();
-
       if (entry) {
         // If an unprocessed entry is found, trigger your sentiment analysis functions
         const sentimentAnalysisId = entry.id;

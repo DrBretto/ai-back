@@ -282,7 +282,7 @@ const SentimentService = {
 
       return newID;
     } catch (err) {
-      console.error('Error in getOrCreateSubjectID:', err.code);
+      console.error('Error in getOrCreateSubjectID:', err);
       return null;
     }
   },
