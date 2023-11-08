@@ -243,14 +243,19 @@ def train_model(model, input_dataloader, label_dataloader, criterion, optimizer,
     model.train()
     for epoch in range(num_epochs):
         for input_batch, label_batch in zip(input_dataloader, label_dataloader):
-            input_batch, label_batch = input_batch, label_batch
+            # Convert batches to tensors
+            input_tensor = torch.tensor(input_batch.values).float()
+            label_tensor = torch.tensor(label_batch.values).float()
+
             # Forward pass
-            outputs = model(input_batch)
-            loss = criterion(outputs, label_batch)
+            outputs = model(input_tensor)
+            loss = criterion(outputs, label_tensor)
+
             # Backward and optimize
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
 def save_model_parameters(model, db_config):
@@ -352,10 +357,6 @@ def process_data(batch_size):
         sys.stderr.write("Error: Final combined data is empty.\n")
         return pd.DataFrame()
 
-
-    latest_feature_slice = pd.DataFrame()
-    latest_label_slice = pd.DataFrame()
-
     jdst_columns = [col for col in final_combined_data.columns if '_jdst' in col]
     nugt_columns = [col for col in final_combined_data.columns if '_nugt' in col]
 
@@ -364,32 +365,38 @@ def process_data(batch_size):
 
     print("final_combined_data shape:", final_combined_data.shape)
 
-    #input_size = 1# (your manually determined input size)
-    #output_size = 1# (your manually determined output size)
-    #model = get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size)
-    #criterion = nn.MSELoss()
-    #optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    #model_initialized = True
+    input_size = 905
+    output_size = 192
+    hidden_size = 50  
+    num_layers = 2  
+    model_id=None
+    
+    model = get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size)
+    criterion = nn.MSELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
+    # Train in batches using DataLoader
     for input_data, label_data in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
-
+        
         input_dataloader = DataLoader(input_data, batch_size=batch_size, shuffle=False)
         label_dataloader = DataLoader(label_data, batch_size=batch_size, shuffle=False)
+            
+        train_model(model, input_dataloader, label_dataloader, criterion, optimizer, num_epochs=100)
 
-        latest_feature_slice = input_data.tail(1)  # or label_data.tail(1) depending on your need
-        latest_label_slice = label_data.tail(1)  # or label_data.tail(1) depending on your need
-        break
-
-    # Return the latest slice if needed, or any other information relevant after processing all batches
-    return latest_feature_slice, latest_label_slice
+    return model
 
 
 if __name__ == '__main__':
     batch_size = 256
-    latest_feature_slice, latest_label_slice = process_data(batch_size)
+    trained_model = process_data(batch_size)
     
-    # Print the shape of the latest feature slice
-    print(f"Latest Feature Slice Shape: {latest_feature_slice.shape}")
+    db_config = {
+        'dbname': os.environ['DB_NAME'],
+        'user': os.environ['DB_USER'],
+        'password': os.environ['DB_PASSWORD'],
+        'host': os.environ['DB_HOST']
+    }
 
-    # Print the shape of the latest label slice
-    print(f"Latest Label Slice Shape: {latest_label_slice.shape}")
+    save_model_parameters(trained_model, db_config)
+    print("Model parameters saved to the database.")
+
