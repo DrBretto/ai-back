@@ -239,6 +239,77 @@ def prepare_dataloaders(stock_data_with_sentiment, lagwindow, batch_size):
 
     return dataloader
 
+def train_model(model, input_dataloader, label_dataloader, criterion, optimizer, num_epochs):
+    model.train()
+    for epoch in range(num_epochs):
+        for input_batch, label_batch in zip(input_dataloader, label_dataloader):
+            input_batch, label_batch = input_batch, label_batch
+            # Forward pass
+            outputs = model(input_batch)
+            loss = criterion(outputs, label_batch)
+            # Backward and optimize
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
+
+def save_model_parameters(model, db_config):
+    # Serialize model state to a byte stream
+    byte_stream = io.BytesIO()
+    torch.save(model.state_dict(), byte_stream)
+    byte_stream.seek(0)
+    
+    with psycopg2.connect(**db_config) as conn:
+        with conn.cursor() as cursor:
+            # Save the byte stream as binary data in the database
+            cursor.execute('INSERT INTO model_parameters (parameters) VALUES (%s)', (byte_stream.getvalue(),))
+            conn.commit()
+
+def load_model_parameters(model_id, model, db_config):
+    with psycopg2.connect(**db_config) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT parameters FROM model_parameters WHERE id = %s', (model_id,))
+            result = cursor.fetchone()
+            if result:
+                byte_stream = io.BytesIO(result[0])
+                byte_stream.seek(0)
+                # Deserialize state dict and load into model
+                model.load_state_dict(torch.load(byte_stream, map_location=torch.device('cpu')))
+            else:
+                raise ValueError('No model parameters found in the database for the provided model_id.')
+
+def get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size):
+    # Database configuration from environment variables
+    db_config = {
+        'dbname': os.environ['DB_NAME'],
+        'user': os.environ['DB_USER'],
+        'password': os.environ['DB_PASSWORD'],
+        'host': os.environ['DB_HOST']
+    }
+
+    model = FinancialLSTM(input_size, hidden_size, num_layers, output_size)
+    if model_id is not None:
+        try:
+            with psycopg2.connect(**db_config) as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute("SELECT parameters FROM model_parameters WHERE id = %s", (model_id,))
+                    result = cursor.fetchone()
+                    if result is not None:
+                        byte_stream = io.BytesIO(result[0])
+                        byte_stream.seek(0)
+                        # Deserialize state dict and load into model
+                        model.load_state_dict(torch.load(byte_stream, map_location=torch.device('cpu')))
+                        print(f"Model parameters loaded for model_id: {model_id}")
+                    else:
+                        print("No existing model parameters found. Initializing new model.")
+        except Exception as e:
+            print(f"Error accessing the database: {e}")
+            # Handle error accordingly. You may want to re-raise the error or handle it in some way.
+    else:
+        print("No model_id provided. Initializing new model.")
+
+    return model
+
 def process_data(batch_size):
     historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
 
@@ -300,8 +371,6 @@ def process_data(batch_size):
     #optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     #model_initialized = True
 
-
-
     for input_data, label_data in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
 
         input_dataloader = DataLoader(input_data, batch_size=batch_size, shuffle=False)
@@ -309,82 +378,10 @@ def process_data(batch_size):
 
         latest_feature_slice = input_data.tail(1)  # or label_data.tail(1) depending on your need
         latest_label_slice = input_data.tail(1)  # or label_data.tail(1) depending on your need
+        break
 
     # Return the latest slice if needed, or any other information relevant after processing all batches
     return latest_feature_slice, latest_label_slice
-
-def train_model(model, input_dataloader, label_dataloader, criterion, optimizer, num_epochs):
-    model.train()
-    for epoch in range(num_epochs):
-        for input_batch, label_batch in zip(input_dataloader, label_dataloader):
-            input_batch, label_batch = input_batch, label_batch
-            # Forward pass
-            outputs = model(input_batch)
-            loss = criterion(outputs, label_batch)
-            # Backward and optimize
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
-
-
-def save_model_parameters(model, db_config):
-    # Serialize model state to a byte stream
-    byte_stream = io.BytesIO()
-    torch.save(model.state_dict(), byte_stream)
-    byte_stream.seek(0)
-    
-    with psycopg2.connect(**db_config) as conn:
-        with conn.cursor() as cursor:
-            # Save the byte stream as binary data in the database
-            cursor.execute('INSERT INTO model_parameters (parameters) VALUES (%s)', (byte_stream.getvalue(),))
-            conn.commit()
-
-def load_model_parameters(model_id, model, db_config):
-    with psycopg2.connect(**db_config) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute('SELECT parameters FROM model_parameters WHERE id = %s', (model_id,))
-            result = cursor.fetchone()
-            if result:
-                byte_stream = io.BytesIO(result[0])
-                byte_stream.seek(0)
-                # Deserialize state dict and load into model
-                model.load_state_dict(torch.load(byte_stream, map_location=torch.device('cpu')))
-            else:
-                raise ValueError('No model parameters found in the database for the provided model_id.')
-
-def get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size):
-    # Database configuration from environment variables
-    db_config = {
-        'dbname': os.environ['DB_NAME'],
-        'user': os.environ['DB_USER'],
-        'password': os.environ['DB_PASSWORD'],
-        'host': os.environ['DB_HOST']
-    }
-
-    model = FinancialLSTM(input_size, hidden_size, num_layers, output_size)
-    if model_id is not None:
-        try:
-            with psycopg2.connect(**db_config) as conn:
-                with conn.cursor() as cursor:
-                    cursor.execute("SELECT parameters FROM model_parameters WHERE id = %s", (model_id,))
-                    result = cursor.fetchone()
-                    if result is not None:
-                        byte_stream = io.BytesIO(result[0])
-                        byte_stream.seek(0)
-                        # Deserialize state dict and load into model
-                        model.load_state_dict(torch.load(byte_stream, map_location=torch.device('cpu')))
-                        print(f"Model parameters loaded for model_id: {model_id}")
-                    else:
-                        print("No existing model parameters found. Initializing new model.")
-        except Exception as e:
-            print(f"Error accessing the database: {e}")
-            # Handle error accordingly. You may want to re-raise the error or handle it in some way.
-    else:
-        print("No model_id provided. Initializing new model.")
-
-    return model
-
 
 
 if __name__ == '__main__':
