@@ -326,16 +326,6 @@ def get_or_initialize_model(model_id, input_size, hidden_size, num_layers, outpu
     return model
 
 
-def ensure_correct_length(x, max_length):
-    # Ensure x is a list
-    if not isinstance(x, list):
-        x = list(x)
-    # Truncate if x is longer than the max_length
-    x = x[:max_length]
-    # Pad x if it's shorter than the max_length
-    x += [-1] * (max_length - len(x))
-    return x
-
 def process_data(batch_size):
     historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
 
@@ -343,10 +333,23 @@ def process_data(batch_size):
         sys.stderr.write("Error: One or more stock datasets from the database are empty.\n")
         return pd.DataFrame()
 
-    max_length_gold = 30
-    max_length_usd = 30
-    sentiment_gold['token_values'] = sentiment_gold['token_values'].apply(lambda x: x + [-1]*(max_length_gold - len(x)))
-    sentiment_usd['token_values'] = sentiment_usd['token_values'].apply(lambda x: x + [-1]*(max_length_usd - len(x)))
+    max_length_gold = 100
+    max_length_usd = 100
+
+    # Function to truncate or pad the token_values lists
+    def adjust_token_values_length(token_values, max_length):
+        if len(token_values) > max_length:
+            return token_values[:max_length]  # Truncate the list if it's too long
+        else:
+            return token_values + [-1] * (max_length - len(token_values))  # Pad the list if it's too short
+
+    # Applying the adjustment to the sentiment dataframes
+    sentiment_gold['token_values'] = sentiment_gold['token_values'].apply(
+        lambda x: adjust_token_values_length(x, max_length_gold))
+
+    sentiment_usd['token_values'] = sentiment_usd['token_values'].apply(
+        lambda x: adjust_token_values_length(x, max_length_usd))
+
 
     # Right after the aggregation
     max_length_observed_gold = sentiment_gold['token_values'].str.len().max()
@@ -413,7 +416,7 @@ def process_data(batch_size):
 
     print("final_combined_data shape:", final_combined_data.shape)
 
-    input_size = 904
+    input_size = 1044
     output_size = 192
     hidden_size = 50  
     num_layers = 2  
