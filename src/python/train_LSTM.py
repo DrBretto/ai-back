@@ -160,6 +160,7 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         batch_with_features = create_lagged_features(batch, intervals, lagwindow)
         batch_with_features = create_future_price_points(batch_with_features, future_window, future_interval)
         batch_with_features = batch_with_features.iloc[max_lag:(max_lag + batch_size)]
+        batch_with_features.drop(columns=['date_time'], inplace=True)
 
         if batch_with_features.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
