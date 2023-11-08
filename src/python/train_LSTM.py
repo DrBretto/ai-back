@@ -174,6 +174,14 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         input_data = batch_with_features[input_columns]
         label_data = batch_with_features[label_columns]
 
+        # Assuming `input_data` is your DataFrame and 'array_column' is the name of the column containing arrays
+        if any(input_data['array_column'].apply(lambda x: len(x) if isinstance(x, list) else 0).unique() > 1):
+            raise ValueError("Arrays in 'array_column' are not of the same length.")
+
+        # Proceed to tensor conversion if no error is raised
+        input_data_tensor = torch.tensor(input_data.values.astype(np.float32))
+
+
         input_data_tensor = torch.tensor(input_data.values.astype(np.float32))
         label_data_tensor = torch.tensor(label_data.values.astype(np.float32))
 
@@ -328,6 +336,13 @@ def process_data(batch_size):
     max_length_usd = 30
     sentiment_gold['token_values'] = sentiment_gold['token_values'].apply(lambda x: x + [-1]*(max_length_gold - len(x)))
     sentiment_usd['token_values'] = sentiment_usd['token_values'].apply(lambda x: x + [-1]*(max_length_usd - len(x)))
+    # Check if all token_values lists have the correct length after padding
+    correct_length_gold = all(sentiment_gold['token_values'].apply(len) == max_length_gold)
+    correct_length_usd = all(sentiment_usd['token_values'].apply(len) == max_length_usd)
+
+    if not correct_length_gold or not correct_length_usd:
+        raise ValueError("Not all token_values lists have the correct length after padding.")
+
 
     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
     combined_sentiment['token_values_gold'] = combined_sentiment['token_values_gold'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length_gold)
