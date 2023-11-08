@@ -325,6 +325,17 @@ def get_or_initialize_model(model_id, input_size, hidden_size, num_layers, outpu
 
     return model
 
+
+def ensure_correct_length(x, max_length):
+    # Ensure x is a list
+    if not isinstance(x, list):
+        x = list(x)
+    # Truncate if x is longer than the max_length
+    x = x[:max_length]
+    # Pad x if it's shorter than the max_length
+    x += [-1] * (max_length - len(x))
+    return x
+
 def process_data(batch_size):
     historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
 
@@ -342,6 +353,34 @@ def process_data(batch_size):
 
     if not correct_length_gold or not correct_length_usd:
         raise ValueError("Not all token_values lists have the correct length after padding.")
+    
+
+
+    
+    # Right after the aggregation
+    max_length_observed_gold = sentiment_gold['token_values'].str.len().max()
+    max_length_observed_usd = sentiment_usd['token_values'].str.len().max()
+
+    print(f"Max length observed for gold: {max_length_observed_gold}")
+    print(f"Max length observed for USD: {max_length_observed_usd}")
+
+    if max_length_observed_gold > max_length_gold or max_length_observed_usd > max_length_usd:
+        print("Observed token_values lists longer than expected maximum lengths.")
+        # Optionally, raise an error to halt the process and inspect the data
+        # raise ValueError("token_values lists longer than expected maximum lengths found.")
+
+    # Before padding, add a check for any lists that are already longer than the max_length
+    over_length_gold = sentiment_gold[sentiment_gold['token_values'].str.len() > max_length_gold]
+    over_length_usd = sentiment_usd[sentiment_usd['token_values'].str.len() > max_length_usd]
+
+    if not over_length_gold.empty or not over_length_usd.empty:
+        print("Found token_values lists longer than the maximum length before padding:")
+        print(over_length_gold)
+        print(over_length_usd)
+        # Again, you can raise an error here to inspect the problematic rows
+        # raise ValueError("Found token_values lists longer than the maximum length before padding.")
+
+
 
 
     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
