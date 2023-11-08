@@ -377,7 +377,7 @@ def process_data(batch_size):
         label_dataloader = DataLoader(label_data, batch_size=batch_size, shuffle=False)
 
         latest_feature_slice = input_data.tail(1)  # or label_data.tail(1) depending on your need
-        latest_label_slice = input_data.tail(1)  # or label_data.tail(1) depending on your need
+        latest_label_slice = label_data.tail(1)  # or label_data.tail(1) depending on your need
         break
 
     # Return the latest slice if needed, or any other information relevant after processing all batches
