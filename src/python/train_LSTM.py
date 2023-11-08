@@ -174,14 +174,7 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         input_data = batch_with_features[input_columns]
         label_data = batch_with_features[label_columns]
 
-        # Assuming `input_data` is your DataFrame and 'array_column' is the name of the column containing arrays
-        if any(input_data['array_column'].apply(lambda x: len(x) if isinstance(x, list) else 0).unique() > 1):
-            raise ValueError("Arrays in 'array_column' are not of the same length.")
-
         # Proceed to tensor conversion if no error is raised
-        input_data_tensor = torch.tensor(input_data.values.astype(np.float32))
-
-
         input_data_tensor = torch.tensor(input_data.values.astype(np.float32))
         label_data_tensor = torch.tensor(label_data.values.astype(np.float32))
 
@@ -325,6 +318,12 @@ def get_or_initialize_model(model_id, input_size, hidden_size, num_layers, outpu
 
     return model
 
+def adjust_token_values_length(token_values, max_length):
+    if len(token_values) > max_length:
+        return token_values[:max_length]  # Truncate the list if it's too long
+    else:
+        return token_values + [-1] * (max_length - len(token_values))  # Pad the list if it's too short
+
 
 def process_data(batch_size):
     historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
@@ -336,19 +335,13 @@ def process_data(batch_size):
     max_length_gold = 100
     max_length_usd = 100
 
-    # Function to truncate or pad the token_values lists
-    def adjust_token_values_length(token_values, max_length):
-        if len(token_values) > max_length:
-            return token_values[:max_length]  # Truncate the list if it's too long
-        else:
-            return token_values + [-1] * (max_length - len(token_values))  # Pad the list if it's too short
-
     # Applying the adjustment to the sentiment dataframes
     sentiment_gold['token_values'] = sentiment_gold['token_values'].apply(
         lambda x: adjust_token_values_length(x, max_length_gold))
 
     sentiment_usd['token_values'] = sentiment_usd['token_values'].apply(
         lambda x: adjust_token_values_length(x, max_length_usd))
+
 
 
     # Right after the aggregation
