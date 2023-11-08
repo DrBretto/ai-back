@@ -246,9 +246,19 @@ def train_model(model, input_dataloader, label_dataloader, criterion, optimizer,
     model.train()
     for epoch in range(num_epochs):
         for input_batch, label_batch in zip(input_dataloader, label_dataloader):
-            # Convert batches to tensors
-            input_tensor = torch.tensor(input_batch.values).float()
-            label_tensor = torch.tensor(label_batch.values).float()
+
+            token_values_gold_tensor = [torch.tensor(t, dtype=torch.float32) for t in input_batch['token_values_gold']]
+            token_values_usd_tensor = [torch.tensor(t, dtype=torch.float32) for t in input_batch['token_values_usd']]
+
+            # Now drop the token columns from the original batch to handle the rest
+            non_token_data = input_batch.drop(columns=['token_values_gold', 'token_values_usd'])
+            non_token_tensor = torch.tensor(non_token_data.values, dtype=torch.float32)
+
+            # Combine the non-token and token tensors
+            input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
+
+            # Convert the label batch to tensor
+            label_tensor = torch.tensor(label_batch.values, dtype=torch.float32)
 
             # Forward pass
             outputs = model(input_tensor)
@@ -259,7 +269,7 @@ def train_model(model, input_dataloader, label_dataloader, criterion, optimizer,
             loss.backward()
             optimizer.step()
 
-        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
+            print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
 def save_model_parameters(model, db_config):
     # Serialize model state to a byte stream
@@ -366,9 +376,6 @@ def process_data(batch_size):
         print(over_length_usd)
         # Again, you can raise an error here to inspect the problematic rows
         # raise ValueError("Found token_values lists longer than the maximum length before padding.")
-
-
-
 
     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
     combined_sentiment['token_values_gold'] = combined_sentiment['token_values_gold'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length_gold)
