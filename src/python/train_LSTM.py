@@ -14,6 +14,7 @@ import json
 import holidays
 import torch
 import torch.nn as nn
+import io 
 
 # Define the window and intervals outside of the function
 _lagwindow = 30
@@ -38,9 +39,9 @@ class FinancialLSTM(nn.Module):
     
     def forward(self, x):
         # Initialize hidden state with zeros
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
         # Initialize cell state
-        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
         
         # Forward propagate LSTM
         out, _ = self.lstm(x, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size)
@@ -48,6 +49,7 @@ class FinancialLSTM(nn.Module):
         # Decode the hidden state of the last time step
         out = self.fc(out[:, -1, :])
         return out
+
 
 class OverlappingWindowDataset(Dataset):
     def __init__(self, data, lagwindow):
@@ -291,52 +293,106 @@ def process_data(batch_size):
 
     print("final_combined_data shape:", final_combined_data.shape)
 
+    #input_size = 1# (your manually determined input size)
+    #output_size = 1# (your manually determined output size)
+    #model = get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size)
+    #criterion = nn.MSELoss()
+    #optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    #model_initialized = True
+
+
+
     for input_data, label_data in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
 
         input_dataloader = DataLoader(input_data, batch_size=batch_size, shuffle=False)
         label_dataloader = DataLoader(label_data, batch_size=batch_size, shuffle=False)
 
-        # You could train your model on each batch here, or validate, etc.
-        # model.train(input_dataloader, label_dataloader)
-
-        # If you want to keep the last slice of data for something else
         latest_feature_slice = input_data.tail(1)  # or label_data.tail(1) depending on your need
         latest_label_slice = input_data.tail(1)  # or label_data.tail(1) depending on your need
-
-        
 
     # Return the latest slice if needed, or any other information relevant after processing all batches
     return latest_feature_slice, latest_label_slice
 
-def train_model(dataloader, model, criterion, optimizer, num_epochs):
+def train_model(model, input_dataloader, label_dataloader, criterion, optimizer, num_epochs):
+    model.train()
     for epoch in range(num_epochs):
-        for input_batch, label_batch in dataloader:
-            # Forward pass: Compute predicted y by passing x to the model
-            output_batch = model(input_batch)
-            
-            # Compute loss
-            loss = criterion(output_batch, label_batch)
-            
-            # Zero gradients, perform a backward pass, and update the weights.
+        for input_batch, label_batch in zip(input_dataloader, label_dataloader):
+            input_batch, label_batch = input_batch, label_batch
+            # Forward pass
+            outputs = model(input_batch)
+            loss = criterion(outputs, label_batch)
+            # Backward and optimize
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            
-        print(f'Epoch {epoch}, Loss: {loss.item()}')
+        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
-# In your main block
+
+def save_model_parameters(model, db_config):
+    # Serialize model state to a byte stream
+    byte_stream = io.BytesIO()
+    torch.save(model.state_dict(), byte_stream)
+    byte_stream.seek(0)
+    
+    with psycopg2.connect(**db_config) as conn:
+        with conn.cursor() as cursor:
+            # Save the byte stream as binary data in the database
+            cursor.execute('INSERT INTO model_parameters (parameters) VALUES (%s)', (byte_stream.getvalue(),))
+            conn.commit()
+
+def load_model_parameters(model_id, model, db_config):
+    with psycopg2.connect(**db_config) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT parameters FROM model_parameters WHERE id = %s', (model_id,))
+            result = cursor.fetchone()
+            if result:
+                byte_stream = io.BytesIO(result[0])
+                byte_stream.seek(0)
+                # Deserialize state dict and load into model
+                model.load_state_dict(torch.load(byte_stream, map_location=torch.device('cpu')))
+            else:
+                raise ValueError('No model parameters found in the database for the provided model_id.')
+
+def get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size):
+    # Database configuration from environment variables
+    db_config = {
+        'dbname': os.environ['DB_NAME'],
+        'user': os.environ['DB_USER'],
+        'password': os.environ['DB_PASSWORD'],
+        'host': os.environ['DB_HOST']
+    }
+
+    model = FinancialLSTM(input_size, hidden_size, num_layers, output_size)
+    if model_id is not None:
+        try:
+            with psycopg2.connect(**db_config) as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute("SELECT parameters FROM model_parameters WHERE id = %s", (model_id,))
+                    result = cursor.fetchone()
+                    if result is not None:
+                        byte_stream = io.BytesIO(result[0])
+                        byte_stream.seek(0)
+                        # Deserialize state dict and load into model
+                        model.load_state_dict(torch.load(byte_stream, map_location=torch.device('cpu')))
+                        print(f"Model parameters loaded for model_id: {model_id}")
+                    else:
+                        print("No existing model parameters found. Initializing new model.")
+        except Exception as e:
+            print(f"Error accessing the database: {e}")
+            # Handle error accordingly. You may want to re-raise the error or handle it in some way.
+    else:
+        print("No model_id provided. Initializing new model.")
+
+    return model
+
+
+
 if __name__ == '__main__':
     batch_size = 256
     latest_feature_slice, latest_label_slice = process_data(batch_size)
     
-    for index, row in latest_feature_slice.iterrows():
-        formatted_row = f"Index {index}:\n" + "\n".join(
-            f"{col}: {row[col]}" for col in latest_feature_slice.columns
-        )
-        sys.stdout.write(formatted_row + "\n\n")
+    # Print the shape of the latest feature slice
+    print(f"Latest Feature Slice Shape: {latest_feature_slice.shape}")
 
-    for index, row in latest_label_slice.iterrows():
-        formatted_row = f"Index {index}:\n" + "\n".join(
-            f"{col}: {row[col]}" for col in latest_label_slice.columns
-        )
-        sys.stdout.write(formatted_row + "\n\n")
+    # Print the shape of the latest label slice
+    print(f"Latest Label Slice Shape: {latest_label_slice.shape}")
