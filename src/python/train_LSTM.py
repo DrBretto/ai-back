@@ -219,6 +219,8 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
 
         
         label_tensor = torch.tensor(label_data.values, dtype=torch.float32)
+        input_tensor = torch.tensor(input_data.values, dtype=torch.float32)
+
         print(f"Shape of label_tensor: {label_tensor.shape}, dtype: {label_tensor.dtype}")
 
         print(f"Input tensor shape: {input_tensor.shape}, dtype: {input_tensor.dtype}")
