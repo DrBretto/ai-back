@@ -21,7 +21,6 @@ _lagwindow = 30
 _defaultIntervals = [1, 15, 60, 1440]
 _future_window = 96
 _future_interval = 15
-
 us_holidays = holidays.US()
 
 
@@ -166,7 +165,7 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
             continue 
 
-        # Dynamically determine label columns and use the rest as features
+# Dynamically determine label columns and use the rest as features
         label_columns = [col for col in batch_with_features.columns if 'future_' in col]
         input_columns = [col for col in batch_with_features.columns if col not in label_columns]
 
@@ -174,11 +173,30 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         input_data = batch_with_features[input_columns]
         label_data = batch_with_features[label_columns]
 
-        # Proceed to tensor conversion if no error is raised
-        input_data_tensor = torch.tensor(input_data.values.astype(np.float32))
-        label_data_tensor = torch.tensor(label_data.values.astype(np.float32))
+        # Extract columns with tokenized data
+        token_values_gold = input_data['token_values_gold'].tolist()
+        token_values_usd = input_data['token_values_usd'].tolist()
 
-        yield (input_data_tensor, label_data_tensor)
+        # Drop the token columns from the original batch to handle the rest
+        non_token_data = input_data.drop(columns=['token_values_gold', 'token_values_usd'])
+
+        # Process non-token data
+        non_token_tensor = torch.tensor(non_token_data.values, dtype=torch.float32)
+
+        # Process tokenized data
+        token_values_gold_tensors = [torch.tensor(t, dtype=torch.float32) for t in token_values_gold]
+        token_values_usd_tensors = [torch.tensor(t, dtype=torch.float32) for t in token_values_usd]
+
+        token_values_gold_tensor = torch.stack(token_values_gold_tensors)
+        token_values_usd_tensor = torch.stack(token_values_usd_tensors)
+
+        # Combine all tensors
+        input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
+
+        # Convert label data to tensor
+        label_tensor = torch.tensor(label_data.values, dtype=torch.float32)
+
+        yield (input_tensor, label_tensor)
 
 def add_time_features(df):
     # Add basic time features
@@ -242,28 +260,10 @@ def prepare_dataloaders(stock_data_with_sentiment, lagwindow, batch_size):
 
     return dataloader
 
-def train_model(model, input_dataloader, label_dataloader, criterion, optimizer, num_epochs):
+def train_model(model, input_data_tensor, label_data_tensor, criterion, optimizer, num_epochs):
     model.train()
     for epoch in range(num_epochs):
-        for (input_batch,), (label_batch,) in zip(input_dataloader, label_dataloader):
-
-            # Log the values you're about to convert
-            print("token_values_gold:", input_batch['token_values_gold'])
-            print("token_values_usd:", input_batch['token_values_usd'])
-
-            try:
-                token_values_gold_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in input_batch['token_values_gold']])
-                token_values_usd_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in input_batch['token_values_usd']])
-            except TypeError as e:
-                print("Error when converting to tensor:", e)
-                print("token_values_gold:", input_batch['token_values_gold'])
-                print("token_values_usd:", input_batch['token_values_usd'])
-                continue  # Skip this batch
-            
-            non_token_data = input_batch.drop(columns=['token_values_gold', 'token_values_usd'])
-            non_token_tensor = torch.tensor(non_token_data.values, dtype=torch.float32)
-            input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
-            label_tensor = torch.tensor(label_batch.values, dtype=torch.float32)
+        for input_tensor, label_tensor in zip(input_data_tensor, label_data_tensor):
 
             outputs = model(input_tensor)
             loss = criterion(outputs, label_tensor)
@@ -337,7 +337,6 @@ def adjust_token_values_length(token_values, max_length):
         return token_values[:max_length]  # Truncate the list if it's too long
     else:
         return token_values + [-1] * (max_length - len(token_values))  # Pad the list if it's too short
-
 
 def process_data(batch_size):
     historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
