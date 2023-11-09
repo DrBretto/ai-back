@@ -34,19 +34,14 @@ class FinancialLSTM(nn.Module):
         self.fc = nn.Linear(hidden_size, output_size)
     
     def forward(self, input_data):
-        print(f"Before unsqueeze - Input data stats: Min: {input_data.min()}, Max: {input_data.max()}, Mean: {input_data.mean()}, NaN count: {torch.isnan(input_data).sum()}")
-
+        
         if input_data.dim() == 2:
             input_data = input_data.unsqueeze(0)  
-
-        print(f"After unsqueeze - Input data stats: Min: {input_data.min()}, Max: {input_data.max()}, Mean: {input_data.mean()}, NaN count: {torch.isnan(input_data).sum()}")
 
         h0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
         c0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
         out, _ = self.lstm(input_data, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size)
         out = self.fc(out[:, -1, :])
-
-        print(f"Output stats: Min: {out.min()}, Max: {out.max()}, Mean: {out.mean()}, NaN count: {torch.isnan(out).sum()}")
 
         return out
 class OverlappingWindowDataset(Dataset):
@@ -251,24 +246,6 @@ def train_model(model, input_data_tensor, label_data_tensor, criterion, optimize
         # Forward pass
         outputs = model(input_data_tensor)
         loss = criterion(outputs, label_data_tensor)
-        
-        # Logging
-        if not torch.isfinite(loss):
-            print(f'Invalid loss in epoch {epoch}. Loss: {loss}')
-            print('Model outputs:', outputs)
-            print('Input data tensor stats:', 
-                  f'Min: {input_data_tensor.min()}',
-                  f'Max: {input_data_tensor.max()}',
-                  f'Mean: {input_data_tensor.mean()}')
-            print('Label data tensor stats:', 
-                  f'Min: {label_data_tensor.min()}',
-                  f'Max: {label_data_tensor.max()}',
-                  f'Mean: {label_data_tensor.mean()}')
-            for name, param in model.named_parameters():
-                if param.requires_grad:
-                    if not torch.isfinite(param.grad).all():
-                        print(f'Parameter {name} has NaN gradient.')
-            return  # Exit if loss is not finite
         
         # Backward pass and optimization
         loss.backward()
