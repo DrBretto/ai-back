@@ -305,6 +305,10 @@ def train_model(model, input_data_tensor, label_data_tensor, criterion, optimize
     for epoch in range(num_epochs):
         for input_tensor, label_tensor in zip(input_data_tensor, label_data_tensor):
 
+
+            print(f"Input tensor dtype (train): {input_tensor.dtype}")
+            print(f"Label tensor dtype (train): {label_tensor.dtype}")
+
             outputs = model(input_tensor)
             loss = criterion(outputs, label_tensor)
 
