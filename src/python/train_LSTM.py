@@ -428,7 +428,7 @@ def process_data(batch_size):
 
     print("final_combined_data shape:", final_combined_data.shape)
 
-    input_size = 1044
+    input_size = 1102
     output_size = 192
     hidden_size = 50  
     num_layers = 2  
