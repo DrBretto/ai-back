@@ -36,6 +36,10 @@ class FinancialLSTM(nn.Module):
         self.fc = nn.Linear(hidden_size, output_size)
     
     def forward(self, input_data):
+                # Adding a batch dimension to input_data if it's missing
+        if input_data.dim() == 2:
+            input_data = input_data.unsqueeze(0)  # Add a batch dimension at the 0th position
+
         # Check if input_data is a list and convert elements of the list to tensors
         print(f"Input tensor shape forward: {input_data.shape}")
         print(f"Input tensor dtype forward: {input_data.dtype}")
@@ -43,7 +47,7 @@ class FinancialLSTM(nn.Module):
         # Initialize hidden state with zeros
         h0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
         c0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
-        
+
 
         # Log the shapes of input tensors
         print(f"Input tensor shape: {input_data.shape}")
