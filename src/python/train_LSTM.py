@@ -305,9 +305,6 @@ def train_model(model, input_data_tensor, label_data_tensor, criterion, optimize
     for epoch in range(num_epochs):
         for input_tensor, label_tensor in zip(input_data_tensor, label_data_tensor):
 
-            print(f'Input tensor shape: , dtype: {input_tensor.dtype}')
-            print(f'Label tensor shape: , dtype: {label_tensor.dtype}')
-
             outputs = model(input_tensor)
             loss = criterion(outputs, label_tensor)
 
@@ -480,10 +477,7 @@ def process_data(batch_size):
         input_dataloader = DataLoader(input_dataset, batch_size=batch_size, shuffle=False)
         label_dataloader = DataLoader(label_dataset, batch_size=batch_size, shuffle=False)
 
-        print(f'Input tensor shape:  dtype: {input_tensor.dtype}')
-        print(f'Label tensor shape:  dtype: {label_tensor.dtype}')
-        
-        train_model(model, input_tensor, label_tensor, criterion, optimizer, num_epochs=10)
+        train_model(model, input_dataloader, label_dataloader, criterion, optimizer, num_epochs=10)
 
     return model
 
