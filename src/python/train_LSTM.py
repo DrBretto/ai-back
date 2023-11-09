@@ -438,6 +438,9 @@ def process_data(batch_size):
     final_combined_data.drop(columns=['date_published'], inplace=True)  # Drop duplicate date column
     final_combined_data.reset_index(drop=True, inplace=True)
 
+    final_combined_data.fillna(method='ffill', inplace=True)
+    final_combined_data.fillna(method='bfill', inplace=True)
+
     if final_combined_data.empty:
         sys.stderr.write("Error: Final combined data is empty.\n")
         return pd.DataFrame()
