@@ -216,7 +216,7 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
 
         # Combine all tensors
         input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
-        input_tensor = torch.tensor(input_tensor, dtype=torch.float32)
+        print(f"Input tensor type: {type(input_tensor)}")
 
         label_tensor = torch.tensor(label_data.values, dtype=torch.float32)
 
