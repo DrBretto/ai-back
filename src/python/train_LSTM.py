@@ -303,20 +303,14 @@ def prepare_dataloaders(stock_data_with_sentiment, lagwindow, batch_size):
 def train_model(model, input_data_tensor, label_data_tensor, criterion, optimizer, num_epochs):
     model.train()
     for epoch in range(num_epochs):
-        for input_tensor, label_tensor in zip(input_data_tensor, label_data_tensor):
+        outputs = model(input_data_tensor)
+        loss = criterion(outputs, label_data_tensor)
 
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
-            print(f"Input tensor dtype (train): {input_tensor.dtype}")
-            print(f"Label tensor dtype (train): {label_tensor.dtype}")
-
-            outputs = model(input_tensor)
-            loss = criterion(outputs, label_tensor)
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
+        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
 def save_model_parameters(model, db_config):
     # Serialize model state to a byte stream
