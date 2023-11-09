@@ -24,6 +24,7 @@ module.exports = (app) => {
   });
 
   cron.schedule('0 */3 * * *', () => {
+    const db = app.get('db');
     //Daily Sentiment Scheduler
     console.log(
       'Running sentiment analysis for gold and dollar at:',
