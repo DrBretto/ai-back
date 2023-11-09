@@ -463,13 +463,13 @@ def process_data(batch_size):
     # Train in batches using DataLoader
     for input_tensor, label_tensor in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
         
-        input_dataset = TensorDataset(input_tensor)
-        label_dataset = TensorDataset(label_tensor)
+        # input_dataset = TensorDataset(input_tensor)
+        # label_dataset = TensorDataset(label_tensor)
             
-        input_dataloader = DataLoader(input_dataset, batch_size=batch_size, shuffle=False)
-        label_dataloader = DataLoader(label_dataset, batch_size=batch_size, shuffle=False)
+        # input_dataloader = DataLoader(input_dataset, batch_size=batch_size, shuffle=False)
+        # label_dataloader = DataLoader(label_dataset, batch_size=batch_size, shuffle=False)
 
-        train_model(model, input_dataloader, label_dataloader, criterion, optimizer, num_epochs=10)
+        train_model(model, input_tensor, label_tensor, criterion, optimizer, num_epochs=10)
 
     return model
 
