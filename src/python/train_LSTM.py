@@ -201,11 +201,19 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         token_values_gold = input_data['token_values_gold'].tolist()
         token_values_usd = input_data['token_values_usd'].tolist()
 
+        # Log the dtype of token_values_gold and token_values_usd
+        print(f"Dtype of token_values_gold: {type(token_values_gold[0])}")
+        print(f"Dtype of token_values_usd: {type(token_values_usd[0])}")
+
+
         # Drop the token columns from the original batch to handle the rest
         non_token_data = input_data.drop(columns=['token_values_gold', 'token_values_usd'])
 
         # Process non-token data
         non_token_tensor = torch.tensor(non_token_data.values, dtype=torch.float32)
+
+        # Log the dtype of non_token_tensor
+        print(f"Dtype of non_token_tensor: {non_token_tensor.dtype}")
 
         # Process tokenized data
         token_values_gold_tensors = [torch.tensor(t, dtype=torch.float32) for t in token_values_gold]
@@ -214,14 +222,18 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         token_values_gold_tensor = torch.stack(token_values_gold_tensors)
         token_values_usd_tensor = torch.stack(token_values_usd_tensors)
 
+        # Log the dtype of token_values_gold_tensor and token_values_usd_tensor
+        print(f"Dtype of token_values_gold_tensor: {token_values_gold_tensor.dtype}")
+        print(f"Dtype of token_values_usd_tensor: {token_values_usd_tensor.dtype}")
+
         # Combine all tensors
         input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
-        print(f"Input tensor type: {type(input_tensor)}")
+        # Log the dtype of input_tensor
+        print(f"Dtype of input_tensor: {input_tensor.dtype}")
 
         label_tensor = torch.tensor(label_data.values, dtype=torch.float32)
 
         print(f"Shape of label_tensor: {label_tensor.shape}, dtype: {label_tensor.dtype}")
-
         print(f"Input tensor shape: {input_tensor.shape}, dtype: {input_tensor.dtype}")
 
         yield (input_tensor, label_tensor)
