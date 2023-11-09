@@ -38,10 +38,14 @@ class FinancialLSTM(nn.Module):
     def forward(self, x):
         # Check if x is a list
         if isinstance(x, list):
-            # If it's a list, convert it to a tensor
+            # If it's a list, convert each element to a tensor
+            x = [torch.tensor(item, dtype=torch.float32) for item in x]
+            # Stack the tensors along a new dimension (batch dimension)
+            x = torch.stack(x, dim=0)
+        else:
+            # If x is not a list, convert it to a tensor
             x = torch.tensor(x, dtype=torch.float32)
         
-        print("Input tensor shape:", x.shape)
         # Initialize hidden state with zeros
         h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
         # Initialize cell state
@@ -49,11 +53,11 @@ class FinancialLSTM(nn.Module):
         
         # Forward propagate LSTM
         out, _ = self.lstm(x, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size)
-        print("Output tensor shape after LSTM:", out.shape)
+        
         # Decode the hidden state of the last time step
         out = self.fc(out[:, -1, :])
-        print("Final output tensor shape:", out.shape)
         return out
+
 
 
 class OverlappingWindowDataset(Dataset):
