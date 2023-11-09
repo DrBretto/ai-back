@@ -29,47 +29,21 @@ class FinancialLSTM(nn.Module):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         
-        # LSTM layer
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
         
-        # Fully connected layer
         self.fc = nn.Linear(hidden_size, output_size)
     
     def forward(self, input_data):
-                # Adding a batch dimension to input_data if it's missing
+
         if input_data.dim() == 2:
-            input_data = input_data.unsqueeze(0)  # Add a batch dimension at the 0th position
+            input_data = input_data.unsqueeze(0)  
 
-        # Check if input_data is a list and convert elements of the list to tensors
-        print(f"Input tensor shape forward: {input_data.shape}")
-        print(f"Input tensor dtype forward: {input_data.dtype}")
-
-        # Initialize hidden state with zeros
         h0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
         c0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
-
-
-        # Log the shapes of input tensors
-        print(f"Input tensor shape: {input_data.shape}")
-        print(f"Input tensor dtype: {input_data.dtype}")
-
-        # Forward propagate LSTM
         out, _ = self.lstm(input_data, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size)
-
-        # Log the shape of the LSTM output
-        print(f"LSTM output shape: {out.shape}")
-
-        # Decode the hidden state of the last time step
         out = self.fc(out[:, -1, :])
 
-        # Log the shape of the final output
-        print(f"Final output shape: {out.shape}")
-
         return out
-
-
-
-
 class OverlappingWindowDataset(Dataset):
     def __init__(self, data, lagwindow):
         self.data = data
@@ -187,52 +161,20 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
             continue 
 
-        # Dynamically determine label columns and use the rest as features
         label_columns = [col for col in batch_with_features.columns if 'future_' in col]
         input_columns = [col for col in batch_with_features.columns if col not in label_columns]
-
-        # Now split the batch into input and label data
         input_data = batch_with_features[input_columns]
         label_data = batch_with_features[label_columns]
-
-        # Extract columns with tokenized data
         token_values_gold = input_data['token_values_gold'].tolist()
         token_values_usd = input_data['token_values_usd'].tolist()
-
-        # Log the dtype of token_values_gold and token_values_usd
-        print(f"Dtype of token_values_gold: {type(token_values_gold[0])}")
-        print(f"Dtype of token_values_usd: {type(token_values_usd[0])}")
-
-
-        # Drop the token columns from the original batch to handle the rest
         non_token_data = input_data.drop(columns=['token_values_gold', 'token_values_usd'])
-
-        # Process non-token data
         non_token_tensor = torch.tensor(non_token_data.values, dtype=torch.float32)
-
-        # Log the dtype of non_token_tensor
-        print(f"Dtype of non_token_tensor: {non_token_tensor.dtype}")
-
-        # Process tokenized data
         token_values_gold_tensors = [torch.tensor(t, dtype=torch.float32) for t in token_values_gold]
         token_values_usd_tensors = [torch.tensor(t, dtype=torch.float32) for t in token_values_usd]
-
         token_values_gold_tensor = torch.stack(token_values_gold_tensors)
         token_values_usd_tensor = torch.stack(token_values_usd_tensors)
-
-        # Log the dtype of token_values_gold_tensor and token_values_usd_tensor
-        print(f"Dtype of token_values_gold_tensor: {token_values_gold_tensor.dtype}")
-        print(f"Dtype of token_values_usd_tensor: {token_values_usd_tensor.dtype}")
-
-        # Combine all tensors
         input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
-        # Log the dtype of input_tensor
-        print(f"Dtype of input_tensor: {input_tensor.dtype}")
-
         label_tensor = torch.tensor(label_data.values, dtype=torch.float32)
-
-        print(f"Shape of label_tensor: {label_tensor.shape}, dtype: {label_tensor.dtype}")
-        print(f"Input tensor shape: {input_tensor.shape}, dtype: {input_tensor.dtype}")
 
         yield (input_tensor, label_tensor)
 
@@ -301,14 +243,36 @@ def prepare_dataloaders(stock_data_with_sentiment, lagwindow, batch_size):
 def train_model(model, input_data_tensor, label_data_tensor, criterion, optimizer, num_epochs):
     model.train()
     for epoch in range(num_epochs):
+        optimizer.zero_grad()
+        
+        # Forward pass
         outputs = model(input_data_tensor)
         loss = criterion(outputs, label_data_tensor)
-
-        optimizer.zero_grad()
+        
+        # Logging
+        if not torch.isfinite(loss):
+            print(f'Invalid loss in epoch {epoch}. Loss: {loss}')
+            print('Model outputs:', outputs)
+            print('Input data tensor stats:', 
+                  f'Min: {input_data_tensor.min()}',
+                  f'Max: {input_data_tensor.max()}',
+                  f'Mean: {input_data_tensor.mean()}')
+            print('Label data tensor stats:', 
+                  f'Min: {label_data_tensor.min()}',
+                  f'Max: {label_data_tensor.max()}',
+                  f'Mean: {label_data_tensor.mean()}')
+            for name, param in model.named_parameters():
+                if param.requires_grad:
+                    if not torch.isfinite(param.grad).all():
+                        print(f'Parameter {name} has NaN gradient.')
+            return  # Exit if loss is not finite
+        
+        # Backward pass and optimization
         loss.backward()
         optimizer.step()
-
+        
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
+
 
 def save_model_parameters(model, db_config):
     # Serialize model state to a byte stream
@@ -383,28 +347,18 @@ def process_data(batch_size):
     max_length_gold = 100
     max_length_usd = 100
 
-    # Applying the adjustment to the sentiment dataframes
     sentiment_gold['token_values'] = sentiment_gold['token_values'].apply(
         lambda x: adjust_token_values_length(x, max_length_gold))
 
     sentiment_usd['token_values'] = sentiment_usd['token_values'].apply(
         lambda x: adjust_token_values_length(x, max_length_usd))
 
-
-
-    # Right after the aggregation
     max_length_observed_gold = sentiment_gold['token_values'].str.len().max()
     max_length_observed_usd = sentiment_usd['token_values'].str.len().max()
 
-    print(f"Max length observed for gold: {max_length_observed_gold}")
-    print(f"Max length observed for USD: {max_length_observed_usd}")
-
     if max_length_observed_gold > max_length_gold or max_length_observed_usd > max_length_usd:
         print("Observed token_values lists longer than expected maximum lengths.")
-        # Optionally, raise an error to halt the process and inspect the data
-        # raise ValueError("token_values lists longer than expected maximum lengths found.")
 
-    # Before padding, add a check for any lists that are already longer than the max_length
     over_length_gold = sentiment_gold[sentiment_gold['token_values'].str.len() > max_length_gold]
     over_length_usd = sentiment_usd[sentiment_usd['token_values'].str.len() > max_length_usd]
 
@@ -412,25 +366,19 @@ def process_data(batch_size):
         print("Found token_values lists longer than the maximum length before padding:")
         print(over_length_gold)
         print(over_length_usd)
-        # Again, you can raise an error here to inspect the problematic rows
-        # raise ValueError("Found token_values lists longer than the maximum length before padding.")
 
     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
     combined_sentiment['token_values_gold'] = combined_sentiment['token_values_gold'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length_gold)
     combined_sentiment['token_values_usd'] = combined_sentiment['token_values_usd'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length_usd)
-
     combined_sentiment.drop(['subject_id_gold', 'subject_id_usd'], axis=1, inplace=True)
     combined_sentiment.fillna(method='ffill', inplace=True)
     combined_sentiment.fillna(method='bfill', inplace=True)
 
-    # Combine JDST and NUGT data
     combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
     combined_stocks.drop(['id_jdst', 'stock_id_jdst', 'id_nugt', 'stock_id_nugt'], axis=1, inplace=True)
-
     combined_stocks.sort_values('date_time', inplace=True)
     combined_sentiment.sort_values('date_published', inplace=True)
 
-    # Merge using merge_asof
     final_combined_data = pd.merge_asof(
     combined_stocks,
     combined_sentiment,
@@ -452,8 +400,6 @@ def process_data(batch_size):
     jdst_min, jdst_max = calculate_min_max(final_combined_data[jdst_columns])
     nugt_min, nugt_max = calculate_min_max(final_combined_data[nugt_columns])
 
-    print("final_combined_data shape:", final_combined_data.shape)
-
     input_size = 1102
     output_size = 192
     hidden_size = 1000  
@@ -464,7 +410,6 @@ def process_data(batch_size):
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    # Train in batches using DataLoader
     for input_tensor, label_tensor in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
         train_model(model, input_tensor, label_tensor, criterion, optimizer, num_epochs=10)
 
