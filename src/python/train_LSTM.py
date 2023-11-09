@@ -171,7 +171,7 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
             continue 
 
-# Dynamically determine label columns and use the rest as features
+        # Dynamically determine label columns and use the rest as features
         label_columns = [col for col in batch_with_features.columns if 'future_' in col]
         input_columns = [col for col in batch_with_features.columns if col not in label_columns]
 
@@ -201,6 +201,9 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
 
         # Convert label data to tensor
         label_tensor = torch.tensor(label_data.values, dtype=torch.float32)
+
+        print(f"Input tensor shape: {input_tensor.shape}")
+        print(f"Label tensor shape: {label_tensor.shape}")
 
         yield (input_tensor, label_tensor)
 
