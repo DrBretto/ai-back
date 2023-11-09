@@ -217,9 +217,11 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         # Combine all tensors
         input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
 
-        # Convert label data to tensor
+        print(f"Shape of label_data before conversion: {label_data.shape}, dtype: {label_data.dtype}")
         label_tensor = torch.tensor(label_data.values, dtype=torch.float32)
- 
+        print(f"Shape of label_tensor: {label_tensor.shape}, dtype: {label_tensor.dtype}")
+
+        print(f"Input tensor shape: {input_tensor.shape}, dtype: {input_tensor.dtype}")
 
         yield (input_tensor, label_tensor)
 
@@ -464,6 +466,10 @@ def process_data(batch_size):
             
         input_dataloader = DataLoader(input_dataset, batch_size=batch_size, shuffle=False)
         label_dataloader = DataLoader(label_dataset, batch_size=batch_size, shuffle=False)
+
+        print(f'Input tensor shape: {input_tensor.shape}, dtype: {input_tensor.dtype}')
+        print(f'Label tensor shape: {label_tensor.shape}, dtype: {label_tensor.dtype}')
+    
         
         train_model(model, input_dataloader, label_dataloader, criterion, optimizer, num_epochs=10)
 
