@@ -38,25 +38,28 @@ class FinancialLSTM(nn.Module):
     def forward(self, x):
         # Check if x is a list
         if isinstance(x, list):
-            # If it's a list, convert each element to a tensor
-            x = [torch.tensor(item, dtype=torch.float32) for item in x]
-            # Stack the tensors along a new dimension (batch dimension)
+            # Convert elements of the list to tensors
+            x = [torch.tensor(item, dtype=torch.float32) if isinstance(item, list) else item for item in x]
+        elif not isinstance(x, torch.Tensor):
+            # If x is neither a list nor a tensor, raise an error
+            raise ValueError("Input x must be either a tensor or a list of tensors.")
+
+        # If there are any tensors within the list, stack them along a new dimension (batch dimension)
+        if any(isinstance(item, torch.Tensor) for item in x):
             x = torch.stack(x, dim=0)
-        else:
-            # If x is not a list, convert it to a tensor
-            x = torch.tensor(x, dtype=torch.float32)
-        
+
         # Initialize hidden state with zeros
         h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
         # Initialize cell state
         c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
-        
+
         # Forward propagate LSTM
         out, _ = self.lstm(x, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size)
-        
+
         # Decode the hidden state of the last time step
         out = self.fc(out[:, -1, :])
         return out
+
 
 
 
