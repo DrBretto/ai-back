@@ -35,7 +35,7 @@ class FinancialLSTM(nn.Module):
         # Fully connected layer
         self.fc = nn.Linear(hidden_size, output_size)
     
-    def forward(self, input_data, label_data):
+    def forward(self, input_data):
         # Check if input_data is a list and convert elements of the list to tensors
         if isinstance(input_data, list):
             input_data = [torch.tensor(item, dtype=torch.float32) if isinstance(item, list) else item for item in input_data]
