@@ -417,6 +417,15 @@ def process_data(batch_size):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     for input_tensor, label_tensor in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
+        print(f"Input tensor stats before train_model: Min: {input_tensor.min().item()}, Max: {input_tensor.max().item()}, Mean: {input_tensor.mean().item()}")
+        print(f"Label tensor stats before train_model: Min: {label_tensor.min().item()}, Max: {label_tensor.max().item()}, Mean: {label_tensor.mean().item()}")
+        
+        # Ensure the tensors are not empty and have no NaN values
+        assert input_tensor.nelement() > 0, "Input tensor is empty"
+        assert label_tensor.nelement() > 0, "Label tensor is empty"
+        assert torch.isfinite(input_tensor).all(), "Input tensor contains non-finite values (NaN or inf)"
+        assert torch.isfinite(label_tensor).all(), "Label tensor contains non-finite values (NaN or inf)"
+    
         train_model(model, input_tensor, label_tensor, criterion, optimizer, num_epochs=10)
 
     return model
