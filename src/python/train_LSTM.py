@@ -247,13 +247,24 @@ def train_model(model, input_dataloader, label_dataloader, criterion, optimizer,
     for epoch in range(num_epochs):
         for (input_batch,), (label_batch,) in zip(input_dataloader, label_dataloader):
 
-            token_values_gold_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in input_batch['token_values_gold']])
-            token_values_usd_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in input_batch['token_values_usd']])
+            # Log the values you're about to convert
+            print("token_values_gold:", input_batch['token_values_gold'])
+            print("token_values_usd:", input_batch['token_values_usd'])
+
+            try:
+                token_values_gold_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in input_batch['token_values_gold']])
+                token_values_usd_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in input_batch['token_values_usd']])
+            except TypeError as e:
+                print("Error when converting to tensor:", e)
+                print("token_values_gold:", input_batch['token_values_gold'])
+                print("token_values_usd:", input_batch['token_values_usd'])
+                continue  # Skip this batch
+            
             non_token_data = input_batch.drop(columns=['token_values_gold', 'token_values_usd'])
             non_token_tensor = torch.tensor(non_token_data.values, dtype=torch.float32)
             input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
             label_tensor = torch.tensor(label_batch.values, dtype=torch.float32)
-            
+
             outputs = model(input_tensor)
             loss = criterion(outputs, label_tensor)
 
