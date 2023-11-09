@@ -53,13 +53,23 @@ class FinancialLSTM(nn.Module):
         # Initialize cell state
         c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
 
+        # Log the shapes of input tensors
+        print(f"Input tensor shape: {x.shape}")
+        print(f"Input tensor dtype: {x.dtype}")
+
         # Forward propagate LSTM
         out, _ = self.lstm(x, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size)
 
+        # Log the shape of the LSTM output
+        print(f"LSTM output shape: {out.shape}")
+
         # Decode the hidden state of the last time step
         out = self.fc(out[:, -1, :])
-        return out
 
+        # Log the shape of the final output
+        print(f"Final output shape: {out.shape}")
+
+        return out
 
 
 
@@ -439,7 +449,7 @@ def process_data(batch_size):
 
     input_size = 1102
     output_size = 192
-    hidden_size = 50  
+    hidden_size = 1000  
     num_layers = 2  
     model_id=None
     
