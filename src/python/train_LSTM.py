@@ -167,16 +167,49 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
             continue 
 
+# After 'batch_with_features' is created
+        if batch_with_features.isnull().values.any():
+            nan_info = batch_with_features.isnull().sum()
+            sys.stderr.write(f"NaN values in 'batch_with_features':\n{nan_info}\n")
+
+# Log some statistics of 'batch_with_features'
+        stats_info = batch_with_features.describe().to_string()
+        sys.stderr.write(f"Statistics for 'batch_with_features':\n{stats_info}\n")
+
         label_columns = [col for col in batch_with_features.columns if 'future_' in col]
         input_columns = [col for col in batch_with_features.columns if col not in label_columns]
+
+# Log to check for NaN values in the separated input and label data
+        if input_data.isnull().values.any():
+            nan_columns = input_data.columns[input_data.isnull().any()].tolist()
+            sys.stderr.write(f"NaN found in input data columns: {nan_columns}\n")
+        if label_data.isnull().values.any():
+            sys.stderr.write("NaN found in label data.\n")
+
         input_data = batch_with_features[input_columns]
         label_data = batch_with_features[label_columns]
         token_values_gold = input_data['token_values_gold'].tolist()
         token_values_usd = input_data['token_values_usd'].tolist()
+
+# Log to check if 'token_values_gold' or 'token_values_usd' have NaN values
+        if any(pd.isnull(token_values_gold)):
+            sys.stderr.write("NaN found in 'token_values_gold'.\n")
+        if any(pd.isnull(token_values_usd)):
+            sys.stderr.write("NaN found in 'token_values_usd'.\n")
+
         non_token_data = input_data.drop(columns=['token_values_gold', 'token_values_usd'])
         non_token_tensor = torch.tensor(non_token_data.values, dtype=torch.float32)
         token_values_gold_tensors = [torch.tensor(t, dtype=torch.float32) for t in token_values_gold]
         token_values_usd_tensors = [torch.tensor(t, dtype=torch.float32) for t in token_values_usd]
+
+# Log to check for NaN values after tensor conversion
+        if not torch.isfinite(non_token_tensor).all():
+            sys.stderr.write("NaN found in 'non_token_tensor'.\n")
+        if any(not torch.isfinite(t).all() for t in token_values_gold_tensors):
+            sys.stderr.write("NaN found in 'token_values_gold_tensors'.\n")
+        if any(not torch.isfinite(t).all() for t in token_values_usd_tensors):
+            sys.stderr.write("NaN found in 'token_values_usd_tensors'.\n")
+
         token_values_gold_tensor = torch.stack(token_values_gold_tensors)
         token_values_usd_tensor = torch.stack(token_values_usd_tensors)
         input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
@@ -278,7 +311,6 @@ def train_model(model, input_data_tensor, label_data_tensor, criterion, optimize
         optimizer.step()
         
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
-
 
 def save_model_parameters(model, db_config):
     # Serialize model state to a byte stream
