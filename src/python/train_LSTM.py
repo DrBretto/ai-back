@@ -154,71 +154,30 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
             end = end_index  
 
         batch = df.iloc[(start - max_lag):end + future_offset].copy()
-        print(f"Batch data after initial slice: {batch.isna().sum()}")
-
         batch = add_time_features(batch)  
-        print(f"Batch data after adding time features: {batch.isna().sum()}")
-
         batch = normalize_data_in_batch(batch, jdst_min, jdst_max, columns_to_normalize_jdst)
-        print(f"Batch data after normalizing JDST data: {batch.isna().sum()}")
-
         batch = normalize_data_in_batch(batch, nugt_min, nugt_max, columns_to_normalize_nugt)
-        print(f"Batch data after normalizing NUGT data: {batch.isna().sum()}")
-    
         batch_with_features = create_lagged_features(batch, intervals, lagwindow)
-        print(f"Batch with features after creating lagged features: {batch_with_features.isna().sum()}")
-
         batch_with_features = create_future_price_points(batch_with_features, future_window, future_interval)
-        print(f"Batch with features after creating future price points: {batch_with_features.isna().sum()}")
-
         batch_with_features = batch_with_features.iloc[max_lag:(max_lag + batch_size)]
-        print(f"Batch with features after slicing for batch: {batch_with_features.isna().sum()}")
-
         batch_with_features.drop(columns=['date_time'], inplace=True)
-        print(f"Batch with features after dropping date_time column: {batch_with_features.isna().sum()}")
 
         if batch_with_features.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
             continue 
-
-# After 'batch_with_features' is created
-        if batch_with_features.isnull().values.any():
-            nan_info = batch_with_features.isnull().sum()
-            sys.stderr.write(f"NaN values in 'batch_with_features':\n{nan_info}\n")
 
         label_columns = [col for col in batch_with_features.columns if 'future_' in col]
         input_columns = [col for col in batch_with_features.columns if col not in label_columns]
         input_data = batch_with_features[input_columns]
         label_data = batch_with_features[label_columns]
 
-# Log to check for NaN values in the separated input and label data
-        if input_data.isnull().values.any():
-            nan_columns = input_data.columns[input_data.isnull().any()].tolist()
-            sys.stderr.write(f"NaN found in input data columns: {nan_columns}\n")
-        if label_data.isnull().values.any():
-            sys.stderr.write("NaN found in label data.\n")
-
         token_values_gold = input_data['token_values_gold'].tolist()
         token_values_usd = input_data['token_values_usd'].tolist()
-
-# Log to check if 'token_values_gold' or 'token_values_usd' have NaN values
-        if any(pd.isnull(token_values_gold)):
-            sys.stderr.write("NaN found in 'token_values_gold'.\n")
-        if any(pd.isnull(token_values_usd)):
-            sys.stderr.write("NaN found in 'token_values_usd'.\n")
 
         non_token_data = input_data.drop(columns=['token_values_gold', 'token_values_usd'])
         non_token_tensor = torch.tensor(non_token_data.values, dtype=torch.float32)
         token_values_gold_tensors = [torch.tensor(t, dtype=torch.float32) for t in token_values_gold]
         token_values_usd_tensors = [torch.tensor(t, dtype=torch.float32) for t in token_values_usd]
-
-# Log to check for NaN values after tensor conversion
-        if not torch.isfinite(non_token_tensor).all():
-            sys.stderr.write("NaN found in 'non_token_tensor'.\n")
-        if any(not torch.isfinite(t).all() for t in token_values_gold_tensors):
-            sys.stderr.write("NaN found in 'token_values_gold_tensors'.\n")
-        if any(not torch.isfinite(t).all() for t in token_values_usd_tensors):
-            sys.stderr.write("NaN found in 'token_values_usd_tensors'.\n")
 
         token_values_gold_tensor = torch.stack(token_values_gold_tensors)
         token_values_usd_tensor = torch.stack(token_values_usd_tensors)
@@ -228,18 +187,13 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         yield (input_tensor, label_tensor)
 
 def add_time_features(df):
-    # Add basic time features
     df['year'] = df['date_time'].dt.year
     df['month'] = df['date_time'].dt.month
     df['day'] = df['date_time'].dt.day
     df['day_of_week'] = df['date_time'].dt.dayofweek
     df['hour'] = df['date_time'].dt.hour
     df['minute'] = df['date_time'].dt.minute
-
-    # Identify weekends
     df['is_weekend'] = df['day_of_week'].apply(lambda x: 1 if x >= 5 else 0)
-
-    # Identify holidays
     df['is_holiday'] = df['date_time'].apply(lambda x: 1 if x in us_holidays else 0)
     
     return df
