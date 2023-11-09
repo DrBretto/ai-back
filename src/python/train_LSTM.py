@@ -172,10 +172,6 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
             nan_info = batch_with_features.isnull().sum()
             sys.stderr.write(f"NaN values in 'batch_with_features':\n{nan_info}\n")
 
-# Log some statistics of 'batch_with_features'
-        stats_info = batch_with_features.describe().to_string()
-        sys.stderr.write(f"Statistics for 'batch_with_features':\n{stats_info}\n")
-
         label_columns = [col for col in batch_with_features.columns if 'future_' in col]
         input_columns = [col for col in batch_with_features.columns if col not in label_columns]
 
