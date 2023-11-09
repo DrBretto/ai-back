@@ -174,6 +174,8 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
 
         label_columns = [col for col in batch_with_features.columns if 'future_' in col]
         input_columns = [col for col in batch_with_features.columns if col not in label_columns]
+        input_data = batch_with_features[input_columns]
+        label_data = batch_with_features[label_columns]
 
 # Log to check for NaN values in the separated input and label data
         if input_data.isnull().values.any():
@@ -182,8 +184,6 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         if label_data.isnull().values.any():
             sys.stderr.write("NaN found in label data.\n")
 
-        input_data = batch_with_features[input_columns]
-        label_data = batch_with_features[label_columns]
         token_values_gold = input_data['token_values_gold'].tolist()
         token_values_usd = input_data['token_values_usd'].tolist()
 
