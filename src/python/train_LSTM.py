@@ -34,14 +34,20 @@ class FinancialLSTM(nn.Module):
         self.fc = nn.Linear(hidden_size, output_size)
     
     def forward(self, input_data):
+        print(f"Before unsqueeze - Input data stats: Min: {input_data.min()}, Max: {input_data.max()}, Mean: {input_data.mean()}, NaN count: {torch.isnan(input_data).sum()}")
 
         if input_data.dim() == 2:
             input_data = input_data.unsqueeze(0)  
+
+        print(f"After unsqueeze - Input data stats: Min: {input_data.min()}, Max: {input_data.max()}, Mean: {input_data.mean()}, NaN count: {torch.isnan(input_data).sum()}")
+
 
         h0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
         c0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
         out, _ = self.lstm(input_data, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size)
         out = self.fc(out[:, -1, :])
+
+        print(f"Output stats: Min: {out.min()}, Max: {out.max()}, Mean: {out.mean()}, NaN count: {torch.isnan(out).sum()}")
 
         return out
 class OverlappingWindowDataset(Dataset):
