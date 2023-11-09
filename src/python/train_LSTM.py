@@ -41,7 +41,6 @@ class FinancialLSTM(nn.Module):
 
         print(f"After unsqueeze - Input data stats: Min: {input_data.min()}, Max: {input_data.max()}, Mean: {input_data.mean()}, NaN count: {torch.isnan(input_data).sum()}")
 
-
         h0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
         c0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
         out, _ = self.lstm(input_data, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size)
@@ -155,13 +154,28 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
             end = end_index  
 
         batch = df.iloc[(start - max_lag):end + future_offset].copy()
+        print(f"Batch data after initial slice: {batch.isna().sum()}")
+
         batch = add_time_features(batch)  
+        print(f"Batch data after adding time features: {batch.isna().sum()}")
+
         batch = normalize_data_in_batch(batch, jdst_min, jdst_max, columns_to_normalize_jdst)
+        print(f"Batch data after normalizing JDST data: {batch.isna().sum()}")
+
         batch = normalize_data_in_batch(batch, nugt_min, nugt_max, columns_to_normalize_nugt)
+        print(f"Batch data after normalizing NUGT data: {batch.isna().sum()}")
+    
         batch_with_features = create_lagged_features(batch, intervals, lagwindow)
+        print(f"Batch with features after creating lagged features: {batch_with_features.isna().sum()}")
+
         batch_with_features = create_future_price_points(batch_with_features, future_window, future_interval)
+        print(f"Batch with features after creating future price points: {batch_with_features.isna().sum()}")
+
         batch_with_features = batch_with_features.iloc[max_lag:(max_lag + batch_size)]
+        print(f"Batch with features after slicing for batch: {batch_with_features.isna().sum()}")
+
         batch_with_features.drop(columns=['date_time'], inplace=True)
+        print(f"Batch with features after dropping date_time column: {batch_with_features.isna().sum()}")
 
         if batch_with_features.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
@@ -427,6 +441,8 @@ def process_data(batch_size):
     if final_combined_data.empty:
         sys.stderr.write("Error: Final combined data is empty.\n")
         return pd.DataFrame()
+    
+    print(f"final_combined_data: {final_combined_data.isna().sum()}")
 
     jdst_columns = [col for col in final_combined_data.columns if '_jdst' in col]
     nugt_columns = [col for col in final_combined_data.columns if '_nugt' in col]
