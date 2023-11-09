@@ -42,8 +42,8 @@ class FinancialLSTM(nn.Module):
 
         # Initialize hidden state with zeros
         h0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
-        # Initialize cell state
         c0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
+        
 
         # Log the shapes of input tensors
         print(f"Input tensor shape: {input_data.shape}")
@@ -462,13 +462,6 @@ def process_data(batch_size):
 
     # Train in batches using DataLoader
     for input_tensor, label_tensor in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
-        
-        # input_dataset = TensorDataset(input_tensor)
-        # label_dataset = TensorDataset(label_tensor)
-            
-        # input_dataloader = DataLoader(input_dataset, batch_size=batch_size, shuffle=False)
-        # label_dataloader = DataLoader(label_dataset, batch_size=batch_size, shuffle=False)
-
         train_model(model, input_tensor, label_tensor, criterion, optimizer, num_epochs=10)
 
     return model
