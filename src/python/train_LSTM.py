@@ -35,30 +35,28 @@ class FinancialLSTM(nn.Module):
         # Fully connected layer
         self.fc = nn.Linear(hidden_size, output_size)
     
-    def forward(self, x):
-        # Check if x is a list
-        if isinstance(x, list):
-            # Convert elements of the list to tensors
-            x = [torch.tensor(item, dtype=torch.float32) if isinstance(item, list) else item for item in x]
-        elif not isinstance(x, torch.Tensor):
-            # If x is neither a list nor a tensor, raise an error
-            raise ValueError("Input x must be either a tensor or a list of tensors.")
+    def forward(self, input_data, label_data):
+        # Check if input_data is a list and convert elements of the list to tensors
+        if isinstance(input_data, list):
+            input_data = [torch.tensor(item, dtype=torch.float32) if isinstance(item, list) else item for item in input_data]
+        elif not isinstance(input_data, torch.Tensor):
+            raise ValueError("Input input_data must be either a tensor or a list of tensors.")
 
         # If there are any tensors within the list, stack them along a new dimension (batch dimension)
-        if any(isinstance(item, torch.Tensor) for item in x):
-            x = torch.stack(x, dim=0)
+        if any(isinstance(item, torch.Tensor) for item in input_data):
+            input_data = torch.stack(input_data, dim=0)
 
         # Initialize hidden state with zeros
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+        h0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
         # Initialize cell state
-        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+        c0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
 
         # Log the shapes of input tensors
-        print(f"Input tensor shape: {x.shape}")
-        print(f"Input tensor dtype: {x.dtype}")
+        print(f"Input tensor shape: {input_data.shape}")
+        print(f"Input tensor dtype: {input_data.dtype}")
 
         # Forward propagate LSTM
-        out, _ = self.lstm(x, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size)
+        out, _ = self.lstm(input_data, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size)
 
         # Log the shape of the LSTM output
         print(f"LSTM output shape: {out.shape}")
@@ -70,6 +68,7 @@ class FinancialLSTM(nn.Module):
         print(f"Final output shape: {out.shape}")
 
         return out
+
 
 
 
@@ -219,12 +218,8 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
 
         # Convert label data to tensor
-        print(f"Shape of label_data before conversion: {label_data.shape}")
         label_tensor = torch.tensor(label_data.values, dtype=torch.float32)
-        print(f"Shape of label_tensor: {label_tensor.shape}")
-
-        print(f"Input tensor shape: {input_tensor.shape}")
-        print(f"Label tensor shape: {label_tensor.shape}")
+ 
 
         yield (input_tensor, label_tensor)
 
@@ -295,6 +290,9 @@ def train_model(model, input_data_tensor, label_data_tensor, criterion, optimize
     for epoch in range(num_epochs):
         for input_tensor, label_tensor in zip(input_data_tensor, label_data_tensor):
 
+            print(f'Input tensor shape: {input_tensor.shape}, dtype: {input_tensor.dtype}')
+            print(f'Label tensor shape: {label_tensor.shape}, dtype: {label_tensor.dtype}')
+
             outputs = model(input_tensor)
             loss = criterion(outputs, label_tensor)
 
@@ -303,7 +301,6 @@ def train_model(model, input_data_tensor, label_data_tensor, criterion, optimize
             optimizer.step()
 
             print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
-
 
 def save_model_parameters(model, db_config):
     # Serialize model state to a byte stream
