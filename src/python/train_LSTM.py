@@ -37,14 +37,8 @@ class FinancialLSTM(nn.Module):
     
     def forward(self, input_data):
         # Check if input_data is a list and convert elements of the list to tensors
-        if isinstance(input_data, list):
-            input_data = [torch.tensor(item, dtype=torch.float32) if isinstance(item, list) else item for item in input_data]
-        elif not isinstance(input_data, torch.Tensor):
-            raise ValueError("Input input_data must be either a tensor or a list of tensors.")
-
-        # If there are any tensors within the list, stack them along a new dimension (batch dimension)
-        if any(isinstance(item, torch.Tensor) for item in input_data):
-            input_data = torch.stack(input_data, dim=0)
+        print(f"Input tensor shape forward: {input_data.shape}")
+        print(f"Input tensor dtype forward: {input_data.dtype}")
 
         # Initialize hidden state with zeros
         h0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
