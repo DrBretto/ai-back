@@ -245,31 +245,24 @@ def prepare_dataloaders(stock_data_with_sentiment, lagwindow, batch_size):
 def train_model(model, input_dataloader, label_dataloader, criterion, optimizer, num_epochs):
     model.train()
     for epoch in range(num_epochs):
-        for input_batch, label_batch in zip(input_dataloader, label_dataloader):
+        for (input_batch,), (label_batch,) in zip(input_dataloader, label_dataloader):
 
-            token_values_gold_tensor = [torch.tensor(t, dtype=torch.float32) for t in input_batch['token_values_gold']]
-            token_values_usd_tensor = [torch.tensor(t, dtype=torch.float32) for t in input_batch['token_values_usd']]
-
-            # Now drop the token columns from the original batch to handle the rest
+            token_values_gold_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in input_batch['token_values_gold']])
+            token_values_usd_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in input_batch['token_values_usd']])
             non_token_data = input_batch.drop(columns=['token_values_gold', 'token_values_usd'])
             non_token_tensor = torch.tensor(non_token_data.values, dtype=torch.float32)
-
-            # Combine the non-token and token tensors
             input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
-
-            # Convert the label batch to tensor
             label_tensor = torch.tensor(label_batch.values, dtype=torch.float32)
-
-            # Forward pass
+            
             outputs = model(input_tensor)
             loss = criterion(outputs, label_tensor)
 
-            # Backward and optimize
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
             print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
+
 
 def save_model_parameters(model, db_config):
     # Serialize model state to a byte stream
