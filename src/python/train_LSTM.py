@@ -238,7 +238,7 @@ def prepare_dataloaders(stock_data_with_sentiment, lagwindow, batch_size):
 
     return dataloader
 
-def train_model(model, input_data_tensor, label_data_tensor, criterion, optimizer, num_epochs, model_id):
+def train_model(model, input_data_tensor, label_data_tensor, criterion, optimizer, model_id, num_epochs):
     model.train()
     for epoch in range(num_epochs):
         optimizer.zero_grad()
