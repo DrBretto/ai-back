@@ -30,20 +30,27 @@ class FinancialLSTM(nn.Module):
         self.num_layers = num_layers
         
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
-        
         self.fc = nn.Linear(hidden_size, output_size)
     
-    def forward(self, input_data):
-        
+    def forward(self, x):
+
         if input_data.dim() == 2:
             input_data = input_data.unsqueeze(0)  
-
-        h0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
-        c0 = torch.zeros(self.num_layers, input_data.size(0), self.hidden_size)
-        out, _ = self.lstm(input_data, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size)
-        out = self.fc(out[:, -1, :])
-
+        # Initialize hidden and cell states
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        
+        # Forward propagate LSTM
+        out, _ = self.lstm(x, (h0, c0))  # out: tensor of shape (batch_size, seq_length, hidden_size)
+        
+        # Decode the hidden state of the last time step for each sequence
+        out = self.fc(out)  # Now, out has shape (batch_size, seq_length, output_size)
+        
         return out
+    
+
+
+
 class OverlappingWindowDataset(Dataset):
     def __init__(self, data, lagwindow):
         self.data = data
