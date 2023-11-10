@@ -193,9 +193,6 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
         input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
         label_tensor = torch.tensor(label_data.values, dtype=torch.float32)
 
-        print(f"Input tensor shape: {input_tensor.shape}")
-        print(f"Label tensor shape: {label_tensor.shape}")
-
         yield (input_tensor, label_tensor)
 
 def add_time_features(df):
@@ -263,7 +260,6 @@ def train_model(model, input_data_tensor, label_data_tensor, criterion, optimize
         # Forward pass
         outputs = model(input_data_tensor)
         loss = criterion(outputs, label_data_tensor)
-        print(f"Output shape: {outputs.shape}, Label shape: {label_data_tensor.shape}")
         
         # Backward pass and optimization
         loss.backward()
