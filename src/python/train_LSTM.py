@@ -238,7 +238,7 @@ def prepare_dataloaders(stock_data_with_sentiment, lagwindow, batch_size):
 
     return dataloader
 
-def train_model(model, input_data_tensor, label_data_tensor, criterion, optimizer, model_id, num_epochs):
+def train_model(model, input_data_tensor, label_data_tensor, criterion, optimizer, num_epochs):
     model.train()
     for epoch in range(num_epochs):
         optimizer.zero_grad()
@@ -250,15 +250,7 @@ def train_model(model, input_data_tensor, label_data_tensor, criterion, optimize
         # Backward pass and optimization
         loss.backward()
         optimizer.step()
-        db_config = {
-        'dbname': os.environ['DB_NAME'],
-        'user': os.environ['DB_USER'],
-        'password': os.environ['DB_PASSWORD'],
-        'host': os.environ['DB_HOST']
-        }
 
-        save_model_parameters(model, db_config, model_id)
-        
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
 def save_model_parameters(model, db_config, model_id):
@@ -412,7 +404,16 @@ def process_data(batch_size, model_id):
         assert torch.isfinite(input_tensor).all(), "Input tensor contains non-finite values (NaN or inf)"
         assert torch.isfinite(label_tensor).all(), "Label tensor contains non-finite values (NaN or inf)"
     
-        train_model(model, input_tensor, label_tensor, criterion, optimizer, model_id, num_epochs=1)
+        train_model(model, input_tensor, label_tensor, criterion, optimizer,  num_epochs=1)
+
+        db_config = {
+        'dbname': os.environ['DB_NAME'],
+        'user': os.environ['DB_USER'],
+        'password': os.environ['DB_PASSWORD'],
+        'host': os.environ['DB_HOST']
+        }
+
+        save_model_parameters(model, db_config, model_id)
 
     return model
 
