@@ -414,8 +414,8 @@ def process_data(batch_size, model_id):
     
     for input_tensor, label_tensor in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
         # Log the shapes of the tensors
-        print(f"Input tensor shape: {input_tensor.shape}")
-        print(f"Label tensor shape: {label_tensor.shape}")
+        # print(f"Input tensor shape: {input_tensor.shape}")
+        # print(f"Label tensor shape: {label_tensor.shape}")
         
         assert input_tensor.nelement() > 0, "Input tensor is empty"
         assert label_tensor.nelement() > 0, "Label tensor is empty"
