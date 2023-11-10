@@ -160,24 +160,23 @@ const DataService = {
     console.log('Starting LSTM training...');
 
     return new Promise((resolve, reject) => {
-      const process = spawn(
+      const pythonProcess = spawn(
         'env/bin/python',
         ['-u', 'src/python/train_LSTM.py'],
         {
-          env: { ...process.env, PATH: process.env.PATH + ':env/bin' },
           shell: true,
         }
       );
 
-      process.stdout.on('data', (data) => {
+      pythonProcess.stdout.on('data', (data) => {
         console.log('Real-time output:', data.toString());
       });
 
-      process.stderr.on('data', (data) => {
+      pythonProcess.stderr.on('data', (data) => {
         console.error('Real-time error:', data.toString());
       });
 
-      process.on('close', (code) => {
+      pythonProcess.on('close', (code) => {
         if (code !== 0) {
           console.error(`Training process exited with code ${code}`);
           reject(new Error('Training failed'));
