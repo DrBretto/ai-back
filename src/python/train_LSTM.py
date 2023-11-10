@@ -34,8 +34,6 @@ class FinancialLSTM(nn.Module):
     
     def forward(self, x):
 
-        if input_data.dim() == 2:
-            input_data = input_data.unsqueeze(0)  
         # Initialize hidden and cell states
         h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
         c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
