@@ -238,7 +238,7 @@ def prepare_dataloaders(stock_data_with_sentiment, lagwindow, batch_size):
 
     return dataloader
 
-def train_model(model, input_data_tensor, label_data_tensor, criterion, optimizer, num_epochs):
+def train_model(model, input_data_tensor, label_data_tensor, criterion, optimizer, num_epochs, model_id):
     model.train()
     for epoch in range(num_epochs):
         optimizer.zero_grad()
@@ -250,10 +250,18 @@ def train_model(model, input_data_tensor, label_data_tensor, criterion, optimize
         # Backward pass and optimization
         loss.backward()
         optimizer.step()
+        db_config = {
+        'dbname': os.environ['DB_NAME'],
+        'user': os.environ['DB_USER'],
+        'password': os.environ['DB_PASSWORD'],
+        'host': os.environ['DB_HOST']
+        }
+
+        save_model_parameters(model, db_config, model_id)
         
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
-def save_model_parameters(model, db_config):
+def save_model_parameters(model, db_config, model_id):
     # Serialize model state to a byte stream
     byte_stream = io.BytesIO()
     torch.save(model.state_dict(), byte_stream)
@@ -261,8 +269,13 @@ def save_model_parameters(model, db_config):
     
     with psycopg2.connect(**db_config) as conn:
         with conn.cursor() as cursor:
-            # Save the byte stream as binary data in the database
-            cursor.execute('INSERT INTO model_parameters (parameters) VALUES (%s)', (byte_stream.getvalue(),))
+            # Use UPSERT to insert or update existing entry
+            cursor.execute("""
+                INSERT INTO model_parameters (id, parameters)
+                VALUES (%s, %s)
+                ON CONFLICT (id) DO UPDATE
+                SET parameters = EXCLUDED.parameters;
+            """, (model_id, byte_stream.getvalue()))
             conn.commit()
 
 def load_model_parameters(model_id, model, db_config):
@@ -316,7 +329,7 @@ def adjust_token_values_length(token_values, max_length):
     else:
         return token_values + [-1] * (max_length - len(token_values))  # Pad the list if it's too short
 
-def process_data(batch_size):
+def process_data(batch_size, model_id):
     historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
 
     if historical_data_jdst.empty or historical_data_nugt.empty:
@@ -388,7 +401,6 @@ def process_data(batch_size):
     output_size = 192
     hidden_size = 100  
     num_layers = 2  
-    model_id=None
     
     model = get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size)
     criterion = nn.MSELoss()
@@ -400,15 +412,17 @@ def process_data(batch_size):
         assert torch.isfinite(input_tensor).all(), "Input tensor contains non-finite values (NaN or inf)"
         assert torch.isfinite(label_tensor).all(), "Label tensor contains non-finite values (NaN or inf)"
     
-        train_model(model, input_tensor, label_tensor, criterion, optimizer, num_epochs=1)
+        train_model(model, input_tensor, label_tensor, criterion, optimizer, model_id, num_epochs=1)
 
     return model
 
 
 if __name__ == '__main__':
     batch_size = 10000
-    trained_model = process_data(batch_size)
+    model_id = 1
+    trained_model = process_data(batch_size, model_id)
     
+
     db_config = {
         'dbname': os.environ['DB_NAME'],
         'user': os.environ['DB_USER'],
@@ -416,6 +430,6 @@ if __name__ == '__main__':
         'host': os.environ['DB_HOST']
     }
 
-    save_model_parameters(trained_model, db_config)
+    save_model_parameters(trained_model, db_config, model_id)
     print("Model parameters saved to the database.")
 
