@@ -406,7 +406,7 @@ def process_data(batch_size):
 
 
 if __name__ == '__main__':
-    batch_size = 40000
+    batch_size = 10000
     trained_model = process_data(batch_size)
     
     db_config = {
