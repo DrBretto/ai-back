@@ -1,6 +1,8 @@
-const { exec } = require('child_process');
+//const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+
+const { spawn } = require('child_process');
 
 const DataService = {
   deleteCache() {
@@ -154,38 +156,80 @@ const DataService = {
     }
   },
 
+
+
+
+
+async  trainLSTM() {
+  console.log('Starting LSTM training...');
+
+  const pythonProcess = spawn('env/bin/python', ['src/python/train_LSTM.py'], {
+    shell: true,
+    env: {
+      ...process.env, // Make sure to include existing environment variables
+      PATH: `env/bin:${process.env.PATH}` // Adjust PATH to include your virtualenv binaries
+    }
+  });
+
+  // Handle real-time output
+  pythonProcess.stdout.on('data', (data) => {
+    console.log('Real-time output:', data.toString());
+  });
+
+  // Handle real-time errors
+  pythonProcess.stderr.on('data', (data) => {
+    console.error('Real-time error:', data.toString());
+  });
+
+  // Handle process exit
+  pythonProcess.on('close', (code) => {
+    console.log(`Training process exited with code ${code}`);
+  });
+
+  // Handle process errors
+  pythonProcess.on('error', (error) => {
+    console.error('Failed to start training process.', error);
+  });
+
+  // If you need to write something to the python process, you can use pythonProcess.stdin.write()
+}
+
+
+
+
+
   // Inside your DataService object in DataService.js
 
-  async trainLSTM() {
-    console.log('Starting LSTM training...');
+  // async trainLSTM() {
+  //   console.log('Starting LSTM training...');
 
-    return new Promise((resolve, reject) => {
-      const process = exec(
-        `. env/bin/activate && env/bin/python src/python/train_LSTM.py`,
-        (error, stdout, stderr) => {
-          if (error) {
-            console.error('Error occurred:', error);
-            console.error('Error details:', stderr);
-            reject(error);
-            return;
-          }
+  //   return new Promise((resolve, reject) => {
+  //     const process = exec(
+  //       `. env/bin/activate && env/bin/python src/python/train_LSTM.py`,
+  //       (error, stdout, stderr) => {
+  //         if (error) {
+  //           console.error('Error occurred:', error);
+  //           console.error('Error details:', stderr);
+  //           reject(error);
+  //           return;
+  //         }
 
-          console.log('Training completed. Output:', stdout);
-          resolve(stdout); // Resolve with the raw stdout data directly.
-        }
-      );
+  //         console.log('Training completed. Output:', stdout);
+  //         resolve(stdout); // Resolve with the raw stdout data directly.
+  //       }
+  //     );
 
-      // Optional: If you want to capture real-time stdout as it is being printed by the Python script
-      process.stdout.on('data', (data) => {
-        console.log('Real-time output:', data.toString());
-      });
+  //     Optional: If you want to capture real-time stdout as it is being printed by the Python script
+  //     process.stdout.on('data', (data) => {
+  //       console.log('Real-time output:', data.toString());
+  //     });
 
-      // Optional: If you want to capture real-time stderr as it is being printed by the Python script
-      process.stderr.on('data', (data) => {
-        console.error('Real-time error:', data.toString());
-      });
-    });
-  },
+  //     Optional: If you want to capture real-time stderr as it is being printed by the Python script
+  //     process.stderr.on('data', (data) => {
+  //       console.error('Real-time error:', data.toString());
+  //     });
+  //   });
+  //},
 };
 
 module.exports = DataService;
