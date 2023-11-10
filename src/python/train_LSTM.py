@@ -47,7 +47,8 @@ class FinancialLSTM(nn.Module):
         # Decode the hidden state of the last time step for each sequence
         out = self.fc(out[:, -1, :])  # Now, out has shape (batch_size, output_size)
         
-        return out
+        return out.squeeze()  # Remove any singleton dimensions to ensure output shape matches label shape
+
 
     
 
