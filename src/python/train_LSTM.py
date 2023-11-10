@@ -393,7 +393,7 @@ def process_data(batch_size):
     model = get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-
+    
     for input_tensor, label_tensor in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
         assert input_tensor.nelement() > 0, "Input tensor is empty"
         assert label_tensor.nelement() > 0, "Label tensor is empty"

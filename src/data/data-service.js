@@ -156,47 +156,38 @@ const DataService = {
     }
   },
 
+  async trainLSTM() {
+    console.log('Starting LSTM training...');
 
+    return new Promise((resolve, reject) => {
+      const process = spawn(
+        'env/bin/python',
+        ['-u', 'src/python/train_LSTM.py'],
+        {
+          env: { ...process.env, PATH: process.env.PATH + ':env/bin' },
+          shell: true,
+        }
+      );
 
+      process.stdout.on('data', (data) => {
+        console.log('Real-time output:', data.toString());
+      });
 
+      process.stderr.on('data', (data) => {
+        console.error('Real-time error:', data.toString());
+      });
 
-async  trainLSTM() {
-  console.log('Starting LSTM training...');
-
-  const pythonProcess = spawn('env/bin/python', ['src/python/train_LSTM.py'], {
-    shell: true,
-    env: {
-      ...process.env, // Make sure to include existing environment variables
-      PATH: `env/bin:${process.env.PATH}` // Adjust PATH to include your virtualenv binaries
-    }
-  });
-
-  // Handle real-time output
-  pythonProcess.stdout.on('data', (data) => {
-    console.log('Real-time output:', data.toString());
-  });
-
-  // Handle real-time errors
-  pythonProcess.stderr.on('data', (data) => {
-    console.error('Real-time error:', data.toString());
-  });
-
-  // Handle process exit
-  pythonProcess.on('close', (code) => {
-    console.log(`Training process exited with code ${code}`);
-  });
-
-  // Handle process errors
-  pythonProcess.on('error', (error) => {
-    console.error('Failed to start training process.', error);
-  });
-
-  // If you need to write something to the python process, you can use pythonProcess.stdin.write()
-}
-
-
-
-
+      process.on('close', (code) => {
+        if (code !== 0) {
+          console.error(`Training process exited with code ${code}`);
+          reject(new Error('Training failed'));
+        } else {
+          console.log('Training completed successfully.');
+          resolve();
+        }
+      });
+    });
+  },
 
   // Inside your DataService object in DataService.js
 
