@@ -249,6 +249,7 @@ def train_model(model, input_data_tensor, label_data_tensor, criterion, optimize
         # Forward pass
         outputs = model(input_data_tensor)
         loss = criterion(outputs, label_data_tensor)
+        print(f"Output shape: {outputs.shape}, Label shape: {label_data_tensor.shape}")
         
         # Backward pass and optimization
         loss.backward()
@@ -402,11 +403,15 @@ def process_data(batch_size, model_id):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     
     for input_tensor, label_tensor in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
+        # Log the shapes of the tensors
+        print(f"Input tensor shape: {input_tensor.shape}")
+        print(f"Label tensor shape: {label_tensor.shape}")
+        
         assert input_tensor.nelement() > 0, "Input tensor is empty"
         assert label_tensor.nelement() > 0, "Label tensor is empty"
         assert torch.isfinite(input_tensor).all(), "Input tensor contains non-finite values (NaN or inf)"
         assert torch.isfinite(label_tensor).all(), "Label tensor contains non-finite values (NaN or inf)"
-    
+
         train_model(model, input_tensor, label_tensor, criterion, optimizer,  num_epochs=1)
 
         db_config = {
