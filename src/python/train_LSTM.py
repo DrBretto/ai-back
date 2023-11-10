@@ -28,28 +28,23 @@ class FinancialLSTM(nn.Module):
         super(FinancialLSTM, self).__init__()
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
         self.fc = nn.Linear(hidden_size, output_size)
     
     def forward(self, x):
-        # Add a batch dimension if it's not present
+        # Add a sequence length dimension of 1
         if x.dim() == 2:
-            x = x.unsqueeze(0)
+            x = x.unsqueeze(1)  # Now x has shape (batch_size, 1, number_of_features)
         
         # Initialize hidden and cell states
         h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
         c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
         
         # Forward propagate LSTM
-        out, _ = self.lstm(x, (h0, c0))
+        out, _ = self.lstm(x, (h0, c0))  # After LSTM, shape is (batch_size, 1, hidden_size)
         
-        # Decode the hidden state of the last time step for each sequence
-        out = self.fc(out)
-        
-        # Reshape output to remove the batch dimension if it was initially added
-        if out.size(0) == 1:
-            out = out.squeeze(0)
+        # Decode the hidden state of the last time step
+        out = self.fc(out[:, -1, :])  # Shape becomes (batch_size, output_size)
         
         return out
 
