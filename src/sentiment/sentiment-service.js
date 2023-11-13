@@ -59,15 +59,15 @@ const SentimentService = {
       });
 
       console.log('Searching Aylien for ', subject, startDate);
-
-      const articleBodies = response.data.stories.map((story) => story.body);
-      console.log('Fetched', articleBodies.length, 'articles from Aylien');
-      const articleBatches = sh.createBatches(articleBodies, 8000);
-      console.log('Split articleBodies into', articleBatches.length, 'batches');
+      const combinedArticles = response.data.stories
+        .map((story) => story.body)
+        .join(' ')
+        .slice(0, 40000);
       const date = response.data.stories[0].published_at;
 
+      // Process the combined text blob
       const processedData = await this.processAllArticles(
-        articleBatches,
+        combinedArticles,
         date,
         subject
       );
@@ -97,43 +97,36 @@ const SentimentService = {
     }
   },
 
-  async processAllArticles(articleBodies, date, subject) {
+  async processAllArticles(combinedArticles, date, subject) {
     const processedData = {
       date: date,
-      tokenizedSentiment: '',
+      summary: '',
       scores: [],
     };
 
-    for (const article of articleBodies) {
-      const summary = await this.getSentimentFromGPT(
-        article,
-        'summarize',
-        subject
-      );
-      const sentimentWords = await this.getSentimentFromGPT(
-        summary,
-        'sentimentWords',
-        subject
-      );
+    const summary = await this.getSentimentFromGPT(
+      combinedArticles,
+      'summarize',
+      subject
+    );
+    const sentimentScoreString = await this.getSentimentFromGPT(
+      summary,
+      'sentimentScore',
+      subject
+    );
+    const sentimentScore = sh.validateSentimentScore(sentimentScoreString);
 
-      const sentimentScoreString = await this.getSentimentFromGPT(
-        sentimentWords,
-        'sentimentScore',
-        subject
-      );
-      const sentimentScore = sh.validateSentimentScore(sentimentScoreString);
-
-      if (!isNaN(sentimentScore)) {
-        processedData.scores.push(sentimentScore);
-      }
+    if (!isNaN(sentimentScore)) {
+      processedData.scores.push(sentimentScore);
     }
 
     // Calculating high, low and average scores
     const { scores } = processedData;
-    const high = Math.max(...scores);
-    const low = Math.min(...scores);
-    const average =
-      scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    const high = scores.length ? Math.max(...scores) : 0;
+    const low = scores.length ? Math.min(...scores) : 0;
+    const average = scores.length
+      ? scores.reduce((sum, score) => sum + score, 0) / scores.length
+      : 0;
 
     // Adding high, low and average scores to the processedData object
     processedData.high = high.toFixed(4);
@@ -236,7 +229,7 @@ const SentimentService = {
     };
 
     const body = {
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4-32k',
       messages: [
         {
           role: 'system',
@@ -480,11 +473,15 @@ const SentimentService = {
   async findMissingDate(db, subjectID, sourceID) {
     let currentDate = moment();
     let startYear = currentDate.clone().subtract(5, 'years').year();
+    let currentHour = currentDate.hour();
+    let currentMinute = currentDate.minute();
     let foundDateTime = null;
-  
+
     while (!foundDateTime && currentDate.year() >= startYear) {
+      currentDate.hour(currentHour); // Set to current hour
+      currentDate.minute(currentMinute); // Set to current minute
       const dateStr = currentDate.format('YYYY-MM-DD HH:mm');
-  
+
       try {
         const hasData = await db('sentiment_analysis')
           .where({
@@ -493,19 +490,18 @@ const SentimentService = {
             date_published: dateStr,
           })
           .first();
-  
+
         if (!hasData) {
           foundDateTime = dateStr;
         } else {
           currentDate.subtract(1, 'months');
-          currentDate.date(currentDate.date() % 5 + 1); // Cycle through 1st, 5th, 10th, etc. of the month
-          currentDate.minute(0); // Set minutes to 0
+          currentDate.date(((currentDate.date() - 1) % 5) + 1); // Cycle through 1st, 5th, 10th, etc. of the month
         }
       } catch (error) {
         console.error('Database query error:', error);
       }
     }
-  
+
     return foundDateTime;
   },
 

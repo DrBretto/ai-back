@@ -5,7 +5,7 @@ const SentimentService = require('./sentiment/sentiment-service');
 module.exports = (app) => {
   const db = app.get('db');
 
-  cron.schedule('0 0 * * *', async () => {
+  cron.schedule('* */15 * * *', async () => {
     let currYear = new Date().getFullYear();
     let currMonth = new Date().getMonth() + 1; // Months are 0-based in JS
     //Daily Price Scheduler
