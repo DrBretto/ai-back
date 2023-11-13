@@ -62,7 +62,7 @@ const SentimentService = {
       const combinedArticles = response.data.stories
         .map((story) => story.body)
         .join(' ')
-        .slice(0, 40000);
+        .slice(0, 8000);
       const date = response.data.stories[0].published_at;
 
       // Process the combined text blob
@@ -250,7 +250,7 @@ const SentimentService = {
     } catch (error) {
       console.error(
         `Error in getSentimentFromGPT for ${analysisType}:`,
-        error
+        error.code
       );
       return null;
     }
