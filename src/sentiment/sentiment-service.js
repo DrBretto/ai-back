@@ -478,16 +478,13 @@ const SentimentService = {
   },
 
   async findMissingDate(db, subjectID, sourceID) {
-    let dateCursor = moment();
-    let foundDate = null;
-
-    while (!foundDate) {
-      while (dateCursor.day() === 0 || dateCursor.day() === 6) {
-        dateCursor.subtract(1, 'days');
-      }
-
-      const dateStr = dateCursor.format('YYYY-MM-DD');
-
+    let currentDate = moment();
+    let startYear = currentDate.clone().subtract(5, 'years').year();
+    let foundDateTime = null;
+  
+    while (!foundDateTime && currentDate.year() >= startYear) {
+      const dateStr = currentDate.format('YYYY-MM-DD HH:mm');
+  
       try {
         const hasData = await db('sentiment_analysis')
           .where({
@@ -496,19 +493,20 @@ const SentimentService = {
             date_published: dateStr,
           })
           .first();
-
+  
         if (!hasData) {
-          foundDate = dateStr;
+          foundDateTime = dateStr;
         } else {
-          dateCursor.subtract(1, 'days');
+          currentDate.subtract(1, 'months');
+          currentDate.date(currentDate.date() % 5 + 1); // Cycle through 1st, 5th, 10th, etc. of the month
+          currentDate.minute(0); // Set minutes to 0
         }
       } catch (error) {
-        // Log any database errors
         console.error('Database query error:', error);
       }
     }
-
-    return foundDate;
+  
+    return foundDateTime;
   },
 
   async performSentimentAnalysis(db, subject, source = 'tradingview') {
