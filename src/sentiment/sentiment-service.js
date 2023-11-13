@@ -250,7 +250,7 @@ const SentimentService = {
     } catch (error) {
       console.error(
         `Error in getSentimentFromGPT for ${analysisType}:`,
-        error.code
+        error
       );
       return null;
     }
