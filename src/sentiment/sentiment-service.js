@@ -229,7 +229,7 @@ const SentimentService = {
     };
 
     const body = {
-      model: 'gpt-4-32k',
+      model: 'gpt-4',
       messages: [
         {
           role: 'system',
