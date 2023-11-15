@@ -332,6 +332,21 @@ const SentimentService = {
     }
   },
 
+  async deleteDataById(db, sentimentAnalysisId) {
+    console.log(
+      'Deleting data from sentiment_analysis table for id:',
+      sentimentAnalysisId
+    );
+    try {
+      await db('sentiment_analysis')
+        .where('id', sentimentAnalysisId) // assuming 'id' is the primary key
+        .del();
+      console.log('Data deleted successfully for id:', sentimentAnalysisId);
+    } catch (err) {
+      console.error('Error deleting data:', err.code);
+    }
+  },
+
   async fetchMasterList(db) {
     try {
       const masterListData = await db('master_tokens')
@@ -438,6 +453,7 @@ const SentimentService = {
           'Tokenized sentiment is null or undefined for id:',
           sentimentAnalysisId
         );
+        await this.deleteDataById(db, sentimentAnalysisId);
         return;
       }
 
