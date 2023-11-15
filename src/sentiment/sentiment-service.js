@@ -145,7 +145,7 @@ const SentimentService = {
       console.log('Fetched article content');
       return { title, content: articleContent };
     } catch (error) {
-      console.error('Error in fetchArticleContent:', error.code);
+      console.error('Error in fetchArticleContent:', error);
       return null;
     }
   },
