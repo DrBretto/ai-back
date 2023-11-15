@@ -176,7 +176,7 @@ const SentimentService = {
     };
 
     const body = {
-      model: 'gpt-4-1106-preview',
+      model: 'gpt-33.5-turbo',
       messages: [
         {
           role: 'system',
@@ -229,7 +229,7 @@ const SentimentService = {
     };
 
     const body = {
-      model: 'gpt-4-1106-preview',
+      model: 'gpt-33.5-turbo',
       messages: [
         {
           role: 'system',
