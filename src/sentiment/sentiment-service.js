@@ -488,15 +488,11 @@ const SentimentService = {
   },
 
   async findMissingDate(db, subjectID, sourceID) {
-    let currentDate = moment();
-    let startYear = currentDate.clone().subtract(5, 'years').year();
-    let currentHour = currentDate.hour();
-    let currentMinute = currentDate.minute();
+    let currentDate = moment().subtract(5, 'years');
+    let endYear = moment().year();
     let foundDateTime = null;
 
-    while (!foundDateTime && currentDate.year() >= startYear) {
-      currentDate.hour(currentHour); // Set to current hour
-      currentDate.minute(currentMinute); // Set to current minute
+    while (!foundDateTime && currentDate.year() <= endYear) {
       const dateStr = currentDate.format('YYYY-MM-DD HH:mm');
 
       try {
@@ -511,8 +507,14 @@ const SentimentService = {
         if (!hasData) {
           foundDateTime = dateStr;
         } else {
-          currentDate.subtract(1, 'months');
-          currentDate.date(((currentDate.date() - 1) % 5) + 1); // Cycle through 1st, 5th, 10th, etc. of the month
+          // Incrementally increase the precision
+          if (currentDate.diff(moment(), 'years') <= 1) {
+            currentDate.add(1, 'day');
+          } else if (currentDate.diff(moment(), 'years') <= 2) {
+            currentDate.add(1, 'week');
+          } else {
+            currentDate.add(1, 'month');
+          }
         }
       } catch (error) {
         console.error('Database query error:', error);
