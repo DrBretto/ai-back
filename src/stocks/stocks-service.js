@@ -10,9 +10,9 @@ const StocksService = {
     return stock ? stock.stock_id : null;
   },
 
-  async fetchHistoricalData(db, stockSymbol, monthToFetch) {
+  async fetchHistoricalData(db, stockSymbol) {
     const stockId = await this.getStockId(db, stockSymbol);
-    const historicalUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=1min&adjusted=true&month=${monthToFetch}&outputsize=full&apikey=${alphaVantageApiKey}`;
+    const historicalUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=1min&adjusted=true&outputsize=full&apikey=${alphaVantageApiKey}`;//month=${monthToFetch}&
     await this.fetchDataAndInsert(db, stockId, historicalUrl);
   },
 
