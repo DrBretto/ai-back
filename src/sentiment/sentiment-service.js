@@ -51,7 +51,7 @@ const SentimentService = {
           'title': subject,
           'published_at_start': startDate,
           'published_at_end': endDate,
-          'per_page': 10,
+          'per_page': 20,
           'categories.taxonomy': 'iab-qag',
           'categories.id[]': 'IAB13',
           'language[]': 'en',
@@ -132,6 +132,7 @@ const SentimentService = {
     processedData.high = high.toFixed(4);
     processedData.low = low.toFixed(4);
     processedData.average = average.toFixed(4);
+    processedData.tokenizedSentiment = summary;
 
     return processedData; // Returning the processed data object
   },

@@ -74,59 +74,40 @@ module.exports = (app) => {
 
   //Backlog Historical Schedulers////////////////////////////////////////
 
-  // cron.schedule('*/1 * * * *', async () => {
-  //   const db = app.get('db');
+  cron.schedule('*/1 * * * *', async () => {
+    const db = app.get('db');
 
-  //   // Assume subjectIDs for 'gold' and 'dollar' are 1 and 2, respectively
-  //   const missingDateGold = await SentimentService.findMissingDate(db, 1, 3);
-  //   const missingDateDollar = await SentimentService.findMissingDate(db, 2, 3);
+    // Assume subjectIDs for 'gold' and 'dollar' are 1 and 2, respectively
+    const missingDateGold = await SentimentService.findMissingDate(db, 1, 3);
+    const missingDateDollar = await SentimentService.findMissingDate(db, 2, 3);
 
-  //   if (missingDateGold) {
-  //     console.log(
-  //       'Fetching historical news for gold on date:',
-  //       missingDateGold
-  //     );
-  //     await SentimentService.fetchHistoricalNews(
-  //       db,
-  //       'gold',
-  //       missingDateGold,
-  //       missingDateGold
-  //     );
-  //   }
+    if (missingDateGold) {
+      console.log(
+        'Fetching historical news for gold on date:',
+        missingDateGold
+      );
+      await SentimentService.fetchHistoricalNews(
+        db,
+        'gold',
+        missingDateGold,
+        missingDateGold
+      );
+    }
 
-  //   if (missingDateDollar) {
-  //     console.log(
-  //       'Fetching historical news for dollar on date:',
-  //       missingDateDollar
-  //     );
-  //     await SentimentService.fetchHistoricalNews(
-  //       db,
-  //       'dollar',
-  //       missingDateDollar,
-  //       missingDateDollar
-  //     );
-  //   }
-  // });
+    if (missingDateDollar) {
+      console.log(
+        'Fetching historical news for dollar on date:',
+        missingDateDollar
+      );
+      await SentimentService.fetchHistoricalNews(
+        db,
+        'dollar',
+        missingDateDollar,
+        missingDateDollar
+      );
+    }
+  });
 
-  // let currentYear = new Date().getFullYear();
-  // let currentMonth = new Date().getMonth() + 1; // Months are 0-based in JS
-  // cron.schedule('*/10 * * * *', async () => {
-  //   const db = app.get('db');
-  //   const monthToFetch = `${currentYear}-${currentMonth
-  //     .toString()
-  //     .padStart(2, '0')}`;
-  //   console.log('Fetching history: JDST', monthToFetch);
-  //   await StocksService.fetchHistoricalData(db, 'JDST', monthToFetch);
-  //   console.log('Fetching history: NUGT', monthToFetch);
-  //   await StocksService.fetchHistoricalData(db, 'NUGT', monthToFetch);
-
-  //   // Decrement month and handle year rollover
-  //   if (currentMonth === 1) {
-  //     currentYear--;
-  //     currentMonth = 12;
-  //   } else {
-  //     currentMonth--;
-  //   }
-  // });
+ 
   ////////////////////////////////////////////////////////////////////////////
 };
