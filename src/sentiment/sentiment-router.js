@@ -3,18 +3,92 @@ const SentimentService = require('./sentiment-service');
 
 const sentimentRouter = express.Router();
 
+// sentimentRouter.get('/', async (req, res, next) => {
+//   const subject = req.query.subject || 'gold';
+//   const source = req.query.source || 'tradingview';
+//   const db = req.app.get('db');
+
+//   try {
+//     const articleContents = await SentimentService.performSentimentAnalysis(
+//       db,
+//       subject,
+//       source
+//     );
+//     res.json(articleContents);
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+
 sentimentRouter.get('/', async (req, res, next) => {
-  const subject = req.query.subject || 'gold';
-  const source = req.query.source || 'tradingview';
+  const subjectId = req.query.subject;
+  const sourceId = req.query.source;
   const db = req.app.get('db');
 
+  if (!subjectId || !sourceId) {
+    return res.status(400).json({ message: "Subject and source are required" });
+  }
+
   try {
-    const articleContents = await SentimentService.performSentimentAnalysis(
-      db,
-      subject,
-      source
-    );
-    res.json(articleContents);
+
+    // Query the database for the latest entry for the given subjectId and sourceId
+    const latestEntry = await db('sentiment_analysis')
+      .where({ subject_id: subjectId, source_id: sourceId })
+      .orderBy('date_published', 'desc')
+      .first();
+
+    if (latestEntry) {
+      // Structure the response to include summary and sentiment scores
+      const responseData = {
+        summary: latestEntry.tokenized_sentiment,
+        sentimentScores: {
+          low: latestEntry.low_score,
+          high: latestEntry.high_score,
+          average: latestEntry.average_score
+        }
+      };
+      res.json(responseData);
+    } else {
+      res.status(404).json({ message: `No entries found for subject: ${subjectId} and source: ${sourceId}` });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+
+
+sentimentRouter.get('/', async (req, res, next) => {
+  const subjectId = req.query.subjectId; // Assuming subjectId is passed as a query parameter
+  const db = req.app.get('db');
+
+  if (!subjectId) {
+    return res.status(400).json({ message: 'Subject ID is required' });
+  }
+
+  try {
+    // Query the database for the latest entry for the given subjectId
+    const latestEntry = await db('sentiment_analysis')
+      .where({ subject_id: subjectId })
+      .orderBy('date_published', 'desc')
+      .first();
+
+    if (latestEntry) {
+      // Structure the response to include summary and sentiment scores
+      const responseData = {
+        summary: latestEntry.tokenized_sentiment,
+        sentimentScores: {
+          low: latestEntry.low_score,
+          high: latestEntry.high_score,
+          average: latestEntry.average_score,
+        },
+      };
+      res.json(responseData);
+    } else {
+      res
+        .status(404)
+        .json({ message: `No entries found for subject ID: ${subjectId}` });
+    }
   } catch (error) {
     next(error);
   }
@@ -55,16 +129,24 @@ sentimentRouter.get('/trigger-sentiment-analysis', async (req, res, next) => {
   console.log('Manual trigger for sentiment analysis at:', new Date());
 
   try {
-    const goldResult = await SentimentService.performSentimentAnalysis(db, 'gold', 'tradingview');
+    const goldResult = await SentimentService.performSentimentAnalysis(
+      db,
+      'gold',
+      'tradingview'
+    );
     console.log('Successfully analyzed sentiment for gold:', goldResult);
 
-    const dollarResult = await SentimentService.performSentimentAnalysis(db, 'dollar', 'tradingview');
+    const dollarResult = await SentimentService.performSentimentAnalysis(
+      db,
+      'dollar',
+      'tradingview'
+    );
     console.log('Successfully analyzed sentiment for dollar:', dollarResult);
 
     res.status(200).send({
       message: 'Sentiment analysis triggered successfully',
       gold: goldResult,
-      dollar: dollarResult
+      dollar: dollarResult,
     });
   } catch (error) {
     console.error('Error triggering sentiment analysis:', error);
@@ -72,7 +154,6 @@ sentimentRouter.get('/trigger-sentiment-analysis', async (req, res, next) => {
     next(error);
   }
 });
-
 
 sentimentRouter.get('/compare-terms/:id', async (req, res, next) => {
   const { id } = req.params;
