@@ -196,7 +196,7 @@ const SentimentService = {
 
       return response.data.choices[0].message.content.trim();
     } catch (error) {
-      console.error(`Error in getTokensFromGPT`, error.code);
+      console.error(`Error in getTokensFromGPT`, error);
       return null;
     }
   },
@@ -251,7 +251,7 @@ const SentimentService = {
     } catch (error) {
       console.error(
         `Error in getSentimentFromGPT for ${analysisType}:`,
-        error.code
+        error
       );
       return null;
     }
@@ -293,7 +293,7 @@ const SentimentService = {
       }
       return null; // Explicitly return null if source is not found
     } catch (err) {
-      console.error('Error in getSourceID:', err.code);
+      console.error('Error in getSourceID:', err);
       return null;
     }
   },
