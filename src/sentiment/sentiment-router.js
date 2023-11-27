@@ -21,15 +21,19 @@ const sentimentRouter = express.Router();
 // });
 
 sentimentRouter.get('/', async (req, res, next) => {
-  const subjectId = req.query.subject;
-  const sourceId = req.query.source;
+  const subjectName = req.query.subject;
+  const sourceName = req.query.source;
   const db = req.app.get('db');
 
-  if (!subjectId || !sourceId) {
+  if (!subjectName || !sourceName) {
     return res.status(400).json({ message: "Subject and source are required" });
   }
 
   try {
+    // Convert subjectName and sourceName to their respective IDs
+    // This part depends on your database structure and how you map names to IDs
+    const subjectId = await sentimentRouter.getOrCreateSubjectID(db, subjectName); // Replace with actual implementation
+    const sourceId = await sentimentRouter.getSourceID(db, sourceName); // Replace with actual implementation
 
     // Query the database for the latest entry for the given subjectId and sourceId
     const latestEntry = await db('sentiment_analysis')
@@ -49,7 +53,7 @@ sentimentRouter.get('/', async (req, res, next) => {
       };
       res.json(responseData);
     } else {
-      res.status(404).json({ message: `No entries found for subject: ${subjectId} and source: ${sourceId}` });
+      res.status(404).json({ message: `No entries found for subject: ${subjectName} and source: ${sourceName}` });
     }
   } catch (error) {
     next(error);
