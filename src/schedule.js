@@ -3,9 +3,8 @@ const StocksService = require('./stocks/stocks-service');
 const SentimentService = require('./sentiment/sentiment-service');
 
 module.exports = (app) => {
-  const db = app.get('db');
-
-  cron.schedule('*/1 * * * *', async () => {
+  cron.schedule('*/2 * * * *', async () => {
+    const db = app.get('db');
     //Update historical prices every minute
     console.log('Updating historical prices at:', new Date());
     await StocksService.fetchHistoricalData(db, 'JDST');
