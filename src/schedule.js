@@ -11,7 +11,7 @@ module.exports = (app) => {
     await StocksService.fetchHistoricalData(db, 'NUGT');
   });
 
-  cron.schedule('**/15 8-19 * * *', () => {
+  cron.schedule('*/15 8-19 * * *', () => {
     //TradingView Scrape and analyze
     const db = app.get('db');
     console.log(
