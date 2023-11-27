@@ -11,103 +11,103 @@ module.exports = (app) => {
     await StocksService.fetchHistoricalData(db, 'NUGT');
   });
 
-  cron.schedule('*/1 * * * *', async () => {
-    //realtime prices every minute - NYI
-    const db = app.get('db');
-    await StocksService.fetchTodaysData(db, 'JDST');
-    await StocksService.fetchTodaysData(db, 'NUGT');
-  });
+  // cron.schedule('*/1 * * * *', async () => {
+  //   //realtime prices every minute - NYI
+  //   const db = app.get('db');
+  //   await StocksService.fetchTodaysData(db, 'JDST');
+  //   await StocksService.fetchTodaysData(db, 'NUGT');
+  // });
 
-  cron.schedule('*/1 * * * *', () => {
-    //TradingView Scrape and analyze
-    const db = app.get('db');
-    console.log(
-      'Running sentiment analysis for gold and dollar at:',
-      new Date()
-    );
+  // cron.schedule('*/1 * * * *', () => {
+  //   //TradingView Scrape and analyze
+  //   const db = app.get('db');
+  //   console.log(
+  //     'Running sentiment analysis for gold and dollar at:',
+  //     new Date()
+  //   );
 
-    SentimentService.performSentimentAnalysis(db, 'gold', 'tradingview')
-      .then(() => {
-        console.log('Successfully analyzed sentiment for gold');
-      })
-      .catch((err) => {
-        console.error('Error analyzing sentiment for gold:', err.code);
-      });
+  //   SentimentService.performSentimentAnalysis(db, 'gold', 'tradingview')
+  //     .then(() => {
+  //       console.log('Successfully analyzed sentiment for gold');
+  //     })
+  //     .catch((err) => {
+  //       console.error('Error analyzing sentiment for gold:', err.code);
+  //     });
 
-    SentimentService.performSentimentAnalysis(db, 'dollar', 'tradingview')
-      .then(() => {
-        console.log('Successfully analyzed sentiment for dollar:');
-      })
-      .catch((err) => {
-        console.error('Error analyzing sentiment for dollar:', err.code);
-      });
-  });
+  //   SentimentService.performSentimentAnalysis(db, 'dollar', 'tradingview')
+  //     .then(() => {
+  //       console.log('Successfully analyzed sentiment for dollar:');
+  //     })
+  //     .catch((err) => {
+  //       console.error('Error analyzing sentiment for dollar:', err.code);
+  //     });
+  // });
 
-  cron.schedule('*/1 * * * *', async () => {
-    //backlog Summary Tokenizer
-    const db = app.get('db');
-    for (let i = 0; i < 5; i++) {
-      // Loop to process up to 5 entries
-      try {
-        const entry = await db('sentiment_analysis')
-          .whereNull('token_values')
-          .orderBy('id', 'asc') // Ensure entries are processed in order of their id
-          .first();
+  // cron.schedule('*/1 * * * *', async () => {
+  //   //backlog Summary Tokenizer
+  //   const db = app.get('db');
+  //   for (let i = 0; i < 5; i++) {
+  //     // Loop to process up to 5 entries
+  //     try {
+  //       const entry = await db('sentiment_analysis')
+  //         .whereNull('token_values')
+  //         .orderBy('id', 'asc') // Ensure entries are processed in order of their id
+  //         .first();
 
-        if (entry) {
-          // If an unprocessed entry is found, trigger your sentiment analysis functions
-          const sentimentAnalysisId = entry.id;
-          await SentimentService.performTermComparison(db, sentimentAnalysisId);
-          console.log(
-            'Successfully processed entry with id:',
-            sentimentAnalysisId
-          );
-        } else {
-          console.log('No unprocessed entries found.');
-          break; // Exit loop if no unprocessed entry is found
-        }
-      } catch (error) {
-        console.error('Error processing unprocessed entry:', error.code);
-        break; // Exit loop in case of an error
-      }
-    }
-  });
+  //       if (entry) {
+  //         // If an unprocessed entry is found, trigger your sentiment analysis functions
+  //         const sentimentAnalysisId = entry.id;
+  //         await SentimentService.performTermComparison(db, sentimentAnalysisId);
+  //         console.log(
+  //           'Successfully processed entry with id:',
+  //           sentimentAnalysisId
+  //         );
+  //       } else {
+  //         console.log('No unprocessed entries found.');
+  //         break; // Exit loop if no unprocessed entry is found
+  //       }
+  //     } catch (error) {
+  //       console.error('Error processing unprocessed entry:', error.code);
+  //       break; // Exit loop in case of an error
+  //     }
+  //   }
+  // });
 
-  //Backlog Historical Schedulers////////////////////////////////////////
+  // //Backlog Historical Schedulers////////////////////////////////////////
 
-  cron.schedule('*/1 * * * *', async () => {
-    const db = app.get('db');
+  // cron.schedule('*/1 * * * *', async () => {
+  //   const db = app.get('db');
 
-    // Assume subjectIDs for 'gold' and 'dollar' are 1 and 2, respectively
-    const missingDateGold = await SentimentService.findMissingDate(db, 1, 3);
-    const missingDateDollar = await SentimentService.findMissingDate(db, 2, 3);
+  //   // Assume subjectIDs for 'gold' and 'dollar' are 1 and 2, respectively
+  //   const missingDateGold = await SentimentService.findMissingDate(db, 1, 3);
+  //   const missingDateDollar = await SentimentService.findMissingDate(db, 2, 3);
 
-    if (missingDateGold) {
-      console.log(
-        'Fetching historical news for gold on date:',
-        missingDateGold
-      );
-      await SentimentService.fetchHistoricalNews(
-        db,
-        'gold',
-        missingDateGold,
-        missingDateGold
-      );
-    }
+  //   if (missingDateGold) {
+  //     console.log(
+  //       'Fetching historical news for gold on date:',
+  //       missingDateGold
+  //     );
+  //     await SentimentService.fetchHistoricalNews(
+  //       db,
+  //       'gold',
+  //       missingDateGold,
+  //       missingDateGold
+  //     );
+  //   }
 
-    if (missingDateDollar) {
-      console.log(
-        'Fetching historical news for dollar on date:',
-        missingDateDollar
-      );
-      await SentimentService.fetchHistoricalNews(
-        db,
-        'dollar',
-        missingDateDollar,
-        missingDateDollar
-      );
-    }
-  });
+  //   if (missingDateDollar) {
+  //     console.log(
+  //       'Fetching historical news for dollar on date:',
+  //       missingDateDollar
+  //     );
+  //     await SentimentService.fetchHistoricalNews(
+  //       db,
+  //       'dollar',
+  //       missingDateDollar,
+  //       missingDateDollar
+  //     );
+  //   }
+  // });
 
   ////////////////////////////////////////////////////////////////////////////
 };
