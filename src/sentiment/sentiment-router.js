@@ -32,8 +32,8 @@ sentimentRouter.get('/', async (req, res, next) => {
   try {
     // Convert subjectName and sourceName to their respective IDs
     // This part depends on your database structure and how you map names to IDs
-    const subjectId = await sentimentRouter.getOrCreateSubjectID(db, subjectName); // Replace with actual implementation
-    const sourceId = await sentimentRouter.getSourceID(db, sourceName); // Replace with actual implementation
+    const subjectId = await SentimentService.getOrCreateSubjectID(db, subjectName); 
+    const sourceId = await SentimentService.getSourceID(db, sourceName); 
 
     // Query the database for the latest entry for the given subjectId and sourceId
     const latestEntry = await db('sentiment_analysis')
