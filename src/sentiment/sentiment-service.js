@@ -92,7 +92,7 @@ const SentimentService = {
       }
       return processedData;
     } catch (error) {
-      console.error('Error in fetchHistoricalNews:', error);
+      console.error('Error in fetchHistoricalNews:', error.code);
       return null;
     }
   },
@@ -146,7 +146,7 @@ const SentimentService = {
       console.log('Fetched article content');
       return { title, content: articleContent };
     } catch (error) {
-      console.error('Error in fetchArticleContent:', error);
+      console.error('Error in fetchArticleContent:', error.code);
       return null;
     }
   },
@@ -196,7 +196,7 @@ const SentimentService = {
 
       return response.data.choices[0].message.content.trim();
     } catch (error) {
-      console.error(`Error in getTokensFromGPT`, error);
+      console.error(`Error in getTokensFromGPT`, error.code);
       return null;
     }
   },
@@ -251,7 +251,7 @@ const SentimentService = {
     } catch (error) {
       console.error(
         `Error in getSentimentFromGPT for ${analysisType}:`,
-        error
+        error.code
       );
       return null;
     }
@@ -276,7 +276,7 @@ const SentimentService = {
 
       return newID;
     } catch (err) {
-      console.error('Error in getOrCreateSubjectID:', err);
+      console.error('Error in getOrCreateSubjectID:', err.code);
       return null;
     }
   },
@@ -293,7 +293,7 @@ const SentimentService = {
       }
       return null; // Explicitly return null if source is not found
     } catch (err) {
-      console.error('Error in getSourceID:', err);
+      console.error('Error in getSourceID:', err.code);
       return null;
     }
   },
@@ -360,7 +360,7 @@ const SentimentService = {
         .join('\n');
       return masterListString;
     } catch (error) {
-      console.error('Error fetching master list:', error);
+      console.error('Error fetching master list:', error.code);
       return null;
     }
   },
@@ -384,7 +384,7 @@ const SentimentService = {
       });
       console.log('Sentiment analysis updated successfully.');
     } catch (error) {
-      console.error('Error updating sentiment analysis:', error);
+      console.error('Error updating sentiment analysis:', error.code);
     }
   },
 
@@ -483,7 +483,7 @@ const SentimentService = {
         sentimentAnalysisId
       );
     } catch (error) {
-      console.error('Error performing term comparison:', error);
+      console.error('Error performing term comparison:', error.code);
     }
   },
 
@@ -517,7 +517,7 @@ const SentimentService = {
           }
         }
       } catch (error) {
-        console.error('Database query error:', error);
+        console.error('Database query error:', error.code);
       }
     }
 

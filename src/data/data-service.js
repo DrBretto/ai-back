@@ -151,7 +151,7 @@ const DataService = {
       console.log('Completed getData.');
       return { historicalPath, realtimePath, sentimentPath }; // Return the paths to the data files
     } catch (error) {
-      console.error('Error in getData:', error);
+      console.error('Error in getData:', error.code);
       throw error;
     }
   },

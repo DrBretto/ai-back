@@ -31,7 +31,7 @@ module.exports = (app) => {
         console.log('Successfully analyzed sentiment for gold');
       })
       .catch((err) => {
-        console.error('Error analyzing sentiment for gold:', err);
+        console.error('Error analyzing sentiment for gold:', err.code);
       });
 
     SentimentService.performSentimentAnalysis(db, 'dollar', 'tradingview')
@@ -39,7 +39,7 @@ module.exports = (app) => {
         console.log('Successfully analyzed sentiment for dollar:');
       })
       .catch((err) => {
-        console.error('Error analyzing sentiment for dollar:', err);
+        console.error('Error analyzing sentiment for dollar:', err.code);
       });
   });
 
@@ -67,7 +67,7 @@ module.exports = (app) => {
           break; // Exit loop if no unprocessed entry is found
         }
       } catch (error) {
-        console.error('Error processing unprocessed entry:', error);
+        console.error('Error processing unprocessed entry:', error.code);
         break; // Exit loop in case of an error
       }
     }
