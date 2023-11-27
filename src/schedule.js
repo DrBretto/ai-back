@@ -3,7 +3,7 @@ const StocksService = require('./stocks/stocks-service');
 const SentimentService = require('./sentiment/sentiment-service');
 
 module.exports = (app) => {
-  cron.schedule('*/2 * * * *', async () => {
+  cron.schedule('*/1 * * * *', async () => {
     const db = app.get('db');
     //Update historical prices every minute
     console.log('Updating historical prices at:', new Date());
@@ -12,7 +12,7 @@ module.exports = (app) => {
   });
 
 
-  cron.schedule('*/1 * * * *', () => {
+  cron.schedule('*/10 * * * *', () => {
     //TradingView Scrape and analyze
     const db = app.get('db');
     console.log(
