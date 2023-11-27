@@ -230,7 +230,7 @@ const SentimentService = {
     };
 
     const body = {
-      model: 'gpt-4-turbo',
+      model: 'gpt-3.5-turbo',
       messages: [
         {
           role: 'system',
