@@ -6,7 +6,7 @@ module.exports = (app) => {
   cron.schedule('*/1 * * * *', async () => {
     const db = app.get('db');
     //Update historical prices every minute
-    console.log('Updating historical prices at:', new Date());
+    //console.log('Updating historical prices at:', new Date());
     await StocksService.fetchHistoricalData(db, 'JDST');
     await StocksService.fetchHistoricalData(db, 'NUGT');
   });

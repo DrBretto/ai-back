@@ -569,6 +569,10 @@ const SentimentService = {
       if (!isNewArticle) {
         console.log('No new articles found.');
         return 'No new articles';
+      } else {
+        console.log(
+          '--------------------===================New articles found======================-------------'
+        );
       }
 
       // Update lastFetchedUrls for the subject
