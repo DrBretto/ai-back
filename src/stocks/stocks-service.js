@@ -5,6 +5,41 @@ const finnhubApiKey = process.env.FINNHUB_API_KEY;
 const alphaVantageApiKey = process.env.ALPHA_VANTAGE_API_KEY;
 
 const StocksService = {
+  async fetchLast24HoursData(db) {
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
+
+    const stock1Data = await db('stockhistory')
+      .select('date_time', 'closing_price')
+      .where('stock_id', 1)
+      .andWhere('date_time', '>=', oneDayAgo)
+      .orderBy('date_time', 'asc');
+
+    const stock2Data = await db('stockhistory')
+      .select('date_time', 'closing_price')
+      .where('stock_id', 2)
+      .andWhere('date_time', '>=', oneDayAgo)
+      .orderBy('date_time', 'asc');
+
+    return {
+      stock1Data,
+      stock2Data,
+    };
+  },
+
+  normalizePrices(prices) {
+    const allPrices = [...prices.stock1Data.map(p => p.closing_price), ...prices.stock2Data.map(p => p.closing_price)];
+    const minPrice = Math.min(...allPrices);
+    const maxPrice = Math.max(...allPrices);
+  
+    const normalize = price => (price - minPrice) / (maxPrice - minPrice) * 100;
+  
+    return {
+      stock1Data: prices.stock1Data.map(p => ({ ...p, normalized_price: normalize(p.closing_price) })),
+      stock2Data: prices.stock2Data.map(p => ({ ...p, normalized_price: normalize(p.closing_price) }))
+    };
+  },
+  
+
   async getStockId(db, symbol) {
     const stock = await db('stocks').where({ symbol }).first();
     return stock ? stock.stock_id : null;

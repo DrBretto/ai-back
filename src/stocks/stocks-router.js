@@ -27,4 +27,21 @@ stocksRouter.get('/refresh', async (req, res, next) => {
   }
 });
 
+stocksRouter.get('/last24hours', async (req, res, next) => {
+  const db = req.app.get('db');
+
+  try {
+    // Fetch the last 24 hours of prices for two stocks
+    const prices = await StocksService.fetchLast24HoursData(db);
+
+    // Normalize the data if necessary
+    const normalizedPrices = StocksService.normalizePrices(prices);
+
+    res.json(normalizedPrices);
+  } catch (error) {
+    next(error);
+  }
+});
+
+
 module.exports = stocksRouter;
