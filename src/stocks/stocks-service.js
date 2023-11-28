@@ -9,20 +9,22 @@ const StocksService = {
 
   async fetchLast24HoursData(db, stockSymbol) {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
-
+  
+    // Use getStockId to convert the symbol to an ID
+    const stockId = await this.getStockId(db, stockSymbol);
+    if (!stockId) {
+      throw new Error(`Invalid stock symbol: ${stockSymbol}`);
+    }
+  
     const stockData = await db('stockhistory')
       .select('date_time', 'closing_price')
-      .where('stock_id', stockSymbol)
+      .where('stock_id', stockId)
       .andWhere('date_time', '>=', oneDayAgo)
       .orderBy('date_time', 'asc');
-
+  
     return stockData;
   },
-
-  async getStockId(db, symbol) {
-    const stock = await db('stocks').where({ symbol }).first();
-    return stock ? stock.stock_id : null;
-  },
+  
 
   async fetchHistoricalData(db, stockSymbol) {
     const stockId = await this.getStockId(db, stockSymbol);
