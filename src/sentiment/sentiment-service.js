@@ -11,6 +11,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const sh = require('./sentiment-helper');
 
 let totalTokensUsed = 0;
+const lastFetchedUrls = {};
 
 const SentimentService = {
   async scrapeTradingView(subject) {
@@ -556,6 +557,22 @@ const SentimentService = {
         default:
           return null;
       }
+
+      // Extract URLs from articles
+      const newUrls = articles.map((article) => article.url);
+
+      // Check if there are new articles
+      const isNewArticle = newUrls.some(
+        (url) => !lastFetchedUrls[subject]?.includes(url)
+      );
+
+      if (!isNewArticle) {
+        console.log('No new articles found.');
+        return 'No new articles';
+      }
+
+      // Update lastFetchedUrls for the subject
+      lastFetchedUrls[subject] = newUrls;
 
       let combinedContent = '';
       const sentimentSubject = subject === 'dollar' ? 'US Dollar' : subject; //GPT only disambiguation
