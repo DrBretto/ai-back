@@ -27,21 +27,20 @@ stocksRouter.get('/refresh', async (req, res, next) => {
   }
 });
 
+// In stocksRouter
+
 stocksRouter.get('/last24hours', async (req, res, next) => {
   const db = req.app.get('db');
+  const { stockSymbol } = req.query; // Get stockSymbol from query params
 
   try {
-    // Fetch the last 24 hours of prices for two stocks
-    const prices = await StocksService.fetchLast24HoursData(db);
-
-    // Normalize the data if necessary
-    const normalizedPrices = StocksService.normalizePrices(prices);
-
-    res.json(normalizedPrices);
+    const stockData = await StocksService.fetchLast24HoursData(db, stockSymbol);
+    res.json(stockData);
   } catch (error) {
     next(error);
   }
 });
+
 
 
 module.exports = stocksRouter;
