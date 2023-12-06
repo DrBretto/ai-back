@@ -66,25 +66,42 @@ class OverlappingWindowDataset(Dataset):
         target_sequence = self.data.iloc[index+self.window_size:index+(2*self.window_size)].values.astype(np.float32)
         return torch.Tensor(input_sequence), torch.Tensor(target_sequence)
 
-def save_min_max_values(jdst_min, jdst_max, nugt_min, nugt_max, filename='min_max_values.json'):
-    values = {
-        'jdst_min': jdst_min.tolist() if isinstance(jdst_min, pd.Series) else jdst_min,
-        'jdst_max': jdst_max.tolist() if isinstance(jdst_max, pd.Series) else jdst_max,
-        'nugt_min': nugt_min.tolist() if isinstance(nugt_min, pd.Series) else nugt_min,
-        'nugt_max': nugt_max.tolist() if isinstance(nugt_max, pd.Series) else nugt_max
-    }
-    with open(filename, 'w') as file:
-        json.dump(values, file)
 
 
-def load_min_max_values(filename='min_max_values.json'):
-    try:
-        with open(filename, 'r') as file:
-            values = json.load(file)
-        return values['jdst_min'], values['jdst_max'], values['nugt_min'], values['nugt_max']
-    except FileNotFoundError:
-        print(f"File {filename} not found. Please ensure the min and max values have been saved.")
+def save_min_max_values_to_db(jdst_min, jdst_max, nugt_min, nugt_max, db_config):
+    # Convert pandas Series to a single value (assuming each Series has only one value)
+    jdst_min_value = jdst_min.iloc[0] if isinstance(jdst_min, pd.Series) else jdst_min
+    jdst_max_value = jdst_max.iloc[0] if isinstance(jdst_max, pd.Series) else jdst_max
+    nugt_min_value = nugt_min.iloc[0] if isinstance(nugt_min, pd.Series) else nugt_min
+    nugt_max_value = nugt_max.iloc[0] if isinstance(nugt_max, pd.Series) else nugt_max
+
+    conn = psycopg2.connect(**db_config)
+    cursor = conn.cursor()
+    query = """
+    INSERT INTO normalization_parameters (jdst_min, jdst_max, nugt_min, nugt_max) 
+    VALUES (%s, %s, %s, %s);
+    """
+    cursor.execute(query, (jdst_min_value, jdst_max_value, nugt_min_value, nugt_max_value))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+   
+def load_min_max_values_from_db(db_config):
+    conn = psycopg2.connect(**db_config)
+    cursor = conn.cursor()
+    query = "SELECT jdst_min, jdst_max, nugt_min, nugt_max FROM normalization_parameters ORDER BY created_at DESC LIMIT 1;"
+    cursor.execute(query)
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if result:
+        return result
+    else:
+        print("No normalization parameters found in the database.")
         return None, None, None, None
+
 
 def create_future_price_points(stock_data, future_window=96, future_interval=15):
     new_frames = []
@@ -407,7 +424,7 @@ def process_data(batch_size, model_id):
     jdst_min, jdst_max = calculate_min_max(final_combined_data[jdst_columns])
     nugt_min, nugt_max = calculate_min_max(final_combined_data[nugt_columns])
 
-    save_min_max_values(jdst_min, jdst_max, nugt_min, nugt_max)
+    save_min_max_values_to_db(jdst_min, jdst_max, nugt_min, nugt_max)
 
     input_size = 1102
     output_size = 192
@@ -488,7 +505,7 @@ if __name__ == '__main__':
         print("Model parameters saved to the database.")
     elif operation == 'predict':
 
-        print("Prediction endpoint successfully hit:", load_min_max_values())
+        print("Prediction endpoint successfully hit:", load_min_max_values_from_db())
         data = prepare_data_for_prediction()
         # Load model, fetch latest data, and run predictions
         # This part will be filled with your prediction logic
