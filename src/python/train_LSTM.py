@@ -92,14 +92,7 @@ def save_min_max_values_to_db(jdst_min, jdst_max, nugt_min, nugt_max):
     cursor.close()
     conn.close()
   
-def load_min_max_values_from_db():
-    db_config = {
-    'dbname': os.environ['DB_NAME'],
-    'user': os.environ['DB_USER'],
-    'password': os.environ['DB_PASSWORD'],
-    'host': os.environ['DB_HOST']
-    }
-
+def load_min_max_values_from_db(db_config):
     conn = psycopg2.connect(**db_config)
     cursor = conn.cursor()
     query = "SELECT jdst_min, jdst_max, nugt_min, nugt_max FROM normalization_parameters ORDER BY created_at DESC LIMIT 1;"
@@ -109,10 +102,12 @@ def load_min_max_values_from_db():
     conn.close()
 
     if result:
-        return result
+        # Convert result tuple to a dictionary
+        return {'jdst_min': result[0], 'jdst_max': result[1], 'nugt_min': result[2], 'nugt_max': result[3]}
     else:
         print("No normalization parameters found in the database.")
         return None, None, None, None
+
 
 def create_future_price_points(stock_data, future_window=96, future_interval=15):
     new_frames = []
