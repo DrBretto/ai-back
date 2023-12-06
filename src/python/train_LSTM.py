@@ -68,13 +68,19 @@ class OverlappingWindowDataset(Dataset):
 
 
 
-def save_min_max_values_to_db(jdst_min, jdst_max, nugt_min, nugt_max, db_config):
+def save_min_max_values_to_db(jdst_min, jdst_max, nugt_min, nugt_max):
     # Convert pandas Series to a single value (assuming each Series has only one value)
     jdst_min_value = jdst_min.iloc[0] if isinstance(jdst_min, pd.Series) else jdst_min
     jdst_max_value = jdst_max.iloc[0] if isinstance(jdst_max, pd.Series) else jdst_max
     nugt_min_value = nugt_min.iloc[0] if isinstance(nugt_min, pd.Series) else nugt_min
     nugt_max_value = nugt_max.iloc[0] if isinstance(nugt_max, pd.Series) else nugt_max
-
+   
+    db_config = {
+    'dbname': os.environ['DB_NAME'],
+    'user': os.environ['DB_USER'],
+    'password': os.environ['DB_PASSWORD'],
+    'host': os.environ['DB_HOST']
+    }
     conn = psycopg2.connect(**db_config)
     cursor = conn.cursor()
     query = """
@@ -87,7 +93,14 @@ def save_min_max_values_to_db(jdst_min, jdst_max, nugt_min, nugt_max, db_config)
     conn.close()
 
    
-def load_min_max_values_from_db(db_config):
+def load_min_max_values_from_db():
+    db_config = {
+    'dbname': os.environ['DB_NAME'],
+    'user': os.environ['DB_USER'],
+    'password': os.environ['DB_PASSWORD'],
+    'host': os.environ['DB_HOST']
+    }
+    
     conn = psycopg2.connect(**db_config)
     cursor = conn.cursor()
     query = "SELECT jdst_min, jdst_max, nugt_min, nugt_max FROM normalization_parameters ORDER BY created_at DESC LIMIT 1;"
