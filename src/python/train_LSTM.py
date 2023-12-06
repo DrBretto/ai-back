@@ -411,6 +411,8 @@ def process_data(batch_size, model_id):
     model = get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+    last_input_tensor = None
     
     for input_tensor, label_tensor in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
         # Log the shapes of the tensors
@@ -432,16 +434,40 @@ def process_data(batch_size, model_id):
         }
 
         save_model_parameters(model, db_config, model_id)
+        last_input_tensor = input_tensor[-1]
 
     return model
 
 
-if __name__ == '__main__':
-    batch_size = 10000
-    model_id = 1
-    trained_model = process_data(batch_size, model_id)
-    
+def prepare_latest_data_for_prediction(df, jdst_min, jdst_max, nugt_min, nugt_max):
+    # Use only the most recent data required for one prediction
+    max_lag = max(_defaultIntervals) * _lagwindow
+    latest_data_slice = df.iloc[-max_lag:]
 
+    # Add time features and normalize data
+    latest_data_slice = add_time_features(latest_data_slice)
+    latest_data_slice = normalize_data_in_batch(latest_data_slice, jdst_min, jdst_max, ['closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst'])
+    latest_data_slice = normalize_data_in_batch(latest_data_slice, nugt_min, nugt_max, ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt'])
+
+    # Create lagged features
+    latest_data_with_features = create_lagged_features(latest_data_slice, _defaultIntervals, _lagwindow)
+
+    # Prepare the tensor
+    input_data = latest_data_with_features.iloc[-1]  # Get the last row for prediction
+    non_token_data = input_data.drop(columns=['token_values_gold', 'token_values_usd'])
+    non_token_tensor = torch.tensor(non_token_data.values, dtype=torch.float32)
+    token_values_gold_tensor = torch.tensor([input_data['token_values_gold']], dtype=torch.float32)
+    token_values_usd_tensor = torch.tensor([input_data['token_values_usd']], dtype=torch.float32)
+
+    # Concatenate and add batch dimension
+    input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=0).unsqueeze(0)
+
+    return input_tensor
+
+
+if __name__ == '__main__':
+    operation = sys.argv[1]  # 'train' or 'predict'
+    model_id = 1
     db_config = {
         'dbname': os.environ['DB_NAME'],
         'user': os.environ['DB_USER'],
@@ -449,6 +475,13 @@ if __name__ == '__main__':
         'host': os.environ['DB_HOST']
     }
 
-    save_model_parameters(trained_model, db_config, model_id)
-    print("Model parameters saved to the database.")
-
+    if operation == 'train':
+        batch_size = 10000
+        trained_model = process_data(batch_size, model_id)
+        save_model_parameters(trained_model, db_config, model_id)
+        print("Model parameters saved to the database.")
+    elif operation == 'predict':
+        print("Prediction endpoint successfully hit")
+        # Load model, fetch latest data, and run predictions
+        # This part will be filled with your prediction logic
+        pass

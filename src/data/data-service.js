@@ -188,38 +188,36 @@ const DataService = {
     });
   },
 
-  // Inside your DataService object in DataService.js
+  async predictLSTM() {
+    console.log('Starting LSTM prediction...');
 
-  // async trainLSTM() {
-  //   console.log('Starting LSTM training...');
+    return new Promise((resolve, reject) => {
+      const pythonProcess = spawn(
+        'env/bin/python',
+        ['-u', 'src/python/train_LSTM.py', 'predict'],
+        {
+          shell: true,
+        }
+      );
+      pythonProcess.stdout.on('data', (data) => {
+        console.log('Real-time output:', data.toString());
+      });
 
-  //   return new Promise((resolve, reject) => {
-  //     const process = exec(
-  //       `. env/bin/activate && env/bin/python src/python/train_LSTM.py`,
-  //       (error, stdout, stderr) => {
-  //         if (error) {
-  //           console.error('Error occurred:', error);
-  //           console.error('Error details:', stderr);
-  //           reject(error);
-  //           return;
-  //         }
+      pythonProcess.stderr.on('data', (data) => {
+        console.error('Real-time error:', data.toString());
+      });
 
-  //         console.log('Training completed. Output:', stdout);
-  //         resolve(stdout); // Resolve with the raw stdout data directly.
-  //       }
-  //     );
-
-  //     Optional: If you want to capture real-time stdout as it is being printed by the Python script
-  //     process.stdout.on('data', (data) => {
-  //       console.log('Real-time output:', data.toString());
-  //     });
-
-  //     Optional: If you want to capture real-time stderr as it is being printed by the Python script
-  //     process.stderr.on('data', (data) => {
-  //       console.error('Real-time error:', data.toString());
-  //     });
-  //   });
-  //},
+      pythonProcess.on('close', (code) => {
+        if (code !== 0) {
+          console.error(`Training process exited with code ${code}`);
+          reject(new Error('Training failed'));
+        } else {
+          console.log('Training completed successfully.');
+          resolve();
+        }
+      });
+    });
+  },
 };
 
 module.exports = DataService;

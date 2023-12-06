@@ -42,6 +42,15 @@ router.get('/train', async (req, res, next) => {
   
 });
 
+router.get('/predict', async (req, res, next) => {
+  try {
+    const result = await DataService.predictLSTM();
+    res.json(result);
+  } catch (error) {
+    console.error('Error in /predict route handler:', error);
+    next(error);
+  }
+});
 
 router.get('/delete-cache', (req, res) => {
   DataService.deleteCache();
