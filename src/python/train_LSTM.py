@@ -502,7 +502,8 @@ def prepare_data_for_prediction():
     final_combined_data.fillna(method='bfill', inplace=True)
 
     # Load normalization parameters
-    jdst_min, jdst_max, nugt_min, nugt_max = load_min_max_values_from_db()
+    min_max_values = load_min_max_values_from_db()
+
 
     # Calculate the number of minutes needed for the lag window
     max_interval = max(_defaultIntervals)  # Assuming _defaultIntervals = [1, 15, 60, 1440]
@@ -511,8 +512,9 @@ def prepare_data_for_prediction():
     # Slicing the dataset for the lag window
     final_combined_data = final_combined_data.tail(lag_minutes)
 
-    final_combined_data = normalize_data_in_batch(final_combined_data, jdst_min, jdst_max, ['closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst'])
-    final_combined_data = normalize_data_in_batch(final_combined_data, nugt_min, nugt_max, ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt'])
+# Ensure these are not string type but dictionaries or Series
+    final_combined_data = normalize_data_in_batch(final_combined_data, min_max_values['jdst_min'], min_max_values['jdst_max'], ['closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst'])
+    final_combined_data = normalize_data_in_batch(final_combined_data, min_max_values['nugt_min'], min_max_values['nugt_max'], ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt'])
 
     # Create lagged features
     final_combined_data = create_lagged_features(final_combined_data, _defaultIntervals, _lagwindow)
