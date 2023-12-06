@@ -92,7 +92,13 @@ def save_min_max_values_to_db(jdst_min, jdst_max, nugt_min, nugt_max):
     cursor.close()
     conn.close()
   
-def load_min_max_values_from_db(db_config):
+def load_min_max_values_from_db():
+    db_config = {
+    'dbname': os.environ['DB_NAME'],
+    'user': os.environ['DB_USER'],
+    'password': os.environ['DB_PASSWORD'],
+    'host': os.environ['DB_HOST']
+}
     conn = psycopg2.connect(**db_config)
     cursor = conn.cursor()
     query = "SELECT jdst_min, jdst_max, nugt_min, nugt_max FROM normalization_parameters ORDER BY created_at DESC LIMIT 1;"
