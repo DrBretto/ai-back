@@ -179,6 +179,11 @@ def normalize_data_in_batch(batch_data, min_values, max_values, columns_to_norma
         batch_data[column] = (batch_data[column] - min_values[column]) / (max_values[column] - min_values[column])
     return batch_data
 
+def normalize_prediction_data(batch_data, min_value, max_value, columns_to_normalize):
+    for column in columns_to_normalize:
+        batch_data[column] = (batch_data[column] - min_value) / (max_value - min_value)
+    return batch_data
+
 def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, intervals=_defaultIntervals, lagwindow=_lagwindow, future_window=_future_window, future_interval=_future_interval):
     max_lag = max(intervals) * lagwindow
     future_offset = future_window * future_interval
@@ -513,8 +518,8 @@ def prepare_data_for_prediction():
     final_combined_data = final_combined_data.tail(lag_minutes)
 
 # Ensure these are not string type but dictionaries or Series
-    final_combined_data = normalize_data_in_batch(final_combined_data, min_max_values['jdst_min'], min_max_values['jdst_max'], ['closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst'])
-    final_combined_data = normalize_data_in_batch(final_combined_data, min_max_values['nugt_min'], min_max_values['nugt_max'], ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt'])
+    final_combined_data = normalize_prediction_data(final_combined_data, min_max_values['jdst_min'], min_max_values['jdst_max'], ['closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst'])
+    final_combined_data = normalize_prediction_data(final_combined_data, min_max_values['nugt_min'], min_max_values['nugt_max'], ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt'])
 
     # Create lagged features
     final_combined_data = create_lagged_features(final_combined_data, _defaultIntervals, _lagwindow)
