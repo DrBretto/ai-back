@@ -68,13 +68,14 @@ class OverlappingWindowDataset(Dataset):
 
 def save_min_max_values(jdst_min, jdst_max, nugt_min, nugt_max, filename='min_max_values.json'):
     values = {
-        'jdst_min': jdst_min,
-        'jdst_max': jdst_max,
-        'nugt_min': nugt_min,
-        'nugt_max': nugt_max
+        'jdst_min': jdst_min.tolist() if isinstance(jdst_min, pd.Series) else jdst_min,
+        'jdst_max': jdst_max.tolist() if isinstance(jdst_max, pd.Series) else jdst_max,
+        'nugt_min': nugt_min.tolist() if isinstance(nugt_min, pd.Series) else nugt_min,
+        'nugt_max': nugt_max.tolist() if isinstance(nugt_max, pd.Series) else nugt_max
     }
     with open(filename, 'w') as file:
         json.dump(values, file)
+
 
 def load_min_max_values(filename='min_max_values.json'):
     try:
