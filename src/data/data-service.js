@@ -162,7 +162,7 @@ const DataService = {
     return new Promise((resolve, reject) => {
       const pythonProcess = spawn(
         'env/bin/python',
-        ['-u', 'src/python/train_LSTM.py'],
+        ['-u', 'src/python/train_LSTM.py', 'predict'],
         {
           shell: true,
         }

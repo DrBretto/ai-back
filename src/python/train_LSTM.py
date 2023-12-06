@@ -53,11 +53,6 @@ class FinancialLSTM(nn.Module):
         
         return out
 
-
-    
-
-
-
 class OverlappingWindowDataset(Dataset):
     def __init__(self, data, lagwindow):
         self.data = data
@@ -71,16 +66,24 @@ class OverlappingWindowDataset(Dataset):
         target_sequence = self.data.iloc[index+self.window_size:index+(2*self.window_size)].values.astype(np.float32)
         return torch.Tensor(input_sequence), torch.Tensor(target_sequence)
 
-def create_future_price_points(stock_data, future_window=96, future_interval=15):
-    new_frames = []
-    for lead in range(future_interval, future_window * future_interval + 1, future_interval):
-        for feature in ['closing_price_nugt', 'closing_price_jdst']:
-            future_column_name = f'{feature}_future_{lead}'
-            future_feature = stock_data[feature].shift(-lead).fillna(method='ffill')
-            future_feature_frame = future_feature.to_frame(name=future_column_name)
-            new_frames.append(future_feature_frame)
-    future_data = pd.concat([stock_data] + new_frames, axis=1)
-    return future_data
+def save_min_max_values(jdst_min, jdst_max, nugt_min, nugt_max, filename='min_max_values.json'):
+    values = {
+        'jdst_min': jdst_min,
+        'jdst_max': jdst_max,
+        'nugt_min': nugt_min,
+        'nugt_max': nugt_max
+    }
+    with open(filename, 'w') as file:
+        json.dump(values, file)
+
+def load_min_max_values(filename='min_max_values.json'):
+    try:
+        with open(filename, 'r') as file:
+            values = json.load(file)
+        return values['jdst_min'], values['jdst_max'], values['nugt_min'], values['nugt_max']
+    except FileNotFoundError:
+        print(f"File {filename} not found. Please ensure the min and max values have been saved.")
+        return None, None, None, None
 
 def create_future_price_points(stock_data, future_window=96, future_interval=15):
     new_frames = []
@@ -403,6 +406,8 @@ def process_data(batch_size, model_id):
     jdst_min, jdst_max = calculate_min_max(final_combined_data[jdst_columns])
     nugt_min, nugt_max = calculate_min_max(final_combined_data[nugt_columns])
 
+    save_min_max_values(jdst_min, jdst_max, nugt_min, nugt_max)
+
     input_size = 1102
     output_size = 192
     hidden_size = 100  
@@ -464,6 +469,9 @@ def prepare_latest_data_for_prediction(df, jdst_min, jdst_max, nugt_min, nugt_ma
 
     return input_tensor
 
+def prepare_data_for_prediction():
+    data = "something"
+    return data
 
 if __name__ == '__main__':
     operation = sys.argv[1]  # 'train' or 'predict'
@@ -482,6 +490,7 @@ if __name__ == '__main__':
         print("Model parameters saved to the database.")
     elif operation == 'predict':
         print("Prediction endpoint successfully hit")
+        data = prepare_data_for_prediction()
         # Load model, fetch latest data, and run predictions
         # This part will be filled with your prediction logic
         pass
