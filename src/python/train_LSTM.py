@@ -91,8 +91,7 @@ def save_min_max_values_to_db(jdst_min, jdst_max, nugt_min, nugt_max):
     conn.commit()
     cursor.close()
     conn.close()
-
-   
+  
 def load_min_max_values_from_db():
     db_config = {
     'dbname': os.environ['DB_NAME'],
@@ -100,7 +99,7 @@ def load_min_max_values_from_db():
     'password': os.environ['DB_PASSWORD'],
     'host': os.environ['DB_HOST']
     }
-    
+
     conn = psycopg2.connect(**db_config)
     cursor = conn.cursor()
     query = "SELECT jdst_min, jdst_max, nugt_min, nugt_max FROM normalization_parameters ORDER BY created_at DESC LIMIT 1;"
@@ -114,7 +113,6 @@ def load_min_max_values_from_db():
     else:
         print("No normalization parameters found in the database.")
         return None, None, None, None
-
 
 def create_future_price_points(stock_data, future_window=96, future_interval=15):
     new_frames = []
@@ -471,35 +469,68 @@ def process_data(batch_size, model_id):
 
     return model
 
+def prepare_data_for_prediction():
+    # Fetch all data
+    historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
 
-def prepare_latest_data_for_prediction(df, jdst_min, jdst_max, nugt_min, nugt_max):
-    # Use only the most recent data required for one prediction
-    max_lag = max(_defaultIntervals) * _lagwindow
-    latest_data_slice = df.iloc[-max_lag:]
+    # Process sentiment data
+    sentiment_gold['token_values'] = sentiment_gold['token_values'].apply(
+        lambda x: adjust_token_values_length(x, 100))
 
-    # Add time features and normalize data
-    latest_data_slice = add_time_features(latest_data_slice)
-    latest_data_slice = normalize_data_in_batch(latest_data_slice, jdst_min, jdst_max, ['closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst'])
-    latest_data_slice = normalize_data_in_batch(latest_data_slice, nugt_min, nugt_max, ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt'])
+    sentiment_usd['token_values'] = sentiment_usd['token_values'].apply(
+        lambda x: adjust_token_values_length(x, 100))
+
+    # Merge and process sentiment data
+    combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
+    combined_sentiment['token_values_gold'] = combined_sentiment['token_values_gold'].apply(lambda x: x if isinstance(x, list) else [-1]*100)
+    combined_sentiment['token_values_usd'] = combined_sentiment['token_values_usd'].apply(lambda x: x if isinstance(x, list) else [-1]*100)
+    combined_sentiment.fillna(method='ffill', inplace=True)
+    combined_sentiment.fillna(method='bfill', inplace=True)
+    combined_sentiment.sort_values('date_published', inplace=True)
+
+    # Merge and process stock data
+    combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
+    combined_stocks.sort_values('date_time', inplace=True)
+    combined_stocks.drop(['id_jdst', 'stock_id_jdst', 'id_nugt', 'stock_id_nugt'], axis=1, inplace=True)
+
+    # Merge stock and sentiment data
+    final_combined_data = pd.merge_asof(combined_stocks, combined_sentiment, left_on='date_time', right_on='date_published', direction='nearest')
+    final_combined_data.drop(columns=['date_published'], inplace=True)
+    final_combined_data.reset_index(drop=True, inplace=True)
+    final_combined_data.fillna(method='ffill', inplace=True)
+    final_combined_data.fillna(method='bfill', inplace=True)
+
+    # Load normalization parameters
+    jdst_min, jdst_max, nugt_min, nugt_max = load_min_max_values_from_db()
+
+    # Calculate the number of minutes needed for the lag window
+    max_interval = max(_defaultIntervals)  # Assuming _defaultIntervals = [1, 15, 60, 1440]
+    lag_minutes = _lagwindow * max_interval  # Assuming _lagwindow = 30
+
+    # Slicing the dataset for the lag window
+    final_combined_data = final_combined_data.tail(lag_minutes)
+
+    final_combined_data = normalize_data_in_batch(final_combined_data, jdst_min, jdst_max, ['closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst'])
+    final_combined_data = normalize_data_in_batch(final_combined_data, nugt_min, nugt_max, ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt'])
 
     # Create lagged features
-    latest_data_with_features = create_lagged_features(latest_data_slice, _defaultIntervals, _lagwindow)
+    final_combined_data = create_lagged_features(final_combined_data, _defaultIntervals, _lagwindow)
 
-    # Prepare the tensor
-    input_data = latest_data_with_features.iloc[-1]  # Get the last row for prediction
-    non_token_data = input_data.drop(columns=['token_values_gold', 'token_values_usd'])
+    non_token_data = final_combined_data.drop(columns=['token_values_gold', 'token_values_usd'])
     non_token_tensor = torch.tensor(non_token_data.values, dtype=torch.float32)
-    token_values_gold_tensor = torch.tensor([input_data['token_values_gold']], dtype=torch.float32)
-    token_values_usd_tensor = torch.tensor([input_data['token_values_usd']], dtype=torch.float32)
 
-    # Concatenate and add batch dimension
-    input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=0).unsqueeze(0)
+    token_values_gold = [torch.tensor(t, dtype=torch.float32) for t in final_combined_data['token_values_gold'].tolist()]
+    token_values_usd = [torch.tensor(t, dtype=torch.float32) for t in final_combined_data['token_values_usd'].tolist()]
+    token_values_gold_tensor = torch.stack(token_values_gold)
+    token_values_usd_tensor = torch.stack(token_values_usd)
+
+    # Combine non-token and token tensors
+    input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
 
     return input_tensor
 
-def prepare_data_for_prediction():
-    data = "something"
-    return data
+
+
 
 if __name__ == '__main__':
     operation = sys.argv[1]  # 'train' or 'predict'
@@ -519,7 +550,6 @@ if __name__ == '__main__':
     elif operation == 'predict':
 
         print("Prediction endpoint successfully hit:", load_min_max_values_from_db())
-        data = prepare_data_for_prediction()
-        # Load model, fetch latest data, and run predictions
-        # This part will be filled with your prediction logic
+        prediction_tensor = prepare_data_for_prediction()
+        print(f"Shape of prediction tensor: {prediction_tensor.shape}")
         pass
