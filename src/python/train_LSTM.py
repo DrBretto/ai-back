@@ -417,8 +417,6 @@ def process_data(batch_size, model_id):
     model = get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-
-    last_input_tensor = None
     
     for input_tensor, label_tensor in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
         # Log the shapes of the tensors
@@ -440,7 +438,6 @@ def process_data(batch_size, model_id):
         }
 
         save_model_parameters(model, db_config, model_id)
-        last_input_tensor = input_tensor[-1]
 
     return model
 
@@ -490,7 +487,8 @@ if __name__ == '__main__':
         save_model_parameters(trained_model, db_config, model_id)
         print("Model parameters saved to the database.")
     elif operation == 'predict':
-        print("Prediction endpoint successfully hit")
+
+        print("Prediction endpoint successfully hit:", load_min_max_values())
         data = prepare_data_for_prediction()
         # Load model, fetch latest data, and run predictions
         # This part will be filled with your prediction logic
