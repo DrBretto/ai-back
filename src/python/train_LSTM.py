@@ -556,16 +556,23 @@ def prepare_data_for_prediction():
 
     print(f"non_token_tensor: {non_token_tensor.shape}")
 
-    token_values_gold = [torch.tensor(t, dtype=torch.float32) for t in final_combined_data['token_values_gold'].tolist()]
-    token_values_usd = [torch.tensor(t, dtype=torch.float32) for t in final_combined_data['token_values_usd'].tolist()]
-    token_values_gold_tensor = torch.stack(token_values_gold)
-    token_values_usd_tensor = torch.stack(token_values_usd)
+    combined_tensors = []
 
-    # Combine non-token and token tensors
-    input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
+    for start in range(0, len(final_combined_data), batch_size):
+        end = start + batch_size
+        batch_data = final_combined_data.iloc[start:end]
 
+        non_token_tensor = torch.tensor(batch_data.drop(columns=['token_values_gold', 'token_values_usd']).values, dtype=torch.float32)
+        token_values_gold_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in batch_data['token_values_gold']])
+        token_values_usd_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in batch_data['token_values_usd']])
+
+        # Combine non-token and token tensors for this batch
+        batch_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
+        combined_tensors.append(batch_tensor)
+
+    # Concatenate all batches
+    input_tensor = torch.cat(combined_tensors, dim=0)
     return input_tensor
-
 
 
 
