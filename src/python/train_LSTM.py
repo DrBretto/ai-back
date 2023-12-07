@@ -180,6 +180,7 @@ def normalize_data_in_batch(batch_data, min_values, max_values, columns_to_norma
     return batch_data
 
 def normalize_prediction_data(data, min_value, max_value, columns_to_normalize):
+    print(f"Normalizing batch data for columns: {columns_to_normalize}")
     batch_size = 1000  # Fixed batch size
     normalized_batches = []
 
