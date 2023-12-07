@@ -336,6 +336,8 @@ def save_model_parameters(model, db_config, model_id):
             conn.commit()
 
 def load_model_parameters(model_id, model, db_config):
+    # Create an instance of the model
+
     with psycopg2.connect(**db_config) as conn:
         with conn.cursor() as cursor:
             cursor.execute('SELECT parameters FROM model_parameters WHERE id = %s', (model_id,))
@@ -347,6 +349,9 @@ def load_model_parameters(model_id, model, db_config):
                 model.load_state_dict(torch.load(byte_stream, map_location=torch.device('cpu')))
             else:
                 raise ValueError('No model parameters found in the database for the provided model_id.')
+
+    return model
+
 
 def get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size):
     # Database configuration from environment variables
@@ -569,7 +574,13 @@ def process_data_for_prediction(batch_size, model_id):
 
     save_min_max_values_to_db(jdst_min, jdst_max, nugt_min, nugt_max)
     # Load the model for prediction
-    model = load_model_parameters(model_id)  # Ensure this function loads the trained model
+
+    input_size = 1102
+    output_size = 192
+    hidden_size = 100  
+    num_layers = 2  
+    
+    model = get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size)
 
     # Prepare the last slice of data for prediction
     prediction_input = final_combined_data.iloc[-1:]  # Assuming you need the last row for prediction
@@ -579,103 +590,6 @@ def process_data_for_prediction(batch_size, model_id):
 
     # Extract predicted closing prices for each stock from the prediction
     return prediction
-
-# def prepare_data_for_prediction():
-#     # Fetch all data
-#     historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
-
-#     # Process sentiment data
-#     sentiment_gold['token_values'] = sentiment_gold['token_values'].apply(
-#         lambda x: adjust_token_values_length(x, 100))
-
-#     sentiment_usd['token_values'] = sentiment_usd['token_values'].apply(
-#         lambda x: adjust_token_values_length(x, 100))
-
-#     # Merge and process sentiment data
-#     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
-#     combined_sentiment['token_values_gold'] = combined_sentiment['token_values_gold'].apply(lambda x: x if isinstance(x, list) else [-1]*100)
-#     combined_sentiment['token_values_usd'] = combined_sentiment['token_values_usd'].apply(lambda x: x if isinstance(x, list) else [-1]*100)
-#     combined_sentiment.fillna(method='ffill', inplace=True)
-#     combined_sentiment.fillna(method='bfill', inplace=True)
-#     combined_sentiment.sort_values('date_published', inplace=True)
-
-#     # Merge and process stock data
-#     combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
-#     combined_stocks.sort_values('date_time', inplace=True)
-#     combined_stocks.drop(['id_jdst', 'stock_id_jdst', 'id_nugt', 'stock_id_nugt'], axis=1, inplace=True)
-
-#     # Merge stock and sentiment data
-#     final_combined_data = pd.merge_asof(combined_stocks, combined_sentiment, left_on='date_time', right_on='date_published', direction='nearest')
-#     final_combined_data.drop(columns=['date_published'], inplace=True)
-#     final_combined_data.reset_index(drop=True, inplace=True)
-#     final_combined_data.fillna(method='ffill', inplace=True)
-#     final_combined_data.fillna(method='bfill', inplace=True)
-
-#     # Load normalization parameters
-#     min_max_values = load_min_max_values_from_db()
-
-
-#     # Calculate the number of minutes needed for the lag window
-#     max_interval = max(_defaultIntervals)  # Assuming _defaultIntervals = [1, 15, 60, 1440]
-#     lag_minutes = _lagwindow * max_interval  # Assuming _lagwindow = 30
-
-#     # Slicing the dataset for the lag window
-#     final_combined_data = final_combined_data.tail(lag_minutes)
-
-# # Ensure these are not string type but dictionaries or Series
-#     final_combined_data = normalize_prediction_data(final_combined_data, min_max_values['jdst_min'], min_max_values['jdst_max'], ['closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst'])
-#     final_combined_data = normalize_prediction_data(final_combined_data, min_max_values['nugt_min'], min_max_values['nugt_max'], ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt'])
-
-#     lagged_data_combined = pd.DataFrame()
-
-#     # Process the data in batches
-#     batch_size = 1000 
-#     for start in range(0, len(final_combined_data), batch_size):
-#         end = start + batch_size
-#         batch_data = final_combined_data.iloc[start:end]
-
-#         # Create lagged features for the current batch
-#         batch_with_lags = create_lagged_features(batch_data, _defaultIntervals, _lagwindow)
-#         lagged_data_combined = pd.concat([lagged_data_combined, batch_with_lags])
-
-#     final_combined_data = lagged_data_combined
-
-#     print(f"================lags complete==============")
-#     batch_size = 10000  # Adjust the batch size as needed
-#     non_token_tensors = []
-
-#     for start in range(0, len(final_combined_data), batch_size):
-#         end = start + batch_size
-#         batch_data = final_combined_data.iloc[start:end]
-#         batch_non_token_data = batch_data.drop(columns=['token_values_gold', 'token_values_usd'])
-#         batch_non_token_tensor = torch.tensor(batch_non_token_data.values, dtype=torch.float32)
-#         non_token_tensors.append(batch_non_token_tensor)
-
-#     # Concatenate all the non-token tensors
-#     non_token_tensor = torch.cat(non_token_tensors, dim=0)
-
-
-#     print(f"non_token_tensor: {non_token_tensor.shape}")
-
-#     combined_tensors = []
-
-#     for start in range(0, len(final_combined_data), batch_size):
-#         end = start + batch_size
-#         batch_data = final_combined_data.iloc[start:end]
-
-#         non_token_tensor = torch.tensor(batch_data.drop(columns=['token_values_gold', 'token_values_usd']).values, dtype=torch.float32)
-#         token_values_gold_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in batch_data['token_values_gold']])
-#         token_values_usd_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in batch_data['token_values_usd']])
-
-#         # Combine non-token and token tensors for this batch
-#         batch_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
-#         combined_tensors.append(batch_tensor)
-
-#     # Concatenate all batches
-#     input_tensor = torch.cat(combined_tensors, dim=0)
-#     return input_tensor
-
-
 
 if __name__ == '__main__':
     operation = sys.argv[1]  # 'train' or 'predict'
@@ -696,6 +610,6 @@ if __name__ == '__main__':
     elif operation == 'predict':
 
         print("Prediction endpoint successfully hit:", load_min_max_values_from_db())
-        prediction = process_data_for_prediction(batch_size, model_id)
+        prediction = process_data_for_prediction(batch_size,db_config, model_id)
         print(f"Shape of prediction tensor:", prediction)
         pass
