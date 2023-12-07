@@ -266,12 +266,13 @@ def process_in_batches_for_prediction(df, jdst_min, jdst_max, nugt_min, nugt_max
         batch = normalize_data_in_batch(batch, jdst_min, jdst_max, columns_to_normalize_jdst)
         batch = normalize_data_in_batch(batch, nugt_min, nugt_max, columns_to_normalize_nugt)
         batch_with_features = create_lagged_features(batch, intervals, lagwindow)
+        batch_with_features = batch_with_features.iloc[max_lag:(max_lag + batch_size)]
         batch_with_features.drop(columns=['date_time'], inplace=True)
 
         if batch_with_features.empty:
             sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
             continue 
-
+        
         input_data = batch_with_features
 
         token_values_gold = input_data['token_values_gold'].tolist()
@@ -642,7 +643,7 @@ def process_data_for_prediction(batch_size, model_id):
 if __name__ == '__main__':
     operation = sys.argv[1]  # 'train' or 'predict'
     model_id = 1
-    batch_size = 5000
+    batch_size = 10000
     db_config = {
         'dbname': os.environ['DB_NAME'],
         'user': os.environ['DB_USER'],
