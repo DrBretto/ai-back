@@ -622,19 +622,21 @@ def process_data_for_prediction(batch_size, model_id):
     hidden_size = 100  
     num_layers = 2  
     
+    print(f"final final_combined_data: {final_combined_data.isna().sum()}")
+
     # Initialize the model
     model = get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size)
-    model.eval()  # Set the model to evaluation mode
+    model.eval()
 
-    # Process data in batches
+    last_input_tensor = None
     for input_tensor in process_in_batches_for_prediction(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
-        pass  # Process the data, but no training
+        last_input_tensor = input_tensor  # This will keep updating with the latest batch
 
-    # Use the last batch of input data for prediction
-    with torch.no_grad():
-        prediction = model(input_tensor)  # input_tensor is the last batch from the loop
-
-    return prediction
+    # Predict using the last batch
+    if last_input_tensor is not None:
+        with torch.no_grad():
+            prediction = model(last_input_tensor)
+            return prediction
 
 
 if __name__ == '__main__':
