@@ -642,7 +642,7 @@ def process_data_for_prediction(batch_size, model_id):
 if __name__ == '__main__':
     operation = sys.argv[1]  # 'train' or 'predict'
     model_id = 1
-    batch_size = 10000
+    batch_size = 5000
     db_config = {
         'dbname': os.environ['DB_NAME'],
         'user': os.environ['DB_USER'],
