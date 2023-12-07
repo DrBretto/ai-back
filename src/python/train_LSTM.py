@@ -246,6 +246,49 @@ def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, i
 
         yield (input_tensor, label_tensor)
 
+def process_in_batches_for_prediction(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, intervals=_defaultIntervals, lagwindow=_lagwindow):
+    max_lag = max(intervals) * lagwindow
+    start_index = max_lag
+    end_index = len(df)
+
+    columns_to_normalize_jdst = ['closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst']
+    columns_to_normalize_nugt = ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt']
+
+    df['date_time'] = pd.to_datetime(df['date_time'])  
+
+    for start in range(start_index, end_index, batch_size):
+        end = start + batch_size
+        if end > end_index:
+            end = end_index  
+
+        batch = df.iloc[(start - max_lag):end].copy()
+        batch = add_time_features(batch)  
+        batch = normalize_data_in_batch(batch, jdst_min, jdst_max, columns_to_normalize_jdst)
+        batch = normalize_data_in_batch(batch, nugt_min, nugt_max, columns_to_normalize_nugt)
+        batch_with_features = create_lagged_features(batch, intervals, lagwindow)
+        batch_with_features.drop(columns=['date_time'], inplace=True)
+
+        if batch_with_features.empty:
+            sys.stderr.write(f"Warning: Batch data is empty after feature creation. Start index: {start}, End index: {end}\n")
+            continue 
+
+        input_data = batch_with_features
+
+        token_values_gold = input_data['token_values_gold'].tolist()
+        token_values_usd = input_data['token_values_usd'].tolist()
+
+        non_token_data = input_data.drop(columns=['token_values_gold', 'token_values_usd'])
+        non_token_tensor = torch.tensor(non_token_data.values, dtype=torch.float32)
+        token_values_gold_tensors = [torch.tensor(t, dtype=torch.float32) for t in token_values_gold]
+        token_values_usd_tensors = [torch.tensor(t, dtype=torch.float32) for t in token_values_usd]
+
+        token_values_gold_tensor = torch.stack(token_values_gold_tensors)
+        token_values_usd_tensor = torch.stack(token_values_usd_tensors)
+        input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
+
+        yield input_tensor
+
+
 def add_time_features(df):
     df['year'] = df['date_time'].dt.year
     df['month'] = df['date_time'].dt.month
@@ -573,23 +616,26 @@ def process_data_for_prediction(batch_size, model_id):
     nugt_min, nugt_max = calculate_min_max(final_combined_data[nugt_columns])
 
     save_min_max_values_to_db(jdst_min, jdst_max, nugt_min, nugt_max)
-    # Load the model for prediction
 
     input_size = 1102
     output_size = 192
     hidden_size = 100  
     num_layers = 2  
     
+    # Initialize the model
     model = get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size)
+    model.eval()  # Set the model to evaluation mode
 
-    # Prepare the last slice of data for prediction
-    prediction_input = final_combined_data.iloc[-1:]  # Assuming you need the last row for prediction
+    # Process data in batches
+    for input_tensor, _ in process_in_batches_for_prediction(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
+        pass  # Process the data, but no training
 
-    # Run the prediction
-    prediction = predict_with_model(prediction_input, model)
+    # Use the last batch of input data for prediction
+    with torch.no_grad():
+        prediction = model(input_tensor)  # input_tensor is the last batch from the loop
 
-    # Extract predicted closing prices for each stock from the prediction
     return prediction
+
 
 if __name__ == '__main__':
     operation = sys.argv[1]  # 'train' or 'predict'
@@ -610,6 +656,6 @@ if __name__ == '__main__':
     elif operation == 'predict':
 
         print("Prediction endpoint successfully hit:", load_min_max_values_from_db())
-        prediction = process_data_for_prediction(batch_size,db_config, model_id)
+        prediction = process_data_for_prediction(batch_size, model_id)
         print(f"Shape of prediction tensor:", prediction)
         pass
