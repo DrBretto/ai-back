@@ -627,7 +627,7 @@ def process_data_for_prediction(batch_size, model_id):
     model.eval()  # Set the model to evaluation mode
 
     # Process data in batches
-    for input_tensor, _ in process_in_batches_for_prediction(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
+    for input_tensor in process_in_batches_for_prediction(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
         pass  # Process the data, but no training
 
     # Use the last batch of input data for prediction
