@@ -66,8 +66,6 @@ class OverlappingWindowDataset(Dataset):
         target_sequence = self.data.iloc[index+self.window_size:index+(2*self.window_size)].values.astype(np.float32)
         return torch.Tensor(input_sequence), torch.Tensor(target_sequence)
 
-
-
 def save_min_max_values_to_db(jdst_min, jdst_max, nugt_min, nugt_max):
     # Convert pandas Series to a single value (assuming each Series has only one value)
     jdst_min_value = jdst_min.iloc[0] if isinstance(jdst_min, pd.Series) else jdst_min
@@ -382,6 +380,16 @@ def get_or_initialize_model(model_id, input_size, hidden_size, num_layers, outpu
 
     return model
 
+def predict_with_model(input_tensor, model):
+    # Assuming the model is already loaded and in evaluation mode
+    model.eval()
+
+    with torch.no_grad():
+        prediction = model(input_tensor)
+
+    return prediction
+
+
 def adjust_token_values_length(token_values, max_length):
     if len(token_values) > max_length:
         return token_values[:max_length]  # Truncate the list if it's too long
@@ -490,106 +498,189 @@ def process_data(batch_size, model_id):
 
     return model
 
-def prepare_data_for_prediction():
-    # Fetch all data
+
+def process_data_for_prediction(batch_size, model_id):
     historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
 
-    # Process sentiment data
+    if historical_data_jdst.empty or historical_data_nugt.empty:
+        sys.stderr.write("Error: One or more stock datasets from the database are empty.\n")
+        return pd.DataFrame()
+
+    max_length_gold = 100
+    max_length_usd = 100
+
     sentiment_gold['token_values'] = sentiment_gold['token_values'].apply(
-        lambda x: adjust_token_values_length(x, 100))
+        lambda x: adjust_token_values_length(x, max_length_gold))
 
     sentiment_usd['token_values'] = sentiment_usd['token_values'].apply(
-        lambda x: adjust_token_values_length(x, 100))
+        lambda x: adjust_token_values_length(x, max_length_usd))
 
-    # Merge and process sentiment data
+    max_length_observed_gold = sentiment_gold['token_values'].str.len().max()
+    max_length_observed_usd = sentiment_usd['token_values'].str.len().max()
+
+    if max_length_observed_gold > max_length_gold or max_length_observed_usd > max_length_usd:
+        print("Observed token_values lists longer than expected maximum lengths.")
+
+    over_length_gold = sentiment_gold[sentiment_gold['token_values'].str.len() > max_length_gold]
+    over_length_usd = sentiment_usd[sentiment_usd['token_values'].str.len() > max_length_usd]
+
+    if not over_length_gold.empty or not over_length_usd.empty:
+        print("Found token_values lists longer than the maximum length before padding:")
+        print(over_length_gold)
+        print(over_length_usd)
+
     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
-    combined_sentiment['token_values_gold'] = combined_sentiment['token_values_gold'].apply(lambda x: x if isinstance(x, list) else [-1]*100)
-    combined_sentiment['token_values_usd'] = combined_sentiment['token_values_usd'].apply(lambda x: x if isinstance(x, list) else [-1]*100)
+    combined_sentiment['token_values_gold'] = combined_sentiment['token_values_gold'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length_gold)
+    combined_sentiment['token_values_usd'] = combined_sentiment['token_values_usd'].apply(lambda x: x if isinstance(x, list) else [-1]*max_length_usd)
+    combined_sentiment.drop(['subject_id_gold', 'subject_id_usd'], axis=1, inplace=True)
     combined_sentiment.fillna(method='ffill', inplace=True)
     combined_sentiment.fillna(method='bfill', inplace=True)
+
+    combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
+    combined_stocks.drop(['id_jdst', 'stock_id_jdst', 'id_nugt', 'stock_id_nugt'], axis=1, inplace=True)
+    combined_stocks.sort_values('date_time', inplace=True)
     combined_sentiment.sort_values('date_published', inplace=True)
 
-    # Merge and process stock data
-    combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
-    combined_stocks.sort_values('date_time', inplace=True)
-    combined_stocks.drop(['id_jdst', 'stock_id_jdst', 'id_nugt', 'stock_id_nugt'], axis=1, inplace=True)
+    final_combined_data = pd.merge_asof(
+    combined_stocks,
+    combined_sentiment,
+    left_on='date_time',
+    right_on='date_published',
+    direction='nearest'
+    )   
 
-    # Merge stock and sentiment data
-    final_combined_data = pd.merge_asof(combined_stocks, combined_sentiment, left_on='date_time', right_on='date_published', direction='nearest')
-    final_combined_data.drop(columns=['date_published'], inplace=True)
+    final_combined_data.drop(columns=['date_published'], inplace=True)  # Drop duplicate date column
     final_combined_data.reset_index(drop=True, inplace=True)
+
     final_combined_data.fillna(method='ffill', inplace=True)
     final_combined_data.fillna(method='bfill', inplace=True)
 
-    # Load normalization parameters
-    min_max_values = load_min_max_values_from_db()
+    if final_combined_data.empty:
+        sys.stderr.write("Error: Final combined data is empty.\n")
+        return pd.DataFrame()
+    
+    print(f"final_combined_data: {final_combined_data.isna().sum()}")
+
+    jdst_columns = [col for col in final_combined_data.columns if '_jdst' in col]
+    nugt_columns = [col for col in final_combined_data.columns if '_nugt' in col]
+
+    jdst_min, jdst_max = calculate_min_max(final_combined_data[jdst_columns])
+    nugt_min, nugt_max = calculate_min_max(final_combined_data[nugt_columns])
+
+    save_min_max_values_to_db(jdst_min, jdst_max, nugt_min, nugt_max)
+    # Load the model for prediction
+    model = load_model_parameters(model_id)  # Ensure this function loads the trained model
+
+    # Prepare the last slice of data for prediction
+    prediction_input = final_combined_data.iloc[-1:]  # Assuming you need the last row for prediction
+
+    # Run the prediction
+    prediction = predict_with_model(prediction_input, model)
+
+    # Extract predicted closing prices for each stock from the prediction
+    return prediction
+
+# def prepare_data_for_prediction():
+#     # Fetch all data
+#     historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
+
+#     # Process sentiment data
+#     sentiment_gold['token_values'] = sentiment_gold['token_values'].apply(
+#         lambda x: adjust_token_values_length(x, 100))
+
+#     sentiment_usd['token_values'] = sentiment_usd['token_values'].apply(
+#         lambda x: adjust_token_values_length(x, 100))
+
+#     # Merge and process sentiment data
+#     combined_sentiment = pd.merge(sentiment_gold, sentiment_usd, on='date_published', how='outer', suffixes=('_gold', '_usd'))
+#     combined_sentiment['token_values_gold'] = combined_sentiment['token_values_gold'].apply(lambda x: x if isinstance(x, list) else [-1]*100)
+#     combined_sentiment['token_values_usd'] = combined_sentiment['token_values_usd'].apply(lambda x: x if isinstance(x, list) else [-1]*100)
+#     combined_sentiment.fillna(method='ffill', inplace=True)
+#     combined_sentiment.fillna(method='bfill', inplace=True)
+#     combined_sentiment.sort_values('date_published', inplace=True)
+
+#     # Merge and process stock data
+#     combined_stocks = pd.merge(historical_data_jdst, historical_data_nugt, on='date_time', how='outer', suffixes=('_jdst', '_nugt'))
+#     combined_stocks.sort_values('date_time', inplace=True)
+#     combined_stocks.drop(['id_jdst', 'stock_id_jdst', 'id_nugt', 'stock_id_nugt'], axis=1, inplace=True)
+
+#     # Merge stock and sentiment data
+#     final_combined_data = pd.merge_asof(combined_stocks, combined_sentiment, left_on='date_time', right_on='date_published', direction='nearest')
+#     final_combined_data.drop(columns=['date_published'], inplace=True)
+#     final_combined_data.reset_index(drop=True, inplace=True)
+#     final_combined_data.fillna(method='ffill', inplace=True)
+#     final_combined_data.fillna(method='bfill', inplace=True)
+
+#     # Load normalization parameters
+#     min_max_values = load_min_max_values_from_db()
 
 
-    # Calculate the number of minutes needed for the lag window
-    max_interval = max(_defaultIntervals)  # Assuming _defaultIntervals = [1, 15, 60, 1440]
-    lag_minutes = _lagwindow * max_interval  # Assuming _lagwindow = 30
+#     # Calculate the number of minutes needed for the lag window
+#     max_interval = max(_defaultIntervals)  # Assuming _defaultIntervals = [1, 15, 60, 1440]
+#     lag_minutes = _lagwindow * max_interval  # Assuming _lagwindow = 30
 
-    # Slicing the dataset for the lag window
-    final_combined_data = final_combined_data.tail(lag_minutes)
+#     # Slicing the dataset for the lag window
+#     final_combined_data = final_combined_data.tail(lag_minutes)
 
-# Ensure these are not string type but dictionaries or Series
-    final_combined_data = normalize_prediction_data(final_combined_data, min_max_values['jdst_min'], min_max_values['jdst_max'], ['closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst'])
-    final_combined_data = normalize_prediction_data(final_combined_data, min_max_values['nugt_min'], min_max_values['nugt_max'], ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt'])
+# # Ensure these are not string type but dictionaries or Series
+#     final_combined_data = normalize_prediction_data(final_combined_data, min_max_values['jdst_min'], min_max_values['jdst_max'], ['closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst'])
+#     final_combined_data = normalize_prediction_data(final_combined_data, min_max_values['nugt_min'], min_max_values['nugt_max'], ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt'])
 
-    lagged_data_combined = pd.DataFrame()
+#     lagged_data_combined = pd.DataFrame()
 
-    # Process the data in batches
-    batch_size = 10000 
-    for start in range(0, len(final_combined_data), batch_size):
-        end = start + batch_size
-        batch_data = final_combined_data.iloc[start:end]
+#     # Process the data in batches
+#     batch_size = 1000 
+#     for start in range(0, len(final_combined_data), batch_size):
+#         end = start + batch_size
+#         batch_data = final_combined_data.iloc[start:end]
 
-        # Create lagged features for the current batch
-        batch_with_lags = create_lagged_features(batch_data, _defaultIntervals, _lagwindow)
-        lagged_data_combined = pd.concat([lagged_data_combined, batch_with_lags])
+#         # Create lagged features for the current batch
+#         batch_with_lags = create_lagged_features(batch_data, _defaultIntervals, _lagwindow)
+#         lagged_data_combined = pd.concat([lagged_data_combined, batch_with_lags])
 
-    final_combined_data = lagged_data_combined
+#     final_combined_data = lagged_data_combined
 
-    print(f"================lags complete==============")
-    batch_size = 10000  # Adjust the batch size as needed
-    non_token_tensors = []
+#     print(f"================lags complete==============")
+#     batch_size = 10000  # Adjust the batch size as needed
+#     non_token_tensors = []
 
-    for start in range(0, len(final_combined_data), batch_size):
-        end = start + batch_size
-        batch_data = final_combined_data.iloc[start:end]
-        batch_non_token_data = batch_data.drop(columns=['token_values_gold', 'token_values_usd'])
-        batch_non_token_tensor = torch.tensor(batch_non_token_data.values, dtype=torch.float32)
-        non_token_tensors.append(batch_non_token_tensor)
+#     for start in range(0, len(final_combined_data), batch_size):
+#         end = start + batch_size
+#         batch_data = final_combined_data.iloc[start:end]
+#         batch_non_token_data = batch_data.drop(columns=['token_values_gold', 'token_values_usd'])
+#         batch_non_token_tensor = torch.tensor(batch_non_token_data.values, dtype=torch.float32)
+#         non_token_tensors.append(batch_non_token_tensor)
 
-    # Concatenate all the non-token tensors
-    non_token_tensor = torch.cat(non_token_tensors, dim=0)
+#     # Concatenate all the non-token tensors
+#     non_token_tensor = torch.cat(non_token_tensors, dim=0)
 
 
-    print(f"non_token_tensor: {non_token_tensor.shape}")
+#     print(f"non_token_tensor: {non_token_tensor.shape}")
 
-    combined_tensors = []
+#     combined_tensors = []
 
-    for start in range(0, len(final_combined_data), batch_size):
-        end = start + batch_size
-        batch_data = final_combined_data.iloc[start:end]
+#     for start in range(0, len(final_combined_data), batch_size):
+#         end = start + batch_size
+#         batch_data = final_combined_data.iloc[start:end]
 
-        non_token_tensor = torch.tensor(batch_data.drop(columns=['token_values_gold', 'token_values_usd']).values, dtype=torch.float32)
-        token_values_gold_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in batch_data['token_values_gold']])
-        token_values_usd_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in batch_data['token_values_usd']])
+#         non_token_tensor = torch.tensor(batch_data.drop(columns=['token_values_gold', 'token_values_usd']).values, dtype=torch.float32)
+#         token_values_gold_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in batch_data['token_values_gold']])
+#         token_values_usd_tensor = torch.stack([torch.tensor(t, dtype=torch.float32) for t in batch_data['token_values_usd']])
 
-        # Combine non-token and token tensors for this batch
-        batch_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
-        combined_tensors.append(batch_tensor)
+#         # Combine non-token and token tensors for this batch
+#         batch_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
+#         combined_tensors.append(batch_tensor)
 
-    # Concatenate all batches
-    input_tensor = torch.cat(combined_tensors, dim=0)
-    return input_tensor
+#     # Concatenate all batches
+#     input_tensor = torch.cat(combined_tensors, dim=0)
+#     return input_tensor
 
 
 
 if __name__ == '__main__':
     operation = sys.argv[1]  # 'train' or 'predict'
     model_id = 1
+    batch_size = 10000
     db_config = {
         'dbname': os.environ['DB_NAME'],
         'user': os.environ['DB_USER'],
@@ -598,13 +689,13 @@ if __name__ == '__main__':
     }
 
     if operation == 'train':
-        batch_size = 10000
+        
         trained_model = process_data(batch_size, model_id)
         save_model_parameters(trained_model, db_config, model_id)
         print("Model parameters saved to the database.")
     elif operation == 'predict':
 
         print("Prediction endpoint successfully hit:", load_min_max_values_from_db())
-        prediction_tensor = prepare_data_for_prediction()
-        print(f"Shape of prediction tensor: {prediction_tensor.shape}")
+        prediction = process_data_for_prediction(batch_size, model_id)
+        print(f"Shape of prediction tensor:", prediction)
         pass
