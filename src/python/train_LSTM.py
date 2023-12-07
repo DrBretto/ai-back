@@ -127,6 +127,7 @@ def create_future_price_points(stock_data, future_window=96, future_interval=15)
     return future_data
 
 def create_lagged_features(stock_data, intervals, lagwindow):
+    print(f"Creating lagged features for intervals: {intervals}")
     new_frames = []
     column_names = set()  # Use a set to track existing column names for uniqueness
 
@@ -147,6 +148,7 @@ def create_lagged_features(stock_data, intervals, lagwindow):
                 new_frames.append(lagged_feature_frame)
                 
     lagged_data = pd.concat([stock_data] + new_frames, axis=1)
+    print(f"lagged_data: {lagged_data.isna().sum()}")
     return lagged_data
 
 def calculate_min_max(historical_data):
