@@ -11,7 +11,7 @@ module.exports = (app) => {
     await StocksService.fetchHistoricalData(db, 'NUGT');
   });
 
-  cron.schedule('*/1 * * * *', () => {
+  cron.schedule('*/15 8-20 * * *', () => {
     //TradingView Scrape and analyze
     const db = app.get('db');
     console.log(
@@ -36,7 +36,7 @@ module.exports = (app) => {
       });
   });
 
-  cron.schedule('*/1 * * * *', async () => {
+  cron.schedule('*/15 * * * *', async () => {
     //backlog Summary Tokenizer
     const db = app.get('db');
     for (let i = 0; i < 5; i++) {

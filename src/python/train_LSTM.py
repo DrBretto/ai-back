@@ -179,10 +179,22 @@ def normalize_data_in_batch(batch_data, min_values, max_values, columns_to_norma
         batch_data[column] = (batch_data[column] - min_values[column]) / (max_values[column] - min_values[column])
     return batch_data
 
-def normalize_prediction_data(batch_data, min_value, max_value, columns_to_normalize):
-    for column in columns_to_normalize:
-        batch_data[column] = (batch_data[column] - min_value) / (max_value - min_value)
-    return batch_data
+def normalize_prediction_data(data, min_value, max_value, columns_to_normalize):
+    batch_size = 10000  # Fixed batch size
+    normalized_batches = []
+
+    for start in range(0, len(data), batch_size):
+        end = start + batch_size
+        batch_data = data.iloc[start:end].copy()
+
+        for column in columns_to_normalize:
+            batch_data[column] = (batch_data[column] - min_value) / (max_value - min_value)
+
+        normalized_batches.append(batch_data)
+
+    # Concatenate all normalized batches
+    return pd.concat(normalized_batches)
+
 
 def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, intervals=_defaultIntervals, lagwindow=_lagwindow, future_window=_future_window, future_interval=_future_interval):
     max_lag = max(intervals) * lagwindow
