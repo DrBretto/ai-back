@@ -536,8 +536,19 @@ def prepare_data_for_prediction():
     final_combined_data = normalize_prediction_data(final_combined_data, min_max_values['jdst_min'], min_max_values['jdst_max'], ['closing_price_jdst', 'high_price_jdst', 'low_price_jdst', 'volume_jdst'])
     final_combined_data = normalize_prediction_data(final_combined_data, min_max_values['nugt_min'], min_max_values['nugt_max'], ['closing_price_nugt', 'high_price_nugt', 'low_price_nugt', 'volume_nugt'])
 
-    # Create lagged features
-    final_combined_data = create_lagged_features(final_combined_data, _defaultIntervals, _lagwindow)
+    lagged_data_combined = pd.DataFrame()
+
+    # Process the data in batches
+    batch_size = 10000 
+    for start in range(0, len(final_combined_data), batch_size):
+        end = start + batch_size
+        batch_data = final_combined_data.iloc[start:end]
+
+        # Create lagged features for the current batch
+        batch_with_lags = create_lagged_features(batch_data, _defaultIntervals, _lagwindow)
+        lagged_data_combined = pd.concat([lagged_data_combined, batch_with_lags])
+
+    final_combined_data = lagged_data_combined
 
     non_token_data = final_combined_data.drop(columns=['token_values_gold', 'token_values_usd'])
     non_token_tensor = torch.tensor(non_token_data.values, dtype=torch.float32)
