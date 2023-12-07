@@ -539,7 +539,7 @@ def prepare_data_for_prediction():
     lagged_data_combined = pd.DataFrame()
 
     # Process the data in batches
-    batch_size = 1000 
+    batch_size = 10000 
     for start in range(0, len(final_combined_data), batch_size):
         end = start + batch_size
         batch_data = final_combined_data.iloc[start:end]
@@ -551,8 +551,19 @@ def prepare_data_for_prediction():
     final_combined_data = lagged_data_combined
 
     print(f"================lags complete==============")
-    non_token_data = final_combined_data.drop(columns=['token_values_gold', 'token_values_usd'])
-    non_token_tensor = torch.tensor(non_token_data.values, dtype=torch.float32)
+    batch_size = 10000  # Adjust the batch size as needed
+    non_token_tensors = []
+
+    for start in range(0, len(final_combined_data), batch_size):
+        end = start + batch_size
+        batch_data = final_combined_data.iloc[start:end]
+        batch_non_token_data = batch_data.drop(columns=['token_values_gold', 'token_values_usd'])
+        batch_non_token_tensor = torch.tensor(batch_non_token_data.values, dtype=torch.float32)
+        non_token_tensors.append(batch_non_token_tensor)
+
+    # Concatenate all the non-token tensors
+    non_token_tensor = torch.cat(non_token_tensors, dim=0)
+
 
     print(f"non_token_tensor: {non_token_tensor.shape}")
 
