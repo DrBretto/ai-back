@@ -641,13 +641,13 @@ if __name__ == '__main__':
         prediction = process_data_for_prediction(batch_size, model_id)
         print(f"Prediction tensor shape: {prediction.shape}")
 
-        # Assuming the output is directly the future prices
-        predicted_prices = prediction.squeeze()  # Adjust based on your actual output shape
+        last_prediction = prediction[-1]  # Extract the last prediction
+        stock1_prediction = last_prediction[:96]  # First 96 values for stock 1
+        stock2_prediction = last_prediction[96:]  # Next 96 values for stock 2
 
-        # Convert to list and format as JSON
         prediction_json = json.dumps({
-            "stock1_future_price": predicted_prices[0].item(),  # Assuming first element is stock1
-            "stock2_future_price": predicted_prices[1].item()   # Assuming second element is stock2
+            "stock1_future_price": stock1_prediction.tolist(),  # Convert to list
+            "stock2_future_price": stock2_prediction.tolist()  # Convert to list
         })
 
         print(prediction_json)
