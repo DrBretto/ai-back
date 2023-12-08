@@ -653,8 +653,8 @@ if __name__ == '__main__':
         print(f"Prediction tensor shape: {prediction.shape}")
 
         last_prediction = prediction[-1]  # Extract the last prediction
-        stock1_prediction = prediction[::2]  # Even indices for stock 1
-        stock2_prediction = prediction[1::2]  # Odd indices for stock 2
+        stock1_prediction = last_prediction[::2]  # Even indices for stock 1
+        stock2_prediction = last_prediction[1::2]  # Odd indices for stock 2
 
         # Convert predictions to lists
         stock1_prediction_list = stock1_prediction.tolist()
@@ -663,8 +663,6 @@ if __name__ == '__main__':
         # Assuming stock1_id and stock2_id are the IDs for your stocks
         stock_ids = [1, 2]  # Replace with actual stock IDs
         predictions = [stock1_prediction_list, stock2_prediction_list]
-
-
 
         prediction_json = json.dumps({
             "stock1_future_price": stock1_prediction_list,  # Convert to list
