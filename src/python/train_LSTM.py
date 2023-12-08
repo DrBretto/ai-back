@@ -410,7 +410,6 @@ def get_or_initialize_model(model_id, input_size, hidden_size, num_layers, outpu
                         byte_stream.seek(0)
                         # Deserialize state dict and load into model
                         model.load_state_dict(torch.load(byte_stream, map_location=torch.device('cpu')))
-                        print(f"Model parameters loaded for model_id: {model_id}")
                     else:
                         print("No existing model parameters found. Initializing new model.")
         except Exception as e:
@@ -637,9 +636,18 @@ if __name__ == '__main__':
         trained_model = process_data(batch_size, model_id)
         save_model_parameters(trained_model, db_config, model_id)
         print("Model parameters saved to the database.")
-        
+
     elif operation == 'predict':
         prediction = process_data_for_prediction(batch_size, model_id)
-        # Convert prediction to a JSON string or a suitable format
-        prediction_str = json.dumps(prediction.tolist())  # Example conversion to JSON
-        print(prediction_str)
+
+        # Assuming the output is directly the future prices
+        predicted_prices = prediction.squeeze()  # Adjust based on your actual output shape
+
+        # Convert to list and format as JSON
+        prediction_json = json.dumps({
+            "stock1_future_price": predicted_prices[0].item(),  # Assuming first element is stock1
+            "stock2_future_price": predicted_prices[1].item()   # Assuming second element is stock2
+        })
+
+        print(prediction_json)
+

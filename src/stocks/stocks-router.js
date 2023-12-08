@@ -32,7 +32,6 @@ stocksRouter.get('/refresh', async (req, res, next) => {
 stocksRouter.get('/last24hours', async (req, res, next) => {
   const { stockSymbol } = req.query; // Get stockSymbol from query params
   const db = req.app.get('db');
-  console.log('stockSymbol:', stockSymbol);
 
   try {
     const stockData = await StocksService.fetchLast24HoursData(db, stockSymbol);
