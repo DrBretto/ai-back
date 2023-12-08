@@ -190,7 +190,7 @@ const DataService = {
 
   async predictLSTM() {
     console.log('Starting LSTM prediction...');
-
+  
     return new Promise((resolve, reject) => {
       const pythonProcess = spawn(
         'env/bin/python',
@@ -199,25 +199,29 @@ const DataService = {
           shell: true,
         }
       );
+  
+      let output = '';
       pythonProcess.stdout.on('data', (data) => {
         console.log('Real-time output:', data.toString());
+        output += data.toString(); // Accumulate the output
       });
-
+  
       pythonProcess.stderr.on('data', (data) => {
         console.error('Real-time error:', data.toString());
       });
-
+  
       pythonProcess.on('close', (code) => {
         if (code !== 0) {
-          console.error(`Training process exited with code ${code}`);
-          reject(new Error('Training failed'));
+          console.error(`Prediction process exited with code ${code}`);
+          reject(new Error('Prediction failed'));
         } else {
-          console.log('Training completed successfully.');
-          resolve();
+          console.log('Prediction completed successfully.');
+          resolve(output); // Resolve with the accumulated output
         }
       });
     });
-  },
+  }
+  
 };
 
 module.exports = DataService;

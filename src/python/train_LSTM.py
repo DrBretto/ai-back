@@ -52,7 +52,6 @@ class FinancialLSTM(nn.Module):
             out = out.squeeze(0)
         
         return out
-
 class OverlappingWindowDataset(Dataset):
     def __init__(self, data, lagwindow):
         self.data = data
@@ -112,7 +111,6 @@ def load_min_max_values_from_db():
         print("No normalization parameters found in the database.")
         return None, None, None, None
 
-
 def create_future_price_points(stock_data, future_window=96, future_interval=15):
     new_frames = []
     for lead in range(future_interval, future_window * future_interval + 1, future_interval):
@@ -125,7 +123,6 @@ def create_future_price_points(stock_data, future_window=96, future_interval=15)
     return future_data
 
 def create_lagged_features(stock_data, intervals, lagwindow):
-    print(f"Creating lagged features for intervals: {intervals}")
     new_frames = []
     column_names = set()  # Use a set to track existing column names for uniqueness
 
@@ -146,7 +143,6 @@ def create_lagged_features(stock_data, intervals, lagwindow):
                 new_frames.append(lagged_feature_frame)
                 
     lagged_data = pd.concat([stock_data] + new_frames, axis=1)
-    print(f"lagged_data: {lagged_data.isna().sum()}")
     return lagged_data
 
 def calculate_min_max(historical_data):
@@ -180,7 +176,6 @@ def normalize_data_in_batch(batch_data, min_values, max_values, columns_to_norma
     return batch_data
 
 def normalize_prediction_data(data, min_value, max_value, columns_to_normalize):
-    print(f"Normalizing batch data for columns: {columns_to_normalize}")
     batch_size = 1000  # Fixed batch size
     normalized_batches = []
 
@@ -195,7 +190,6 @@ def normalize_prediction_data(data, min_value, max_value, columns_to_normalize):
 
     # Concatenate all normalized batches
     return pd.concat(normalized_batches)
-
 
 def process_in_batches(df, jdst_min, jdst_max, nugt_min, nugt_max, batch_size, intervals=_defaultIntervals, lagwindow=_lagwindow, future_window=_future_window, future_interval=_future_interval):
     max_lag = max(intervals) * lagwindow
@@ -288,7 +282,6 @@ def process_in_batches_for_prediction(df, jdst_min, jdst_max, nugt_min, nugt_max
         input_tensor = torch.cat((non_token_tensor, token_values_gold_tensor, token_values_usd_tensor), dim=1)
 
         yield input_tensor
-
 
 def add_time_features(df):
     df['year'] = df['date_time'].dt.year
@@ -396,7 +389,6 @@ def load_model_parameters(model_id, model, db_config):
 
     return model
 
-
 def get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size):
     # Database configuration from environment variables
     db_config = {
@@ -437,7 +429,6 @@ def predict_with_model(input_tensor, model):
         prediction = model(input_tensor)
 
     return prediction
-
 
 def adjust_token_values_length(token_values, max_length):
     if len(token_values) > max_length:
@@ -504,8 +495,6 @@ def process_data(batch_size, model_id):
     if final_combined_data.empty:
         sys.stderr.write("Error: Final combined data is empty.\n")
         return pd.DataFrame()
-    
-    print(f"final_combined_data: {final_combined_data.isna().sum()}")
 
     jdst_columns = [col for col in final_combined_data.columns if '_jdst' in col]
     nugt_columns = [col for col in final_combined_data.columns if '_nugt' in col]
@@ -525,9 +514,6 @@ def process_data(batch_size, model_id):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     
     for input_tensor, label_tensor in process_in_batches(final_combined_data, jdst_min, jdst_max, nugt_min, nugt_max, batch_size):
-        # Log the shapes of the tensors
-        # print(f"Input tensor shape: {input_tensor.shape}")
-        # print(f"Label tensor shape: {label_tensor.shape}")
         
         assert input_tensor.nelement() > 0, "Input tensor is empty"
         assert label_tensor.nelement() > 0, "Label tensor is empty"
@@ -546,7 +532,6 @@ def process_data(batch_size, model_id):
         save_model_parameters(model, db_config, model_id)
 
     return model
-
 
 def process_data_for_prediction(batch_size, model_id):
     historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
@@ -607,8 +592,7 @@ def process_data_for_prediction(batch_size, model_id):
     if final_combined_data.empty:
         sys.stderr.write("Error: Final combined data is empty.\n")
         return pd.DataFrame()
-    
-    print(f"final_combined_data: {final_combined_data.isna().sum()}")
+
 
     jdst_columns = [col for col in final_combined_data.columns if '_jdst' in col]
     nugt_columns = [col for col in final_combined_data.columns if '_nugt' in col]
@@ -622,8 +606,6 @@ def process_data_for_prediction(batch_size, model_id):
     output_size = 192
     hidden_size = 100  
     num_layers = 2  
-    
-    print(f"final final_combined_data: {final_combined_data.isna().sum()}")
 
     # Initialize the model
     model = get_or_initialize_model(model_id, input_size, hidden_size, num_layers, output_size)
@@ -652,13 +634,12 @@ if __name__ == '__main__':
     }
 
     if operation == 'train':
-        
         trained_model = process_data(batch_size, model_id)
         save_model_parameters(trained_model, db_config, model_id)
         print("Model parameters saved to the database.")
+        
     elif operation == 'predict':
-
-        print("Prediction endpoint successfully hit:", load_min_max_values_from_db())
         prediction = process_data_for_prediction(batch_size, model_id)
-        print(f"Shape of prediction tensor:", prediction)
-        pass
+        # Convert prediction to a JSON string or a suitable format
+        prediction_str = json.dumps(prediction.tolist())  # Example conversion to JSON
+        print(prediction_str)
