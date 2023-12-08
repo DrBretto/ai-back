@@ -664,8 +664,7 @@ if __name__ == '__main__':
         stock_ids = [1, 2]  # Replace with actual stock IDs
         predictions = [stock1_prediction_list, stock2_prediction_list]
 
-        # Save predictions to database
-        save_predictions_to_db(predictions, stock_ids, db_config)
+
 
         prediction_json = json.dumps({
             "stock1_future_price": stock1_prediction_list,  # Convert to list
@@ -673,5 +672,8 @@ if __name__ == '__main__':
         })
 
         print(prediction_json)
+
+                # Save predictions to database
+        save_predictions_to_db(predictions, stock_ids, db_config)
 
 
