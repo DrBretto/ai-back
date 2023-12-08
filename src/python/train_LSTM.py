@@ -435,6 +435,17 @@ def adjust_token_values_length(token_values, max_length):
     else:
         return token_values + [-1] * (max_length - len(token_values))  # Pad the list if it's too short
 
+def save_predictions_to_db(predictions, stock_ids, db_config):
+    conn = psycopg2.connect(**db_config)
+    cursor = conn.cursor()
+
+    for stock_id, prediction in zip(stock_ids, predictions):
+        cursor.execute("INSERT INTO stock_predictions (stock_id, prediction_values) VALUES (%s, %s)", (stock_id, prediction))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
 def process_data(batch_size, model_id):
     historical_data_jdst, historical_data_nugt, sentiment_gold, sentiment_usd = get_data_from_db()
 
@@ -642,13 +653,25 @@ if __name__ == '__main__':
         print(f"Prediction tensor shape: {prediction.shape}")
 
         last_prediction = prediction[-1]  # Extract the last prediction
-        stock1_prediction = last_prediction[:96]  # First 96 values for stock 1
-        stock2_prediction = last_prediction[96:]  # Next 96 values for stock 2
+        stock1_prediction = prediction[::2]  # Even indices for stock 1
+        stock2_prediction = prediction[1::2]  # Odd indices for stock 2
+
+        # Convert predictions to lists
+        stock1_prediction_list = stock1_prediction.tolist()
+        stock2_prediction_list = stock2_prediction.tolist()
+
+        # Assuming stock1_id and stock2_id are the IDs for your stocks
+        stock_ids = [1, 2]  # Replace with actual stock IDs
+        predictions = [stock1_prediction_list, stock2_prediction_list]
+
+        # Save predictions to database
+        save_predictions_to_db(predictions, stock_ids, db_config)
 
         prediction_json = json.dumps({
-            "stock1_future_price": stock1_prediction.tolist(),  # Convert to list
-            "stock2_future_price": stock2_prediction.tolist()  # Convert to list
+            "stock1_future_price": stock1_prediction_list,  # Convert to list
+            "stock2_future_price": stock2_prediction_list   # Convert to list
         })
 
         print(prediction_json)
+
 
