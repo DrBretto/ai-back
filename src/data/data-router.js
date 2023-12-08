@@ -51,6 +51,17 @@ router.get('/predict', async (req, res, next) => {
   }
 });
 
+router.get('/latest-prediction', async (req, res, next) => {
+  const db = req.app.get('db');
+  try {
+    const latestPrediction = await DataService.getLatestPrediction(db);
+    res.json(latestPrediction);
+  } catch (error) {
+    console.error('Error in /latest-prediction route handler:', error);
+    next(error);
+  }
+});
+
 router.get('/delete-cache', (req, res) => {
   DataService.deleteCache();
   res.send('Cache deleted successfully.');

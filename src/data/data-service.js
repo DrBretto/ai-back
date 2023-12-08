@@ -156,6 +156,37 @@ const DataService = {
     }
   },
 
+  async getLatestPrediction(db) {
+    try {
+      console.log('Fetching the latest predictions...');
+
+      const result = await db('stock_predictions')
+        .select('stock_id', 'prediction_values')
+        .whereIn('stock_id', [1, 2])
+        .orderBy('prediction_date', 'desc')
+        .limit(2);
+
+      if (result.length < 2) {
+        return { message: 'Insufficient prediction data available.' };
+      }
+
+      // Assuming result[0] is for stock 1 and result[1] is for stock 2
+      return {
+        stock1_prediction:
+          result[0].stock_id === 1
+            ? result[0].prediction_values
+            : result[1].prediction_values,
+        stock2_prediction:
+          result[1].stock_id === 2
+            ? result[1].prediction_values
+            : result[0].prediction_values,
+      };
+    } catch (error) {
+      console.error('Error fetching the latest predictions:', error);
+      throw error;
+    }
+  },
+
   async trainLSTM() {
     console.log('Starting LSTM training...');
 
@@ -190,7 +221,7 @@ const DataService = {
 
   async predictLSTM() {
     console.log('Starting LSTM prediction...');
-  
+
     return new Promise((resolve, reject) => {
       const pythonProcess = spawn(
         'env/bin/python',
@@ -199,17 +230,17 @@ const DataService = {
           shell: true,
         }
       );
-  
+
       let output = '';
       pythonProcess.stdout.on('data', (data) => {
         console.log('Real-time output:', data.toString());
         output += data.toString(); // Accumulate the output
       });
-  
+
       pythonProcess.stderr.on('data', (data) => {
         console.error('Real-time error:', data.toString());
       });
-  
+
       pythonProcess.on('close', (code) => {
         if (code !== 0) {
           console.error(`Prediction process exited with code ${code}`);
@@ -220,8 +251,7 @@ const DataService = {
         }
       });
     });
-  }
-  
+  },
 };
 
 module.exports = DataService;

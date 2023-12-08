@@ -1,6 +1,7 @@
 const cron = require('node-cron');
 const StocksService = require('./stocks/stocks-service');
 const SentimentService = require('./sentiment/sentiment-service');
+const DataService = require('./data/data-service');
 
 module.exports = (app) => {
   cron.schedule('*/1 * * * *', async () => {
@@ -9,6 +10,17 @@ module.exports = (app) => {
     //console.log('Updating historical prices at:', new Date());
     await StocksService.fetchHistoricalData(db, 'JDST');
     await StocksService.fetchHistoricalData(db, 'NUGT');
+  });
+
+  cron.schedule('0 * * * *', async () => {
+    console.log('Running a task every hour');
+    // Your code to trigger the LSTM prediction
+    await DataService.predictLSTM();
+  });
+
+  cron.schedule('* 6 * * *', async () => { 
+      console.log("training LSTM")
+      await DataService.trainLSTM();
   });
 
   cron.schedule('0 * * * *', () => {
