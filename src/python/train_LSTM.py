@@ -639,6 +639,7 @@ if __name__ == '__main__':
 
     elif operation == 'predict':
         prediction = process_data_for_prediction(batch_size, model_id)
+        print(f"Prediction tensor shape: {prediction.shape}")
 
         # Assuming the output is directly the future prices
         predicted_prices = prediction.squeeze()  # Adjust based on your actual output shape
