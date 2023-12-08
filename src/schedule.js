@@ -14,10 +14,6 @@ module.exports = (app) => {
   cron.schedule('*/15 8-20 * * *', () => {
     //TradingView Scrape and analyze
     const db = app.get('db');
-    console.log(
-      'Running sentiment analysis for gold and dollar at:',
-      new Date()
-    );
 
     SentimentService.performSentimentAnalysis(db, 'gold', 'tradingview')
       .then(() => {

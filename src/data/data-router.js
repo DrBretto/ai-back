@@ -15,7 +15,6 @@ router.get('/', async (req, res, next) => {
 });
 
 router.get('/process', async (req, res, next) => {
-  console.log('/data/process endpoint hit');
   try {
     const db = req.app.get('db');
     const data = await DataService.getData(db);

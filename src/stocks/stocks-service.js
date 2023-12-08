@@ -24,7 +24,7 @@ const StocksService = {
 
     return stockData;
   },
-  
+
   async getStockId(db, symbol) {
     const stock = await db('stocks').where({ symbol }).first();
     return stock ? stock.stock_id : null;
@@ -85,21 +85,6 @@ const StocksService = {
     const data = await response.json();
     const timeSeries = data['Time Series (1min)'];
 
-    const timeSeriesEntries = Object.entries(timeSeries);
-    const firstEntryDate = timeSeriesEntries[0][0].split(' ')[0];
-    const lastEntryDate =
-      timeSeriesEntries[timeSeriesEntries.length - 1][0].split(' ')[0];
-
-    console.log(
-      'recording data for',
-      stockId,
-      'from',
-      firstEntryDate,
-      'to',
-      lastEntryDate,
-      ':'
-    );
-
     for (const [dateTime, stockData] of Object.entries(timeSeries)) {
       const existingRecord = await db('stockhistory')
         .where({ stock_id: stockId, date_time: dateTime })
@@ -121,17 +106,6 @@ const StocksService = {
         });
       }
     }
-    console.log(
-      'Successfullly Recorded',
-      timeSeriesEntries.length,
-      'historical entries for stockId:',
-      stockId,
-      'from',
-      firstEntryDate,
-      'to',
-      lastEntryDate,
-      '-----------------------'
-    );
   },
 };
 
