@@ -608,7 +608,7 @@ const SentimentService = {
       );
 
       //Quantize sentiment analysis
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 10; i++) {
         const sentimentScoreString = await this.getSentimentFromGPT(
           sentimentWords,
           'sentimentScore',
