@@ -18,9 +18,9 @@ module.exports = (app) => {
     await DataService.predictLSTM();
   });
 
-  cron.schedule('0 0 * * *', async () => { 
-      console.log("training LSTM")
-      await DataService.trainLSTM();
+  cron.schedule('0 0 * * *', async () => {
+    console.log('training LSTM');
+    await DataService.trainLSTM();
   });
 
   cron.schedule('0 6 * * *', () => {
@@ -109,6 +109,4 @@ module.exports = (app) => {
   //     );
   //   }
   // });
-
-  ////////////////////////////////////////////////////////////////////////////
 };
