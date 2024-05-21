@@ -6,7 +6,7 @@ const xss = require('xss');
 const UsersService = {
   hasUserWithUserName(db, email) {
     return db('users')
-      .where({ email })
+      .where({ email }) // Check for email
       .first()
       .then((user) => !!user);
   },

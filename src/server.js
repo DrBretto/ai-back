@@ -5,19 +5,11 @@ const knex = require('knex');
 
 const db = knex({
   client: 'pg',
-  connection: {
-    connectionString: DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false,
-    },
-  },
+  connection: DATABASE_URL,
 });
 
 app.set('db', db);
 
 app.listen(PORT, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Server listening at ${DATABASE_URL}:${PORT}`);
+  console.log(`Server listening at http://localhost:${PORT}`);
 });
-
-//DATABASE_URL = 'postgres://drbretto_ai_16q2_user:Bx2BpoEbEf4NGhWwANRD6tKgtyZI1j6t@dpg-ck46hfvqj8ts73asp4ug-a/drbretto_ai_16q2'
