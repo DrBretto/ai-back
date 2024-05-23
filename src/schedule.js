@@ -23,7 +23,7 @@ module.exports = (app) => {
     await DataService.trainLSTM();
   });
 
-  cron.schedule('0 6 * * *', () => {
+  cron.schedule('0 2 * * *', () => {
     //TradingView Scrape and analyze
     const db = app.get('db');
 
@@ -44,7 +44,7 @@ module.exports = (app) => {
       });
   });
 
-  cron.schedule('*/15 * * * *', async () => {
+  cron.schedule('*/5 * * * *', async () => {
     //backlog Summary Tokenizer
     const db = app.get('db');
     for (let i = 0; i < 5; i++) {

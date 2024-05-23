@@ -1,12 +1,13 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const moment = require('moment');
+const { exec } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 
 const AYLIEN_API_URL = 'https://api.aylien.com/news/stories';
 const AYLIEN_APP_ID = process.env.AYLIEN_APP_ID;
 const AYLIEN_API_KEY = process.env.AYLIEN_API_KEY;
-const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 const sh = require('./sentiment-helper');
 
@@ -151,9 +152,38 @@ const SentimentService = {
     }
   },
 
+  async runIlabCommand(promptFilePath) {
+    const modelPath =
+      'C:\\Users\\Drbre\\Desktop\\Projects\\InstructLab\\community\\instructlab\\models\\merlinite-7b-lab-Q4_K_M.gguf';
+    const configPath =
+      'C:\\Users\\Drbre\\Desktop\\Projects\\InstructLab\\community\\instructlab\\config.yaml';
+
+    // Read the content of the prompt file
+    const promptContent = fs.readFileSync(promptFilePath, 'utf8');
+
+    // Construct the command with the prompt content as the question
+    const command = `ilab chat --model "${modelPath}" --config "${configPath}" "${promptContent}"`;
+
+    console.log('Command:', command);
+
+    return new Promise((resolve, reject) => {
+      exec(command, { shell: true }, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error in runIlabCommand: ${error.message}`);
+          reject(error);
+        } else if (stderr) {
+          console.error(`stderr: ${stderr}`);
+          reject(new Error(stderr));
+        } else {
+          console.log(`stdout: ${stdout}`);
+          const result = stdout.trim();
+          resolve(result);
+        }
+      });
+    });
+  },
+
   async getTokensFromGPT(content, masterList) {
-    const apiKey = OPENAI_API_KEY;
-    const url = OPENAI_API_URL;
     let userPrompt = `You are provided with a list of predefined sentiments related to financial and economic trends, particularly focusing 
         on gold and the US dollar. Each sentiment is associated with a unique identifier. Your task is to read through the provided text and 
         identify any sentiments from the list that are conveyed or implied in the text. Please return a list of the unique identifiers for 
@@ -168,44 +198,20 @@ const SentimentService = {
         Return the identifiers of the sentiments conveyed in the text in CSV format enclosed in brackets. For example, if the text conveys 
         sentiments 1, 4, and 7 from the master list, the return should be: [1,4,7]
         `;
-
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-    };
-
-    const body = {
-      model: 'gpt-4-1106-preview',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a financial analyst specialized in commodities.',
-        },
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ],
-    };
+    const promptFilePath = path.resolve(__dirname, 'prompt.txt');
+    fs.writeFileSync(promptFilePath, userPrompt);
 
     try {
-      const response = await axios.post(url, body, config);
-      totalTokensUsed += response.data.usage.total_tokens;
-
-      return response.data.choices[0].message.content.trim();
+      const result = await this.runIlabCommand(promptFilePath);
+      return result;
     } catch (error) {
-      console.error(`Error in getTokensFromGPT`, error.code);
+      console.error('Error fetching tokens:', error);
       return null;
     }
   },
 
   async getSentimentFromGPT(content, analysisType, subject) {
-    const apiKey = OPENAI_API_KEY;
-    const url = OPENAI_API_URL;
     let userPrompt = '';
-
     switch (analysisType) {
       case 'summarize':
         userPrompt = `Please provide a concise summary of anything related to ${subject} in the following block of text:\n\n${content}`;
@@ -222,37 +228,14 @@ const SentimentService = {
         return null;
     }
 
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-    };
-
-    const body = {
-      model: 'gpt-4-1106-preview',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a financial analyst specialized in commodities.',
-        },
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ],
-    };
+    const promptFilePath = path.resolve(__dirname, 'prompt.txt');
+    fs.writeFileSync(promptFilePath, userPrompt);
 
     try {
-      const response = await axios.post(url, body, config);
-      totalTokensUsed += response.data.usage.total_tokens;
-
-      return response.data.choices[0].message.content.trim();
+      const result = await this.runIlabCommand(promptFilePath);
+      return result;
     } catch (error) {
-      console.error(
-        `Error in getSentimentFromGPT for ${analysisType}:`,
-        error.code
-      );
+      console.error('Error fetching tokens:', error);
       return null;
     }
   },
@@ -470,7 +453,7 @@ const SentimentService = {
       );
 
       if (!gptResponse) {
-        console.error('Failed to get response from GPT-4');
+        console.error('Failed to get response from InstructLab');
         return;
       }
 
@@ -557,7 +540,6 @@ const SentimentService = {
           return null;
       }
 
-     
       let combinedContent = '';
       const sentimentSubject = subject === 'dollar' ? 'US Dollar' : subject; //GPT only disambiguation
       const sentimentScores = [];
@@ -632,3 +614,7 @@ const SentimentService = {
 };
 
 module.exports = SentimentService;
+
+
+
+

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable strict */
 require('dotenv').config();
 const express = require('express');
@@ -22,6 +23,7 @@ const app = express();
 app.use(morgan(morganOption));
 app.use(helmet());
 app.use(cors());
+app.use(express.json()); // Add this line to parse JSON bodies
 
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
@@ -33,18 +35,17 @@ app.get('/', (req, res) => {
   res.send('Hello, world!!');
 });
 
-app.use(function errorHandler(error, req, res) {
+app.use(function errorHandler(error, req, res, next) {
   let response;
   if (NODE_ENV === 'production') {
     response = { error: { message: 'server error' } };
   } else {
     // eslint-disable-next-line no-console
-   //console.error(error);
+    console.error(error);
     response = { message: error.message, error };
   }
   res.status(500).json(response);
 });
-
 
 setupCronJobs(app);
 
