@@ -6,7 +6,6 @@ import numpy as np
 import os
 from torch.utils.data import TensorDataset, DataLoader, Dataset
 import gc
-import resource
 from datetime import time
 from torch.nn.utils.rnn import pad_sequence
 import sys
@@ -15,6 +14,16 @@ import holidays
 import torch
 import torch.nn as nn
 import io 
+import platform
+
+# Manually set database environment variables for local development
+os.environ['DB_NAME'] = 'postgres'
+os.environ['DB_USER'] = 'postgres'
+os.environ['DB_PASSWORD'] = ''
+os.environ['DB_HOST'] = 'localhost'
+
+if platform.system() != 'Windows':
+    import resource
 
 # Define the window and intervals outside of the function
 _lagwindow = 30
@@ -22,6 +31,10 @@ _defaultIntervals = [1, 15, 60, 1440]
 _future_window = 96
 _future_interval = 15
 us_holidays = holidays.US()
+
+
+
+
 
 class FinancialLSTM(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, output_size):
@@ -499,8 +512,9 @@ def process_data(batch_size, model_id):
     final_combined_data.drop(columns=['date_published'], inplace=True)  # Drop duplicate date column
     final_combined_data.reset_index(drop=True, inplace=True)
 
-    final_combined_data.fillna(method='ffill', inplace=True)
-    final_combined_data.fillna(method='bfill', inplace=True)
+    final_combined_data.ffill(inplace=True)
+    final_combined_data.bfill(inplace=True)
+
 
     if final_combined_data.empty:
         sys.stderr.write("Error: Final combined data is empty.\n")

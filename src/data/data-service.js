@@ -223,9 +223,19 @@ const DataService = {
     console.log('Starting LSTM prediction...');
 
     return new Promise((resolve, reject) => {
+      // Correct path to the Python executable within your virtual environment
+      const pythonExecutable =
+        'C:\\Users\\Drbre\\Desktop\\Projects\\gpt-extension-back\\env\\Scripts\\python.exe';
+      const scriptPath =
+        'C:\\Users\\Drbre\\Desktop\\Projects\\gpt-extension-back\\src\\python\\train_LSTM.py';
+
+      // Log paths for debugging
+      console.log('Python Executable Path:', pythonExecutable);
+      console.log('Script Path:', scriptPath);
+
       const pythonProcess = spawn(
-        'env/bin/python',
-        ['-u', 'src/python/train_LSTM.py', 'predict'],
+        pythonExecutable,
+        ['-u', scriptPath, 'predict'],
         {
           shell: true,
         }
@@ -249,6 +259,11 @@ const DataService = {
           console.log('Prediction completed successfully.');
           resolve(output); // Resolve with the accumulated output
         }
+      });
+
+      pythonProcess.on('error', (err) => {
+        console.error('Failed to start subprocess:', err);
+        reject(err);
       });
     });
   },
