@@ -153,21 +153,24 @@ const SentimentService = {
   },
 
   async runIlabCommand(promptFilePath) {
-    const modelPath =
-      'C:\\Users\\Drbre\\Desktop\\Projects\\InstructLab\\community\\instructlab\\models\\merlinite-7b-lab-Q4_K_M.gguf';
-    const configPath =
-      'C:\\Users\\Drbre\\Desktop\\Projects\\InstructLab\\community\\instructlab\\config.yaml';
+    // const modelPath =
+    //   'C:\\Users\\Drbre\\Desktop\\Projects\\InstructLab\\models\\merlinite-7b-lab-Q4_K_M.gguf';
+    // const configPath =
+    //   'C:\\Users\\Drbre\\Desktop\\Projects\\InstructLab\\config.yaml';
+
+    //--model="${modelPath}"
 
     // Read the content of the prompt file
     const promptContent = fs.readFileSync(promptFilePath, 'utf8');
 
     // Construct the command with the prompt content as the question
-    const command = `ilab chat --model "${modelPath}" --config "${configPath}" "${promptContent}"`;
+    //const command = `ilab chat "${promptContent}"`;
+    const command = `ilab chat "you gonna fucking work or not, asshole?"`;
 
     console.log('Command:', command);
 
-    return new Promise((resolve, reject) => {
-      exec(command, { shell: true }, (error, stdout, stderr) => {
+   return new Promise((resolve, reject) => {
+      exec(command, (error, stdout, stderr) => {
         if (error) {
           console.error(`Error in runIlabCommand: ${error.message}`);
           reject(error);
@@ -614,7 +617,3 @@ const SentimentService = {
 };
 
 module.exports = SentimentService;
-
-
-
-
