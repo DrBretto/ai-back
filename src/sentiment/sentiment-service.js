@@ -161,7 +161,7 @@ const SentimentService = {
     //--model="${modelPath}"
 
     // Read the content of the prompt file
-    const promptContent = fs.readFileSync(promptFilePath, 'utf8');
+    //const promptContent = fs.readFileSync(promptFilePath, 'utf8');
 
     // Construct the command with the prompt content as the question
     //const command = `ilab chat "${promptContent}"`;
