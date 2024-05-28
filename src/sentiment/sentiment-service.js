@@ -232,11 +232,10 @@ const SentimentService = {
         return null;
     }
 
-    const promptFilePath = path.resolve(__dirname, 'prompt.txt');
-    fs.writeFileSync(promptFilePath, userPrompt);
+    const userRole = 'You are a finaincial expert specializing in the trade of gold and the us dollar as commodidties.'
 
     try {
-      const result = await this.runIlabCommand(promptFilePath);
+      const result = await this.runIlabCommand(userRole, userPrompt);
       return result;
     } catch (error) {
       console.error('Error fetching tokens:', error);
