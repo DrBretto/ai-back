@@ -1,9 +1,6 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const moment = require('moment');
-const { exec } = require('child_process');
-const path = require('path');
-const fs = require('fs');
 
 const AYLIEN_API_URL = 'https://api.aylien.com/news/stories';
 const AYLIEN_APP_ID = process.env.AYLIEN_APP_ID;
