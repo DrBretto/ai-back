@@ -152,46 +152,50 @@ const SentimentService = {
     }
   },
 
-  async runIlabCommand(promptFilePath) {
-    // const modelPath =
-    //   'C:\\Users\\Drbre\\Desktop\\Projects\\InstructLab\\models\\merlinite-7b-lab-Q4_K_M.gguf';
-    // const configPath =
-    //   'C:\\Users\\Drbre\\Desktop\\Projects\\InstructLab\\config.yaml';
-
-    //--model="${modelPath}"
-
-    // Read the content of the prompt file
-    //const promptContent = fs.readFileSync(promptFilePath, 'utf8');
-
-    // Construct the command with the prompt content as the question
-    //const command = `ilab chat "${promptContent}"`;
-    const command = `ilab chat "you gonna fucking work or not, asshole?"`;
-
-    console.log('Command:', command);
-
-   return new Promise((resolve, reject) => {
-      exec(command, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error in runIlabCommand: ${error.message}`);
-          reject(error);
-        } else if (stderr) {
-          console.error(`stderr: ${stderr}`);
-          reject(new Error(stderr));
-        } else {
-          console.log(`stdout: ${stdout}`);
-          const result = stdout.trim();
-          resolve(result);
+  async runIlabCommand(role, prompt) {
+    try {
+      console.log('trying...');
+      const response = await axios.post(
+        'http://127.0.0.1:8000/v1/chat/completions',
+        {
+          'messages': [
+            {
+              'role': 'system',
+              'content': role,
+            },
+            {
+              'role': 'user',
+              'content': prompt,
+            },
+          ],
         }
-      });
-    });
+      );
+      console.log('Status:', response.status);
+      // Extracting and logging the assistant's message content
+      const assistantMessage = response.data.choices[0].message.content;
+      console.log('Assistant Message:', assistantMessage);
+      return assistantMessage; // Returning just the message content
+    } catch (error) {
+      if (error.response) {
+        console.error('Error Status:', error.response.status);
+        console.error('Error Headers:', error.response.headers);
+        console.error(
+          'Error Data:',
+          JSON.stringify(error.response.data).slice(0, 500)
+        ); // Logs first 500 characters of error data
+      } else if (error.request) {
+        console.error('Error Request:', error.request);
+      } else {
+        console.error('Error Message:', error.message);
+      }
+      throw error;
+    }
   },
 
   async getTokensFromGPT(content, masterList) {
-    let userPrompt = `You are provided with a list of predefined sentiments related to financial and economic trends, particularly focusing 
-        on gold and the US dollar. Each sentiment is associated with a unique identifier. Your task is to read through the provided text and 
-        identify any sentiments from the list that are conveyed or implied in the text. Please return a list of the unique identifiers for 
-        these sentiments in a CSV format, enclosed in brackets. Here is the master list of sentiments along with their identifiers:
-
+    let role =
+      'You are provided with a list of predefined sentiments related to financial and economic trends, particularly focusing on gold and the US dollar. Each sentiment is associated with a unique identifier. Your task is to read through the provided text and identify any sentiments from the list that are conveyed or implied in the text. Please return a list of the unique identifiers for these sentiments in a CSV format, enclosed in brackets. Here is the master list of sentiments along with their identifiers:';
+    let prompt = `
         ${masterList}
         
         Now, please read the following text and identify the sentiments from the master list:
@@ -201,11 +205,8 @@ const SentimentService = {
         Return the identifiers of the sentiments conveyed in the text in CSV format enclosed in brackets. For example, if the text conveys 
         sentiments 1, 4, and 7 from the master list, the return should be: [1,4,7]
         `;
-    const promptFilePath = path.resolve(__dirname, 'prompt.txt');
-    fs.writeFileSync(promptFilePath, userPrompt);
-
     try {
-      const result = await this.runIlabCommand(promptFilePath);
+      const result = await this.runIlabCommand(role, prompt);
       return result;
     } catch (error) {
       console.error('Error fetching tokens:', error);
