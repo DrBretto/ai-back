@@ -2,7 +2,7 @@
 /* eslint-disable strict */
 require('dotenv').config();
 const express = require('express');
-const morgan = require('morgan');
+// const morgan = require('morgan'); // Comment out morgan
 const cors = require('cors');
 const helmet = require('helmet');
 
@@ -16,14 +16,19 @@ const dataRouter = require('./data/data-router');
 
 const setupCronJobs = require('./schedule');
 
-const morganOption = NODE_ENV === 'production' ? 'tiny' : 'common';
+// const morganOption = NODE_ENV === 'production' ? 'tiny' : 'common';
+
+// const customMorganFormat = ':method :url :status :res[content-length] - :response-time ms';
 
 const app = express();
 
-app.use(morgan(morganOption));
+// app.use(morgan(customMorganFormat, {
+//   skip: (req) => req.originalUrl.includes('latest-price') || req.originalUrl.includes('latest-prediction')
+// }));
+
 app.use(helmet());
 app.use(cors());
-app.use(express.json()); // Add this line to parse JSON bodies
+app.use(express.json());
 
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
@@ -40,7 +45,6 @@ app.use(function errorHandler(error, req, res, next) {
   if (NODE_ENV === 'production') {
     response = { error: { message: 'server error' } };
   } else {
-    // eslint-disable-next-line no-console
     console.error(error);
     response = { message: error.message, error };
   }

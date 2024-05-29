@@ -4,7 +4,7 @@ const SentimentService = require('./sentiment/sentiment-service');
 const DataService = require('./data/data-service');
 
 module.exports = (app) => {
-  cron.schedule('*/1 * * * *', async () => {
+  cron.schedule('* */1 * * *', async () => {
     const db = app.get('db');
     //Update historical prices every minute
     //console.log('Updating historical prices at:', new Date());
@@ -12,7 +12,14 @@ module.exports = (app) => {
     await StocksService.fetchHistoricalData(db, 'NUGT');
   });
 
-  cron.schedule('0 * * * *', async () => {
+  cron.schedule('*/1 * * * *', async () => {
+    const db = app.get('db');
+    //console.log('Updating historical prices at:', new Date());
+    await StocksService.fetchTodaysData(db, 'JDST');
+    await StocksService.fetchTodaysData(db, 'NUGT');
+  });
+
+  cron.schedule('0 */6 * * *', async () => {
     console.log('Running a task every hour');
     // Your code to trigger the LSTM prediction
     await DataService.predictLSTM();
@@ -64,7 +71,6 @@ module.exports = (app) => {
             sentimentAnalysisId
           );
         } else {
-          console.log('No unprocessed entries found.');
           break; // Exit loop if no unprocessed entry is found
         }
       } catch (error) {

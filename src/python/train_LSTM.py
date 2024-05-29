@@ -33,9 +33,6 @@ _future_interval = 15
 us_holidays = holidays.US()
 
 
-
-
-
 class FinancialLSTM(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, output_size):
         super(FinancialLSTM, self).__init__()

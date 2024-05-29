@@ -1,6 +1,10 @@
 const express = require('express');
 const DataService = require('./data-service');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
+
+const dataFilePath = path.join(__dirname, 'trader_data.json');
 
 router.get('/', async (req, res, next) => {
   try {
@@ -60,6 +64,41 @@ router.get('/latest-prediction', async (req, res, next) => {
     console.error('Error in /latest-prediction route handler:', error);
     next(error);
   }
+});
+
+router.get('/latest-price', async (req, res, next) => {
+  const { symbol } = req.query;
+  try {
+    const db = req.app.get('db');
+    const latestPrice = await DataService.getLatestPrice(db, symbol);
+    res.json(latestPrice);
+  } catch (error) {
+    console.error('Error in /latest-price route handler:', error);
+    next(error);
+  }
+});
+
+// Route to load trader data
+router.get('/load-trader', (req, res) => {
+  fs.readFile(dataFilePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading trader data:', err);
+      return res.status(500).send('Error reading trader data');
+    }
+    res.json(JSON.parse(data));
+  });
+});
+
+// Route to save trader data
+router.post('/save-trader', (req, res) => {
+  const traderData = req.body;
+  fs.writeFile(dataFilePath, JSON.stringify(traderData, null, 2), 'utf8', (err) => {
+    if (err) {
+      console.error('Error saving trader data:', err);
+      return res.status(500).send('Error saving trader data');
+    }
+    res.send('Trader data saved successfully');
+  });
 });
 
 router.get('/delete-cache', (req, res) => {

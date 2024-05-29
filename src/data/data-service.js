@@ -1,10 +1,33 @@
 //const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-
+const dataFilePath = path.join(__dirname, 'trader_data.json');
 const { spawn } = require('child_process');
 
 const DataService = {
+
+  loadTraderData: () => {
+    return new Promise((resolve, reject) => {
+      fs.readFile(dataFilePath, 'utf8', (err, data) => {
+        if (err) {
+          return reject('Error reading trader data');
+        }
+        resolve(JSON.parse(data));
+      });
+    });
+  },
+  
+  saveTraderData: (traderData) => {
+    return new Promise((resolve, reject) => {
+      fs.writeFile(dataFilePath, JSON.stringify(traderData, null, 2), 'utf8', (err) => {
+        if (err) {
+          return reject('Error saving trader data');
+        }
+        resolve('Trader data saved successfully');
+      });
+    });
+  }, 
+
   deleteCache() {
     const files = [
       path.join(process.cwd(), 'src/cache/historical.json'),
@@ -158,8 +181,6 @@ const DataService = {
 
   async getLatestPrediction(db) {
     try {
-      console.log('Fetching the latest predictions...');
-
       const result = await db('stock_predictions')
         .select('stock_id', 'prediction_values')
         .whereIn('stock_id', [1, 2])
@@ -187,13 +208,48 @@ const DataService = {
     }
   },
 
+  async getLatestPrice(db, symbol) {
+    const stockIdMap = { 'JDST': 1, 'NUGT': 2 };
+    const stockId = stockIdMap[symbol];
+
+    if (!stockId) {
+      throw new Error(`Invalid stock symbol: ${symbol}`);
+    }
+
+    try {
+      const result = await db('stockrealtime')
+        .select('closing_price')
+        .where('stock_id', stockId)
+        .orderBy('date_time', 'desc')
+        .first();
+
+      if (!result) {
+        return { message: 'No price data available.' };
+      }
+
+      return { symbol, price: result.closing_price };
+    } catch (error) {
+      console.error(`Error fetching the latest price for ${symbol}:`, error);
+      throw error;
+    }
+  },
+
   async trainLSTM() {
     console.log('Starting LSTM training...');
 
     return new Promise((resolve, reject) => {
+      // Correct path to the Python executable within your virtual environment
+      const pythonExecutable =
+        'C:\\Users\\Drbre\\Desktop\\Projects\\gpt-extension-back\\env\\Scripts\\python.exe';
+      const scriptPath =
+        'C:\\Users\\Drbre\\Desktop\\Projects\\gpt-extension-back\\src\\python\\train_LSTM.py';
+      // Log paths for debugging
+      console.log('Python Executable Path:', pythonExecutable);
+      console.log('Script Path:', scriptPath);
+
       const pythonProcess = spawn(
-        'env/bin/python',
-        ['-u', 'src/python/train_LSTM.py', 'train'],
+        pythonExecutable,
+        ['-u', scriptPath, 'train'],
         {
           shell: true,
         }
@@ -215,6 +271,11 @@ const DataService = {
           console.log('Training completed successfully.');
           resolve();
         }
+      });
+
+      pythonProcess.on('error', (err) => {
+        console.error('Failed to start subprocess:', err);
+        reject(err);
       });
     });
   },
