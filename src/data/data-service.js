@@ -4,6 +4,7 @@ const fs = require('fs');
 const dataFilePath = path.join(__dirname, 'trader_data.json');
 const { spawn } = require('child_process');
 
+
 const DataService = {
 
   loadTraderData: () => {
