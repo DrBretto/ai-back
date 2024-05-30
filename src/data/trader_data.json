@@ -1,0 +1,15 @@
+{
+  "cash": 0,
+  "holdings": "NUGT",
+  "shares": 2.42072137497,
+  "purchasePrice": 41.31,
+  "portfolioValue": 102.03340595498548,
+  "tradeHistory": [
+    {
+      "timestamp": "2024-05-30T20:25:11.410Z",
+      "action": "Updated portfolio value",
+      "shares": 2.42072137497,
+      "purchasePrice": 42.15
+    }
+  ]
+}

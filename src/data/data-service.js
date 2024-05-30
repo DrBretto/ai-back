@@ -4,11 +4,25 @@ const fs = require('fs');
 const dataFilePath = path.join(__dirname, 'trader_data.json');
 const { spawn } = require('child_process');
 
-
 const DataService = {
-
-  loadTraderData: () => {
+  async loadTraderData() {
     return new Promise((resolve, reject) => {
+      if (!fs.existsSync(dataFilePath)) {
+        const initialData = {
+          cash: 0,
+          holdings: '',
+          shares: 0,
+          portfolioValue: 0,
+          tradeHistory: [],
+        };
+        fs.writeFileSync(
+          dataFilePath,
+          JSON.stringify(initialData, null, 2),
+          'utf8'
+        );
+        return resolve(initialData);
+      }
+
       fs.readFile(dataFilePath, 'utf8', (err, data) => {
         if (err) {
           return reject('Error reading trader data');
@@ -17,19 +31,24 @@ const DataService = {
       });
     });
   },
-  
-  saveTraderData: (traderData) => {
-    return new Promise((resolve, reject) => {
-      fs.writeFile(dataFilePath, JSON.stringify(traderData, null, 2), 'utf8', (err) => {
-        if (err) {
-          return reject('Error saving trader data');
-        }
-        resolve('Trader data saved successfully');
-      });
-    });
-  }, 
 
-  deleteCache() {
+  async saveTraderData(traderData) {
+    return new Promise((resolve, reject) => {
+      fs.writeFile(
+        dataFilePath,
+        JSON.stringify(traderData, null, 2),
+        'utf8',
+        (err) => {
+          if (err) {
+            return reject('Error saving trader data');
+          }
+          resolve('Trader data saved successfully');
+        }
+      );
+    });
+  },
+
+  async deleteCache() {
     const files = [
       path.join(process.cwd(), 'src/cache/historical.json'),
       path.join(process.cwd(), 'src/cache/realtime.json'),

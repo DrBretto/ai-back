@@ -191,7 +191,7 @@ const SentimentService = {
 
   async getTokensFromGPT(content, masterList) {
     let role =
-      'You are provided with a list of predefined sentiments related to financial and economic trends, particularly focusing on gold and the US dollar. Each sentiment is associated with a unique identifier. Your task is to read through the provided text and identify any sentiments from the list that are conveyed or implied in the text. Please return a list of the unique identifiers for these sentiments in a CSV format, enclosed in brackets. Here is the master list of sentiments along with their identifiers:';
+      'You are provided with a list of predefined sentiments related to financial and economic trends, particularly focusing on gold and the US dollar. Each sentiment is associated with a unique identifier. Your task is to read through the provided text and identify any sentiments from the list that are conveyed or implied in the text. Please return a list of the unique identifiers for these sentiments in a CSV format, enclosed in brackets. Please limit to the 10 most relevant. Here is the master list of sentiments along with their identifiers:';
     let prompt = `
         ${masterList}
         
@@ -229,7 +229,8 @@ const SentimentService = {
         return null;
     }
 
-    const userRole = 'You are a finaincial expert specializing in the trade of gold and the us dollar as commodidties.'
+    const userRole =
+      'You are a finaincial expert specializing in the trade of gold and the us dollar as commodidties.';
 
     try {
       const result = await this.runIlabCommand(userRole, userPrompt);

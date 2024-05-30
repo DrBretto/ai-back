@@ -1,10 +1,6 @@
 const express = require('express');
 const DataService = require('./data-service');
 const router = express.Router();
-const path = require('path');
-const fs = require('fs');
-
-const dataFilePath = path.join(__dirname, 'trader_data.json');
 
 router.get('/', async (req, res, next) => {
   try {
@@ -42,7 +38,6 @@ router.get('/train', async (req, res, next) => {
     console.error('Error in /direct-db-access route handler:', error);
     next(error);
   }
-  
 });
 
 router.get('/predict', async (req, res, next) => {
@@ -79,26 +74,27 @@ router.get('/latest-price', async (req, res, next) => {
 });
 
 // Route to load trader data
-router.get('/load-trader', (req, res) => {
-  fs.readFile(dataFilePath, 'utf8', (err, data) => {
-    if (err) {
-      console.error('Error reading trader data:', err);
-      return res.status(500).send('Error reading trader data');
-    }
-    res.json(JSON.parse(data));
-  });
+// Route to load trader data
+router.get('/load-trader', async (req, res) => {
+  try {
+    const data = await DataService.loadTraderData();
+    res.json(data);
+  } catch (error) {
+    console.error('Error reading trader data:', error);
+    res.status(500).send('Error reading trader data');
+  }
 });
 
 // Route to save trader data
-router.post('/save-trader', (req, res) => {
+router.post('/save-trader', async (req, res) => {
   const traderData = req.body;
-  fs.writeFile(dataFilePath, JSON.stringify(traderData, null, 2), 'utf8', (err) => {
-    if (err) {
-      console.error('Error saving trader data:', err);
-      return res.status(500).send('Error saving trader data');
-    }
-    res.send('Trader data saved successfully');
-  });
+  try {
+    const response = await DataService.saveTraderData(traderData);
+    res.send(response);
+  } catch (error) {
+    console.error('Error saving trader data:', error);
+    res.status(500).send('Error saving trader data');
+  }
 });
 
 router.get('/delete-cache', (req, res) => {
